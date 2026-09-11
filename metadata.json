@@ -1,0 +1,6 @@
+{
+  "name": "Sri Vishnu Logistics",
+  "description": "Private transportation business management and analytics web application for fleet trips, driver beta, mileage, and maintenance tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
