@@ -17,6 +17,10 @@ export type DriverBetaType = 'percentage' | 'manual';
 export interface Trip {
   id: string;
   trip_date: string; // YYYY-MM-DD
+  trip_start_datetime?: string; // YYYY-MM-DDTHH:mm
+  trip_end_datetime?: string;   // YYYY-MM-DDTHH:mm
+  gps_source?: 'blackbuck' | 'manual' | 'odometer';
+  gps_distance_km?: number;
   vehicle_id: string;
   driver_id: string;
   transporter_name: string;
@@ -39,10 +43,16 @@ export interface Trip {
   unloading_expense: number;
   other_expenses: number;
   net_profit: number;
+
+  // Halting Details
+  halting_days?: number;
+  halting_charge_per_day?: number;
+  halting_fare?: number; // Halting days * Halting charge/day
+
   // Advance and Balance Collections
   advance_received?: number;
   advance_received_date?: string; // YYYY-MM-DD
-  balance_amount?: number; // Trip fare - advance received
+  balance_amount?: number; // Trip fare - broker fare - advance received + halting fare
   balance_received_date?: string; // YYYY-MM-DD
 
   // Driver Settlement Payments
@@ -64,6 +74,7 @@ export interface DriverReportStats {
   totalTrips: number;
   overallRunningKms: number; // overall kms
   overallDriverBeta: number; // overall driver beta
+  overallHaltingDays: number; // overall halting days
   overallTotalDieselLitres: number; // overall Total Diesel in Litres
   overallMileage: number; // (overall kms / overall Total Diesel in Litres)
   overallAmountPaidToDriver: number; // overall Amount paid to driver

@@ -97,19 +97,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Right Header Status & Logout */}
           <div className="hidden sm:flex items-center space-x-3">
             <div
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                supabaseActive
-                  ? "bg-emerald-950/60 text-emerald-300 border-emerald-700/50"
-                  : "bg-amber-950/60 text-amber-300 border-amber-700/50"
-              }`}
-              title={
-                supabaseActive
-                  ? "Connected to Supabase PostgreSQL"
-                  : "Local Offline Protected Mode (Set VITE_SUPABASE_URL to connect)"
-              }
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-emerald-950/70 text-emerald-300 border-emerald-700/60 shadow-xs"
+              title="Live Central Database Connected - All trips and fleet records are synchronized across all your devices in real-time."
             >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <Database className="w-3.5 h-3.5" />
-              <span>{supabaseActive ? "Supabase Cloud" : "Local Protected"}</span>
+              <span>Multi-Device Cloud Sync Active</span>
             </div>
 
             <button

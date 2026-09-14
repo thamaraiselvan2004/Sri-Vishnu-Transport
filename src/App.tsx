@@ -72,11 +72,53 @@ export function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (session) {
-      loadData();
+  // Silent sync in the background without triggering full loading skeleton
+  const refreshSilent = useCallback(async () => {
+    try {
+      const [vData, dData, tData, mData] = await Promise.all([
+        getVehicles(),
+        getDrivers(),
+        getTrips(),
+        getMaintenanceRecords(),
+      ]);
+      setVehicles(vData);
+      setDrivers(dData);
+      setTrips(tData);
+      setMaintenance(mData);
+    } catch (err) {
+      console.warn("Silent multi-device sync notice:", err);
     }
-  }, [session, loadData]);
+  }, []);
+
+  useEffect(() => {
+    if (!session) return;
+    loadData();
+
+    // Auto-sync every 8 seconds so trips added on other phones appear promptly
+    const pollTimer = setInterval(() => {
+      refreshSilent();
+    }, 8000);
+
+    // Auto-sync immediately when returning to the tab or browser
+    const onFocus = () => {
+      refreshSilent();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refreshSilent();
+      }
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      clearInterval(pollTimer);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [session, loadData, refreshSilent]);
 
   const handleLogout = () => {
     localStorage.removeItem("svl_auth_session");

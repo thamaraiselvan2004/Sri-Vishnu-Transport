@@ -1,10 +1,10 @@
-import { supabase, isSupabaseConfigured } from "./supabase";
 import { Vehicle, Driver, Trip, MaintenanceRecord } from "../types";
 
 const VEHICLES_KEY = "svl_vehicles_data";
 const DRIVERS_KEY = "svl_drivers_data";
 const TRIPS_KEY = "svl_trips_data";
 const MAINTENANCE_KEY = "svl_maintenance_data";
+const MIGRATION_DONE_KEY = "svl_server_migrated_v1";
 
 // Initial seed data as per specification
 const INITIAL_VEHICLES: Vehicle[] = [
@@ -22,24 +22,6 @@ const INITIAL_DRIVERS: Driver[] = [
   { id: "drv-4", driver_name: "Manikandan", active: true, created_at: "2026-01-01T00:00:00Z" },
   { id: "drv-5", driver_name: "Myself", active: true, created_at: "2026-01-01T00:00:00Z" },
 ];
-
-const INITIAL_TRIPS: Trip[] = [];
-
-const INITIAL_MAINTENANCE: MaintenanceRecord[] = [];
-
-// Automatic migration to clear previous demo/seed data as requested
-const RESET_DATA_KEY = "svl_clean_state_v2";
-if (typeof window !== "undefined") {
-  try {
-    if (!localStorage.getItem(RESET_DATA_KEY)) {
-      localStorage.setItem(TRIPS_KEY, JSON.stringify([]));
-      localStorage.setItem(MAINTENANCE_KEY, JSON.stringify([]));
-      localStorage.setItem(RESET_DATA_KEY, "true");
-    }
-  } catch (err) {
-    console.error("Local clean reset error:", err);
-  }
-}
 
 // Helper to access LocalStorage safely
 function getLocal<T>(key: string, fallback: T): T {
@@ -61,22 +43,51 @@ function setLocal<T>(key: string, value: T): void {
 }
 
 // -------------------------------------------------------------
-// VEHICLES API
+// ONE-TIME LOCAL DATA MIGRATION TO SHARED SERVER DATABASE
+// -------------------------------------------------------------
+let migrationAttempted = false;
+async function autoMigrateLocalDataToServer() {
+  if (migrationAttempted || typeof window === "undefined") return;
+  migrationAttempted = true;
+
+  try {
+    const localTrips = getLocal<Trip[]>(TRIPS_KEY, []);
+    const localMaintenance = getLocal<MaintenanceRecord[]>(MAINTENANCE_KEY, []);
+    const localVehicles = getLocal<Vehicle[]>(VEHICLES_KEY, []);
+    const localDrivers = getLocal<Driver[]>(DRIVERS_KEY, []);
+
+    if (localTrips.length > 0 || localMaintenance.length > 0) {
+      await fetch("/api/migrate-local", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          trips: localTrips,
+          maintenance: localMaintenance,
+          vehicles: localVehicles,
+          drivers: localDrivers,
+        }),
+      });
+      localStorage.setItem(MIGRATION_DONE_KEY, "true");
+    }
+  } catch (err) {
+    console.warn("Auto-migration to server database notice:", err);
+  }
+}
+
+// -------------------------------------------------------------
+// VEHICLES API (CENTRAL SERVER + LOCAL FALLBACK)
 // -------------------------------------------------------------
 export async function getVehicles(onlyActive = false): Promise<Vehicle[]> {
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      let query = supabase.from("vehicles").select("*").order("created_at", { ascending: true });
-      if (onlyActive) {
-        query = query.eq("active", true);
-      }
-      const { data, error } = await query;
-      if (!error && data && data.length > 0) {
-        return data;
-      }
-    } catch (e) {
-      console.warn("Supabase vehicle query fallback to local:", e);
+  try {
+    const res = await fetch(`/api/vehicles${onlyActive ? "?onlyActive=true" : ""}`);
+    if (res.ok) {
+      const data: Vehicle[] = await res.json();
+      setLocal(VEHICLES_KEY, data);
+      autoMigrateLocalDataToServer();
+      return onlyActive ? data.filter((v) => v.active) : data;
     }
+  } catch (e) {
+    console.warn("Server API unavailable for vehicles, fallback to local storage:", e);
   }
 
   let list = getLocal<Vehicle[]>(VEHICLES_KEY, INITIAL_VEHICLES);
@@ -89,30 +100,24 @@ export async function getVehicles(onlyActive = false): Promise<Vehicle[]> {
 
 export async function addVehicle(vehicleNumber: string): Promise<Vehicle> {
   const cleanNumber = vehicleNumber.trim().toUpperCase();
-  const newVeh: Vehicle = {
-    id: "veh-" + Date.now(),
-    vehicle_number: cleanNumber,
-    active: true,
-    created_at: new Date().toISOString(),
-  };
 
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("vehicles")
-        .insert([{ vehicle_number: cleanNumber, active: true }])
-        .select()
-        .single();
-      if (!error && data) {
-        return data;
-      }
-    } catch (e) {
-      console.warn("Supabase addVehicle fallback to local:", e);
+  try {
+    const res = await fetch("/api/vehicles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vehicle_number: cleanNumber }),
+    });
+    if (res.ok) {
+      const savedVehicle: Vehicle = await res.json();
+      const list = await getVehicles();
+      setLocal(VEHICLES_KEY, list);
+      return savedVehicle;
     }
+  } catch (e) {
+    console.warn("Server addVehicle failed, using local:", e);
   }
 
   const list = await getVehicles();
-  // Check if exists
   const existing = list.find((v) => v.vehicle_number === cleanNumber);
   if (existing) {
     if (!existing.active) {
@@ -122,18 +127,27 @@ export async function addVehicle(vehicleNumber: string): Promise<Vehicle> {
     return existing;
   }
 
+  const newVeh: Vehicle = {
+    id: "veh-" + Date.now(),
+    vehicle_number: cleanNumber,
+    active: true,
+    created_at: new Date().toISOString(),
+  };
+
   const updated = [...list, newVeh];
   setLocal(VEHICLES_KEY, updated);
   return newVeh;
 }
 
 export async function updateVehicleStatus(id: string, active: boolean): Promise<void> {
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      await supabase.from("vehicles").update({ active }).eq("id", id);
-    } catch (e) {
-      console.warn("Supabase updateVehicleStatus fallback:", e);
-    }
+  try {
+    await fetch(`/api/vehicles/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active }),
+    });
+  } catch (e) {
+    console.warn("Server updateVehicleStatus failed, using local:", e);
   }
 
   const list = await getVehicles();
@@ -142,22 +156,18 @@ export async function updateVehicleStatus(id: string, active: boolean): Promise<
 }
 
 // -------------------------------------------------------------
-// DRIVERS API
+// DRIVERS API (CENTRAL SERVER + LOCAL FALLBACK)
 // -------------------------------------------------------------
 export async function getDrivers(onlyActive = false): Promise<Driver[]> {
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      let query = supabase.from("drivers").select("*").order("created_at", { ascending: true });
-      if (onlyActive) {
-        query = query.eq("active", true);
-      }
-      const { data, error } = await query;
-      if (!error && data && data.length > 0) {
-        return data;
-      }
-    } catch (e) {
-      console.warn("Supabase driver query fallback to local:", e);
+  try {
+    const res = await fetch(`/api/drivers${onlyActive ? "?onlyActive=true" : ""}`);
+    if (res.ok) {
+      const data: Driver[] = await res.json();
+      setLocal(DRIVERS_KEY, data);
+      return onlyActive ? data.filter((d) => d.active) : data;
     }
+  } catch (e) {
+    console.warn("Server API unavailable for drivers, fallback to local storage:", e);
   }
 
   let list = getLocal<Driver[]>(DRIVERS_KEY, INITIAL_DRIVERS);
@@ -170,26 +180,21 @@ export async function getDrivers(onlyActive = false): Promise<Driver[]> {
 
 export async function addDriver(driverName: string): Promise<Driver> {
   const cleanName = driverName.trim();
-  const newDriver: Driver = {
-    id: "drv-" + Date.now(),
-    driver_name: cleanName,
-    active: true,
-    created_at: new Date().toISOString(),
-  };
 
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("drivers")
-        .insert([{ driver_name: cleanName, active: true }])
-        .select()
-        .single();
-      if (!error && data) {
-        return data;
-      }
-    } catch (e) {
-      console.warn("Supabase addDriver fallback to local:", e);
+  try {
+    const res = await fetch("/api/drivers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ driver_name: cleanName }),
+    });
+    if (res.ok) {
+      const savedDriver: Driver = await res.json();
+      const list = await getDrivers();
+      setLocal(DRIVERS_KEY, list);
+      return savedDriver;
     }
+  } catch (e) {
+    console.warn("Server addDriver failed, using local:", e);
   }
 
   const list = await getDrivers();
@@ -204,18 +209,27 @@ export async function addDriver(driverName: string): Promise<Driver> {
     return existing;
   }
 
+  const newDriver: Driver = {
+    id: "drv-" + Date.now(),
+    driver_name: cleanName,
+    active: true,
+    created_at: new Date().toISOString(),
+  };
+
   const updated = [...list, newDriver];
   setLocal(DRIVERS_KEY, updated);
   return newDriver;
 }
 
 export async function updateDriverStatus(id: string, active: boolean): Promise<void> {
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      await supabase.from("drivers").update({ active }).eq("id", id);
-    } catch (e) {
-      console.warn("Supabase updateDriverStatus fallback:", e);
-    }
+  try {
+    await fetch(`/api/drivers/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active }),
+    });
+  } catch (e) {
+    console.warn("Server updateDriverStatus failed, using local:", e);
   }
 
   const list = await getDrivers();
@@ -224,7 +238,7 @@ export async function updateDriverStatus(id: string, active: boolean): Promise<v
 }
 
 // -------------------------------------------------------------
-// TRIPS API
+// TRIPS API (CENTRAL SERVER + MULTI-DEVICE SYNC)
 // -------------------------------------------------------------
 export async function getTrips(filter?: {
   vehicleId?: string;
@@ -232,49 +246,45 @@ export async function getTrips(filter?: {
   fromDate?: string;
   toDate?: string;
 }): Promise<Trip[]> {
+  const queryParams = new URLSearchParams();
+  if (filter?.vehicleId) queryParams.set("vehicleId", filter.vehicleId);
+  if (filter?.driverId) queryParams.set("driverId", filter.driverId);
+  if (filter?.fromDate) queryParams.set("fromDate", filter.fromDate);
+  if (filter?.toDate) queryParams.set("toDate", filter.toDate);
+
+  try {
+    const url = `/api/trips${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const serverTrips: Trip[] = await res.json();
+      setLocal(TRIPS_KEY, serverTrips);
+      return serverTrips;
+    }
+  } catch (e) {
+    console.warn("Server trips query failed, using local cache:", e);
+  }
+
+  // Fallback to local storage cache
   const vehicles = await getVehicles();
   const drivers = await getDrivers();
-
   const vehicleMap = new Map(vehicles.map((v) => [v.id, v.vehicle_number]));
   const driverMap = new Map(drivers.map((d) => [d.id, d.driver_name]));
 
-  let rawTrips: Trip[] = [];
+  let rawTrips = getLocal<Trip[]>(TRIPS_KEY, []);
 
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      let query = supabase.from("trips").select("*").order("trip_date", { ascending: false });
-      if (filter?.vehicleId) query = query.eq("vehicle_id", filter.vehicleId);
-      if (filter?.driverId) query = query.eq("driver_id", filter.driverId);
-      if (filter?.fromDate) query = query.gte("trip_date", filter.fromDate);
-      if (filter?.toDate) query = query.lte("trip_date", filter.toDate);
-
-      const { data, error } = await query;
-      if (!error && data) {
-        rawTrips = data;
-      }
-    } catch (e) {
-      console.warn("Supabase trips query fallback:", e);
-    }
+  if (filter?.vehicleId) {
+    rawTrips = rawTrips.filter((t) => t.vehicle_id === filter.vehicleId);
+  }
+  if (filter?.driverId) {
+    rawTrips = rawTrips.filter((t) => t.driver_id === filter.driverId);
+  }
+  if (filter?.fromDate) {
+    rawTrips = rawTrips.filter((t) => t.trip_date >= filter.fromDate!);
+  }
+  if (filter?.toDate) {
+    rawTrips = rawTrips.filter((t) => t.trip_date <= filter.toDate!);
   }
 
-  if (rawTrips.length === 0) {
-    rawTrips = getLocal<Trip[]>(TRIPS_KEY, []);
-
-    if (filter?.vehicleId) {
-      rawTrips = rawTrips.filter((t) => t.vehicle_id === filter.vehicleId);
-    }
-    if (filter?.driverId) {
-      rawTrips = rawTrips.filter((t) => t.driver_id === filter.driverId);
-    }
-    if (filter?.fromDate) {
-      rawTrips = rawTrips.filter((t) => t.trip_date >= filter.fromDate!);
-    }
-    if (filter?.toDate) {
-      rawTrips = rawTrips.filter((t) => t.trip_date <= filter.toDate!);
-    }
-  }
-
-  // Preserve historical names even if active/inactive status changed
   const enrichedTrips = rawTrips.map((t) => {
     const adv = Number(t.advance_received) || 0;
     const fare = Number(t.trip_fare) || 0;
@@ -309,7 +319,6 @@ export async function getTrips(filter?: {
     };
   });
 
-  // Always newest trip first
   enrichedTrips.sort((a, b) => b.trip_date.localeCompare(a.trip_date));
   return enrichedTrips;
 }
@@ -317,100 +326,77 @@ export async function getTrips(filter?: {
 export async function addTrip(
   tripData: Omit<Trip, "id" | "created_at">
 ): Promise<Trip> {
-  const newTrip: Trip = {
+  const adv = Number(tripData.advance_received) || 0;
+  const fare = Number(tripData.trip_fare) || 0;
+  const beta = Number(tripData.driver_beta) || 0;
+  const paidToDriver = Number(tripData.amount_paid_to_driver) || 0;
+
+  const payload = {
     ...tripData,
-    advance_received: Number(tripData.advance_received) || 0,
+    advance_received: adv,
     advance_received_date: tripData.advance_received_date || "",
     balance_amount:
       tripData.balance_amount !== undefined
         ? Number(tripData.balance_amount)
-        : (Number(tripData.trip_fare) || 0) - (Number(tripData.advance_received) || 0),
+        : fare - adv,
     balance_received_date: tripData.balance_received_date || "",
-    amount_paid_to_driver: Number(tripData.amount_paid_to_driver) || 0,
+    amount_paid_to_driver: paidToDriver,
     driver_payment_date: tripData.driver_payment_date || "",
     remaining_amount_to_driver:
       tripData.remaining_amount_to_driver !== undefined
         ? Number(tripData.remaining_amount_to_driver)
-        : (Number(tripData.driver_beta) || 0) - (Number(tripData.amount_paid_to_driver) || 0),
+        : beta - paidToDriver,
+  };
+
+  try {
+    const res = await fetch("/api/trips", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      const savedTrip: Trip = await res.json();
+      const existingTrips = getLocal<Trip[]>(TRIPS_KEY, []);
+      setLocal(TRIPS_KEY, [savedTrip, ...existingTrips.filter((t) => t.id !== savedTrip.id)]);
+      return savedTrip;
+    }
+  } catch (e) {
+    console.warn("Server addTrip failed, saving to local cache:", e);
+  }
+
+  const fallbackTrip: Trip = {
+    ...payload,
     id: "trip-" + Date.now(),
     created_at: new Date().toISOString(),
   };
 
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("trips")
-        .insert([
-          {
-            trip_date: tripData.trip_date,
-            vehicle_id: tripData.vehicle_id,
-            driver_id: tripData.driver_id,
-            transporter_name: tripData.transporter_name,
-            trip_fare: tripData.trip_fare,
-            broker_fare: tripData.broker_fare,
-            driver_beta: tripData.driver_beta,
-            driver_beta_type: tripData.driver_beta_type,
-            from_state: tripData.from_state,
-            from_city: tripData.from_city,
-            to_state: tripData.to_state,
-            to_city: tripData.to_city,
-            starting_odometer: tripData.starting_odometer || 0,
-            ending_odometer: tripData.ending_odometer || 0,
-            trip_running_kms: tripData.trip_running_kms,
-            toll_charges: tripData.toll_charges,
-            diesel_expense: tripData.diesel_expense,
-            diesel_litres: tripData.diesel_litres,
-            mileage: tripData.mileage,
-            loading_expense: tripData.loading_expense,
-            unloading_expense: tripData.unloading_expense,
-            other_expenses: tripData.other_expenses,
-            net_profit: tripData.net_profit,
-            advance_received: newTrip.advance_received,
-            advance_received_date: newTrip.advance_received_date,
-            balance_amount: newTrip.balance_amount,
-            balance_received_date: newTrip.balance_received_date,
-            amount_paid_to_driver: newTrip.amount_paid_to_driver,
-            driver_payment_date: newTrip.driver_payment_date,
-            remaining_amount_to_driver: newTrip.remaining_amount_to_driver,
-          },
-        ])
-        .select()
-        .single();
-      if (!error && data) {
-        return {
-          ...data,
-          vehicle_number: tripData.vehicle_number,
-          driver_name: tripData.driver_name,
-        };
-      }
-    } catch (e) {
-      console.warn("Supabase addTrip fallback:", e);
-    }
-  }
-
   const existingTrips = getLocal<Trip[]>(TRIPS_KEY, []);
-  const updatedTrips = [newTrip, ...existingTrips];
-  setLocal(TRIPS_KEY, updatedTrips);
-  return newTrip;
+  setLocal(TRIPS_KEY, [fallbackTrip, ...existingTrips]);
+  return fallbackTrip;
 }
 
 export async function updateTrip(id: string, tripData: Partial<Trip>): Promise<void> {
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      const payload: Record<string, any> = { ...tripData };
-      delete payload.id;
-      delete payload.created_at;
-      delete payload.vehicle_number;
-      delete payload.driver_name;
-      payload.updated_at = new Date().toISOString();
-      await supabase.from("trips").update(payload).eq("id", id);
-    } catch (e) {
-      console.warn("Supabase updateTrip fallback:", e);
+  try {
+    const res = await fetch(`/api/trips/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(tripData),
+    });
+    if (res.ok) {
+      const updated: Trip = await res.json();
+      const list = getLocal<Trip[]>(TRIPS_KEY, []);
+      setLocal(
+        TRIPS_KEY,
+        list.map((t) => (t.id === id ? updated : t))
+      );
+      return;
     }
+  } catch (e) {
+    console.warn("Server updateTrip failed, updating local cache:", e);
   }
 
   const list = getLocal<Trip[]>(TRIPS_KEY, []);
-  const updated = list.map((t) =>
+  const updatedList = list.map((t) =>
     t.id === id
       ? {
           ...t,
@@ -419,16 +405,16 @@ export async function updateTrip(id: string, tripData: Partial<Trip>): Promise<v
         }
       : t
   );
-  setLocal(TRIPS_KEY, updated);
+  setLocal(TRIPS_KEY, updatedList);
 }
 
 export async function deleteTrip(id: string): Promise<void> {
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      await supabase.from("trips").delete().eq("id", id);
-    } catch (e) {
-      console.warn("Supabase deleteTrip fallback:", e);
-    }
+  try {
+    await fetch(`/api/trips/${id}`, {
+      method: "DELETE",
+    });
+  } catch (e) {
+    console.warn("Server deleteTrip failed, updating local cache:", e);
   }
 
   const list = getLocal<Trip[]>(TRIPS_KEY, []);
@@ -437,46 +423,42 @@ export async function deleteTrip(id: string): Promise<void> {
 }
 
 // -------------------------------------------------------------
-// MAINTENANCE API
+// MAINTENANCE API (CENTRAL SERVER + MULTI-DEVICE SYNC)
 // -------------------------------------------------------------
 export async function getMaintenanceRecords(
   vehicleId?: string,
   fromDate?: string,
   toDate?: string
 ): Promise<MaintenanceRecord[]> {
+  const queryParams = new URLSearchParams();
+  if (vehicleId) queryParams.set("vehicleId", vehicleId);
+  if (fromDate) queryParams.set("fromDate", fromDate);
+  if (toDate) queryParams.set("toDate", toDate);
+
+  try {
+    const url = `/api/maintenance${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const serverRecords: MaintenanceRecord[] = await res.json();
+      setLocal(MAINTENANCE_KEY, serverRecords);
+      return serverRecords;
+    }
+  } catch (e) {
+    console.warn("Server maintenance query failed, using local cache:", e);
+  }
+
   const vehicles = await getVehicles();
   const vehicleMap = new Map(vehicles.map((v) => [v.id, v.vehicle_number]));
 
-  let rawList: MaintenanceRecord[] = [];
-
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      let query = supabase.from("maintenance").select("*").order("maintenance_date", { ascending: false });
-      if (vehicleId) query = query.eq("vehicle_id", vehicleId);
-      if (fromDate) query = query.gte("maintenance_date", fromDate);
-      if (toDate) query = query.lte("maintenance_date", toDate);
-
-      const { data, error } = await query;
-      if (!error && data) {
-        rawList = data;
-      }
-    } catch (e) {
-      console.warn("Supabase maintenance query fallback:", e);
-    }
+  let rawList = getLocal<MaintenanceRecord[]>(MAINTENANCE_KEY, []);
+  if (vehicleId) {
+    rawList = rawList.filter((m) => m.vehicle_id === vehicleId);
   }
-
-  if (rawList.length === 0) {
-    rawList = getLocal<MaintenanceRecord[]>(MAINTENANCE_KEY, []);
-
-    if (vehicleId) {
-      rawList = rawList.filter((m) => m.vehicle_id === vehicleId);
-    }
-    if (fromDate) {
-      rawList = rawList.filter((m) => m.maintenance_date >= fromDate);
-    }
-    if (toDate) {
-      rawList = rawList.filter((m) => m.maintenance_date <= toDate);
-    }
+  if (fromDate) {
+    rawList = rawList.filter((m) => m.maintenance_date >= fromDate);
+  }
+  if (toDate) {
+    rawList = rawList.filter((m) => m.maintenance_date <= toDate);
   }
 
   const enriched = rawList.map((m) => ({
@@ -484,7 +466,6 @@ export async function getMaintenanceRecords(
     vehicle_number: m.vehicle_number || vehicleMap.get(m.vehicle_id) || "Vehicle #" + m.vehicle_id.slice(-4),
   }));
 
-  // Sort newest first
   enriched.sort((a, b) => b.maintenance_date.localeCompare(a.maintenance_date));
   return enriched;
 }
@@ -492,53 +473,40 @@ export async function getMaintenanceRecords(
 export async function addMaintenanceRecord(
   record: Omit<MaintenanceRecord, "id" | "created_at">
 ): Promise<MaintenanceRecord> {
+  try {
+    const res = await fetch("/api/maintenance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(record),
+    });
+    if (res.ok) {
+      const saved: MaintenanceRecord = await res.json();
+      const existing = getLocal<MaintenanceRecord[]>(MAINTENANCE_KEY, []);
+      setLocal(MAINTENANCE_KEY, [saved, ...existing.filter((m) => m.id !== saved.id)]);
+      return saved;
+    }
+  } catch (e) {
+    console.warn("Server addMaintenance failed, saving to local cache:", e);
+  }
+
   const newRecord: MaintenanceRecord = {
     ...record,
     id: "maint-" + Date.now(),
     created_at: new Date().toISOString(),
   };
 
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("maintenance")
-        .insert([
-          {
-            vehicle_id: record.vehicle_id,
-            maintenance_date: record.maintenance_date,
-            odometer_reading: record.odometer_reading,
-            service_type: record.service_type,
-            description: record.description,
-            amount: record.amount,
-            notes: record.notes,
-          },
-        ])
-        .select()
-        .single();
-      if (!error && data) {
-        return {
-          ...data,
-          vehicle_number: record.vehicle_number,
-        };
-      }
-    } catch (e) {
-      console.warn("Supabase addMaintenance fallback:", e);
-    }
-  }
-
   const existing = getLocal<MaintenanceRecord[]>(MAINTENANCE_KEY, []);
-  const updated = [newRecord, ...existing];
-  setLocal(MAINTENANCE_KEY, updated);
+  setLocal(MAINTENANCE_KEY, [newRecord, ...existing]);
   return newRecord;
 }
 
 export async function deleteMaintenanceRecord(id: string): Promise<void> {
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      await supabase.from("maintenance").delete().eq("id", id);
-    } catch (e) {
-      console.warn("Supabase deleteMaintenance fallback:", e);
-    }
+  try {
+    await fetch(`/api/maintenance/${id}`, {
+      method: "DELETE",
+    });
+  } catch (e) {
+    console.warn("Server deleteMaintenance failed, updating local cache:", e);
   }
 
   const list = getLocal<MaintenanceRecord[]>(MAINTENANCE_KEY, []);
@@ -547,14 +515,16 @@ export async function deleteMaintenanceRecord(id: string): Promise<void> {
 }
 
 export async function clearAllTripsAndMaintenance(): Promise<void> {
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      await supabase.from("trips").delete().neq("id", "0");
-      await supabase.from("maintenance").delete().neq("id", "0");
-    } catch (e) {
-      console.warn("Supabase clear error:", e);
-    }
-  }
   setLocal(TRIPS_KEY, []);
   setLocal(MAINTENANCE_KEY, []);
+}
+
+// Check if shared backend is online
+export async function checkServerSyncStatus(): Promise<boolean> {
+  try {
+    const res = await fetch("/api/health");
+    return res.ok;
+  } catch {
+    return false;
+  }
 }

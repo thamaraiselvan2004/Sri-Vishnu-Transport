@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   X,
   Truck,
@@ -13,6 +13,14 @@ import {
   AlertCircle,
   Building,
   Check,
+  Radio,
+  Zap,
+  Loader2,
+  Clock,
+  Settings,
+  Compass,
+  Route,
+  Gauge,
 } from "lucide-react";
 import { Trip, Vehicle, Driver, DriverBetaType } from "../types";
 import {
@@ -26,6 +34,8 @@ import {
   searchStates,
   searchCities,
 } from "../lib/indianPlaces";
+import { BlackBuckSettingsModal } from "./BlackBuckSettingsModal";
+import { getHighwayDistanceKm } from "../lib/routeDistances";
 
 interface EditTripModalProps {
   trip: Trip | null;
@@ -64,8 +74,26 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
 
   // Distance & Fuel
   const [tripRunningKms, setTripRunningKms] = useState("");
+  const [startingOdometer, setStartingOdometer] = useState("");
+  const [endingOdometer, setEndingOdometer] = useState("");
   const [dieselLitres, setDieselLitres] = useState("");
   const [dieselExpense, setDieselExpense] = useState("");
+
+  // GPS & Timestamps
+  const [tripStartDateTime, setTripStartDateTime] = useState("");
+  const [tripEndDateTime, setTripEndDateTime] = useState("");
+  const [gpsSource, setGpsSource] = useState<"blackbuck" | "manual" | "odometer">("manual");
+  const [isFetchingGps, setIsFetchingGps] = useState(false);
+  const [showBlackbuckSettings, setShowBlackbuckSettings] = useState(false);
+  const [gpsStatus, setGpsStatus] = useState<{
+    type: "success" | "error" | "info" | null;
+    message: string;
+  }>({ type: null, message: "" });
+  const [routeEstimateStatus, setRouteEstimateStatus] = useState<{
+    type: "success" | "info" | null;
+    message: string;
+    distanceKm?: number;
+  }>({ type: null, message: "" });
 
   // Fares & Allowances
   const [tripFare, setTripFare] = useState("");
@@ -78,6 +106,10 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
   const [loadingExpense, setLoadingExpense] = useState("");
   const [unloadingExpense, setUnloadingExpense] = useState("");
   const [otherExpenses, setOtherExpenses] = useState("");
+
+  // Halting Details
+  const [haltingDays, setHaltingDays] = useState("");
+  const [haltingChargePerDay, setHaltingChargePerDay] = useState("");
 
   // Advance & Balance Collections
   const [advanceReceived, setAdvanceReceived] = useState("");
@@ -107,6 +139,16 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
       setToCity(trip.to_city || "");
 
       setTripRunningKms(String(trip.trip_running_kms ?? ""));
+      setStartingOdometer(
+        trip.starting_odometer !== undefined && trip.starting_odometer !== null
+          ? String(trip.starting_odometer)
+          : ""
+      );
+      setEndingOdometer(
+        trip.ending_odometer !== undefined && trip.ending_odometer !== null
+          ? String(trip.ending_odometer)
+          : ""
+      );
       setDieselLitres(String(trip.diesel_litres ?? ""));
       setDieselExpense(String(trip.diesel_expense ?? ""));
 
@@ -121,6 +163,18 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
       setLoadingExpense(String(trip.loading_expense ?? "0"));
       setUnloadingExpense(String(trip.unloading_expense ?? "0"));
       setOtherExpenses(String(trip.other_expenses ?? "0"));
+
+      // Sync Halting Details
+      setHaltingDays(
+        trip.halting_days !== undefined && trip.halting_days !== null
+          ? String(trip.halting_days)
+          : "0"
+      );
+      setHaltingChargePerDay(
+        trip.halting_charge_per_day !== undefined && trip.halting_charge_per_day !== null
+          ? String(trip.halting_charge_per_day)
+          : "0"
+      );
 
       // Sync Advance & Driver Payments
       setAdvanceReceived(
@@ -137,10 +191,140 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
       );
       setDriverPaymentDate(trip.driver_payment_date || "");
 
+      // Sync GPS & Timestamps
+      setTripStartDateTime(
+        trip.trip_start_datetime || (trip.trip_date ? `${trip.trip_date}T06:00` : "")
+      );
+      setTripEndDateTime(
+        trip.trip_end_datetime || (trip.trip_date ? `${trip.trip_date}T20:00` : "")
+      );
+      setGpsSource(trip.gps_source || "manual");
+      setGpsStatus({ type: null, message: "" });
+      setRouteEstimateStatus({ type: null, message: "" });
+
       setErrors({});
       setSuccessMessage(null);
     }
   }, [trip, isOpen]);
+
+  // Calculate duration between Start and End time in hours
+  const tripDurationHours = useMemo(() => {
+    if (!tripStartDateTime || !tripEndDateTime) return null;
+    const s = new Date(tripStartDateTime).getTime();
+    const e = new Date(tripEndDateTime).getTime();
+    if (isNaN(s) || isNaN(e) || e <= s) return null;
+    return Math.round(((e - s) / (1000 * 60 * 60)) * 10) / 10;
+  }, [tripStartDateTime, tripEndDateTime]);
+
+  // Handle manual odometer input updates
+  const handleOdometerChange = (startVal: string, endVal: string) => {
+    setStartingOdometer(startVal);
+    setEndingOdometer(endVal);
+    const s = parseFloat(startVal);
+    const e = parseFloat(endVal);
+    if (!isNaN(s) && !isNaN(e) && e >= s) {
+      const diff = Math.round((e - s) * 10) / 10;
+      setTripRunningKms(String(diff));
+      setGpsSource("odometer");
+    }
+  };
+
+  // Suggest highway route distance based on Origin and Destination
+  const handleSuggestHighwayDistance = () => {
+    const dist = getHighwayDistanceKm(fromCity, toCity);
+    if (dist !== null) {
+      setRouteEstimateStatus({
+        type: "success",
+        message: `Verified highway route between ${fromCity} and ${toCity}: ~${dist} KM (Reference)`,
+        distanceKm: dist,
+      });
+    } else {
+      setRouteEstimateStatus({
+        type: "info",
+        message: `Direct highway route between ${fromCity} and ${toCity} not found in matrix.`,
+      });
+    }
+  };
+
+  // Fetch running KMs directly from BlackBuck GPS
+  const handleFetchBlackbuckGps = async () => {
+    const v = vehicles.find((x) => x.id === vehicleId);
+    const vehNum = v?.vehicle_number || trip?.vehicle_number || "";
+    if (!vehNum) {
+      setGpsStatus({ type: "error", message: "Please select a vehicle first." });
+      return;
+    }
+    if (!tripStartDateTime || !tripEndDateTime) {
+      setGpsStatus({
+        type: "error",
+        message: "Please specify both Start and End Date & Time.",
+      });
+      return;
+    }
+    const s = new Date(tripStartDateTime).getTime();
+    const e = new Date(tripEndDateTime).getTime();
+    if (isNaN(s) || isNaN(e) || e <= s) {
+      setGpsStatus({
+        type: "error",
+        message: "Trip End Date/Time must be later than Start Date/Time.",
+      });
+      return;
+    }
+
+    setIsFetchingGps(true);
+    setGpsStatus({
+      type: "info",
+      message: `Connecting to BlackBuck GPS tracking for ${vehNum}...`,
+    });
+
+    try {
+      const res = await fetch("/api/gps/blackbuck/distance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vehicleNumber: vehNum,
+          startDateTime: tripStartDateTime,
+          endDateTime: tripEndDateTime,
+          fromCity,
+          toCity,
+          startingOdometer: startingOdometer ? Number(startingOdometer) : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fetch GPS distance");
+
+      if (data.success && data.distance_km !== undefined) {
+        setTripRunningKms(String(data.distance_km));
+        setGpsSource("blackbuck");
+        if (data.starting_odometer && !startingOdometer) {
+          setStartingOdometer(String(data.starting_odometer));
+        }
+        if (data.ending_odometer && !endingOdometer) {
+          setEndingOdometer(String(data.ending_odometer));
+        }
+        setGpsStatus({
+          type: "success",
+          message:
+            data.message ||
+            `Detected ${data.distance_km} KM from BlackBuck GPS (${data.duration_hours} hrs)`,
+        });
+      } else if (data.not_configured) {
+        setGpsStatus({
+          type: "error",
+          message:
+            data.message ||
+            "BlackBuck API key not configured. Click 'GPS Settings' to configure credentials.",
+        });
+      }
+    } catch (err: any) {
+      setGpsStatus({
+        type: "error",
+        message: err.message || "Failed to retrieve GPS distance from BlackBuck.",
+      });
+    } finally {
+      setIsFetchingGps(false);
+    }
+  };
 
   if (!isOpen || !trip) return null;
 
@@ -157,9 +341,16 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
     numManualBeta
   );
 
+  // Halting Fare = Halting days * Halting charge/day
+  const numHaltingDays = parseFloat(haltingDays) || 0;
+  const numHaltingChargePerDay = parseFloat(haltingChargePerDay) || 0;
+  const haltingFare = numHaltingDays * numHaltingChargePerDay;
+
   // Derived Advance & Balance Calculation
+  // Formula: balance amount = trip fare - broker fare - advance received + halting fare
   const numAdvanceReceived = parseFloat(advanceReceived) || 0;
-  const balanceAmount = numTripFare - numAdvanceReceived;
+  const balanceAmount =
+    numTripFare - numBrokerFare - numAdvanceReceived + haltingFare;
 
   // Derived Driver Payment & Remaining Calculation
   const numAmountPaidToDriver = parseFloat(amountPaidToDriver) || 0;
@@ -185,6 +376,7 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
 
   const calculatedNetProfit = calculateTripNetProfit({
     tripFare: numTripFare,
+    haltingFare: haltingFare,
     brokerFare: numBrokerFare,
     driverBeta: calculatedDriverBeta,
     loadingExpense: numLoading,
@@ -255,6 +447,12 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
         driver_name: selectedDriver?.name || trip.driver_name,
         transporter_name: transporterName.trim(),
         trip_date: tripDate,
+        trip_start_datetime: tripStartDateTime || undefined,
+        trip_end_datetime: tripEndDateTime || undefined,
+        gps_source: gpsSource,
+        gps_distance_km: tripRunningKms ? Number(tripRunningKms) : undefined,
+        starting_odometer: startingOdometer ? Number(startingOdometer) : undefined,
+        ending_odometer: endingOdometer ? Number(endingOdometer) : undefined,
         from_state: fromState.trim(),
         from_city: fromCity.trim(),
         to_state: toState.trim(),
@@ -264,6 +462,9 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
         broker_fare: numBrokerFare,
         driver_beta: calculatedDriverBeta,
         driver_beta_type: driverBetaType,
+        halting_days: numHaltingDays,
+        halting_charge_per_day: numHaltingChargePerDay,
+        halting_fare: haltingFare,
         diesel_litres: numDieselLitres,
         diesel_expense: numDieselExpense,
         mileage: mileageInfo.mileage,
@@ -428,13 +629,174 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
                 <input
                   type="date"
                   value={tripDate}
-                  onChange={(e) => setTripDate(e.target.value)}
+                  onChange={(e) => {
+                    const newDate = e.target.value;
+                    setTripDate(newDate);
+                    if (newDate && !tripStartDateTime) {
+                      setTripStartDateTime(`${newDate}T06:00`);
+                      setTripEndDateTime(`${newDate}T20:00`);
+                    }
+                  }}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {errors.date && (
                   <p className="text-xs text-red-600 mt-1">{errors.date}</p>
                 )}
               </div>
+            </div>
+
+            {/* Trip Start & End Timestamps with BlackBuck GPS Integration */}
+            <div className="mt-4 pt-3 border-t border-slate-200/80">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+                {/* Trip Start Date & Time */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Trip Start Date &amp; Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={tripStartDateTime}
+                    onChange={(e) => setTripStartDateTime(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-0.5">Departure timestamp</p>
+                </div>
+
+                {/* Trip End Date & Time */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Trip End Date &amp; Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={tripEndDateTime}
+                    onChange={(e) => setTripEndDateTime(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-0.5">Arrival timestamp</p>
+                </div>
+              </div>
+
+              {/* BlackBuck GPS Quick-Sync Bar */}
+              <div className="p-3.5 rounded-xl bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-400 flex items-center justify-center">
+                    <Radio className="w-4 h-4 animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span>BlackBuck GPS KM Sync</span>
+                      {tripDurationHours !== null && (
+                        <span className="text-[11px] font-normal text-amber-300">
+                          ({tripDurationHours} hrs duration)
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Query GPS device odometer difference for this vehicle &amp; timeframe
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowBlackbuckSettings(true)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition cursor-pointer"
+                    title="Configure BlackBuck API credentials"
+                  >
+                    <Settings className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Settings</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSuggestHighwayDistance}
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition cursor-pointer"
+                    title="Check highway route distance"
+                  >
+                    <Compass className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Highway Distance</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleFetchBlackbuckGps}
+                    disabled={isFetchingGps}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs tracking-wide transition cursor-pointer disabled:opacity-50"
+                  >
+                    {isFetchingGps ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Detecting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-3.5 h-3.5 fill-slate-950" />
+                        <span>Fetch GPS KM</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Status Message */}
+              {gpsStatus.type && (
+                <div
+                  className={`mt-2 p-2.5 rounded-lg text-xs flex items-start gap-2 ${
+                    gpsStatus.type === "success"
+                      ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
+                      : gpsStatus.type === "error"
+                      ? "bg-rose-50 border border-rose-200 text-rose-800"
+                      : "bg-blue-50 border border-blue-200 text-blue-800"
+                  }`}
+                >
+                  {gpsStatus.type === "success" ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  ) : gpsStatus.type === "error" ? (
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <Loader2 className="w-4 h-4 text-blue-600 animate-spin shrink-0 mt-0.5" />
+                  )}
+                  <div className="flex-1">
+                    <span>{gpsStatus.message}</span>
+                    {gpsStatus.type === "error" && (
+                      <div className="mt-1">
+                        <button
+                          type="button"
+                          onClick={() => setShowBlackbuckSettings(true)}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 underline hover:text-rose-900 cursor-pointer"
+                        >
+                          <Settings className="w-3 h-3" />
+                          Configure BlackBuck API Credentials
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Highway Route Distance Suggestion */}
+              {routeEstimateStatus.message && (
+                <div className="mt-2 p-2.5 rounded-lg bg-slate-800 text-slate-200 text-xs flex items-center justify-between gap-2 border border-slate-700">
+                  <div className="flex items-center gap-1.5">
+                    <Route className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>{routeEstimateStatus.message}</span>
+                  </div>
+                  {routeEstimateStatus.distanceKm && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTripRunningKms(String(routeEstimateStatus.distanceKm));
+                        setGpsSource("manual");
+                      }}
+                      className="shrink-0 px-2 py-0.5 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px]"
+                    >
+                      Apply {routeEstimateStatus.distanceKm} KM
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -611,19 +973,94 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
               <span>3. Distance &amp; Fuel Performance</span>
             </h3>
 
+            {/* Odometer Inputs (Start & End) */}
+            <div className="p-3.5 mb-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5">
+                  <Gauge className="w-4 h-4 text-slate-600" />
+                  <span className="text-xs font-bold uppercase tracking-wide text-slate-700">
+                    Odometer Readings (Dashboard / App)
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-500">
+                  Auto-calculates distance difference
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    Starting Odometer (KM)
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    placeholder="e.g. 142050"
+                    value={startingOdometer}
+                    onChange={(e) => handleOdometerChange(e.target.value, endingOdometer)}
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    Ending Odometer (KM)
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    placeholder="e.g. 142560"
+                    value={endingOdometer}
+                    onChange={(e) => handleOdometerChange(startingOdometer, e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {startingOdometer && endingOdometer && Number(endingOdometer) >= Number(startingOdometer) && (
+                <div className="mt-2 text-xs text-emerald-700 flex items-center gap-1.5 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>
+                    Odometer Distance:{" "}
+                    <strong className="font-mono">
+                      {Math.round((Number(endingOdometer) - Number(startingOdometer)) * 10) / 10} KM
+                    </strong>
+                  </span>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Trip Running KMs */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Trip Running KMs <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Trip Running KMs <span className="text-red-500">*</span>
+                  </label>
+                  {gpsSource === "blackbuck" ? (
+                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      ✓ BlackBuck GPS
+                    </span>
+                  ) : gpsSource === "odometer" ? (
+                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 border border-blue-300">
+                      ✓ Odometer
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-400">Manual Entry</span>
+                  )}
+                </div>
                 <input
                   type="number"
                   step="any"
                   min="0"
                   placeholder="e.g. 450"
                   value={tripRunningKms}
-                  onChange={(e) => setTripRunningKms(e.target.value)}
+                  onChange={(e) => {
+                    setTripRunningKms(e.target.value);
+                    setGpsSource("manual");
+                  }}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {errors.tripRunningKms && (
@@ -843,6 +1280,60 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
               </div>
             </div>
 
+            {/* Halting Details (Days, Charge/Day & Halting Fare) */}
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-purple-900 bg-purple-100 px-2 py-0.5 rounded-md inline-block mb-3">
+                Halting &amp; Detention Details
+              </span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 items-end">
+                {/* Halting days */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Halting days
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    placeholder="0"
+                    value={haltingDays}
+                    onChange={(e) => setHaltingDays(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                {/* Halting charge / day */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Halting charge / day (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    placeholder="0"
+                    value={haltingChargePerDay}
+                    onChange={(e) => setHaltingChargePerDay(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                {/* Halting fare = Halting days * Halting charge/day */}
+                <div>
+                  <label className="block text-xs font-semibold text-purple-900 mb-1">
+                    Halting fare (₹)
+                  </label>
+                  <div className="px-3 py-1.5 rounded-xl bg-purple-50 border border-purple-300 flex items-center justify-between text-xs">
+                    <span className="text-purple-800 font-medium">Days × Charge/day:</span>
+                    <span className="font-mono font-black text-purple-950">
+                      {formatINR(haltingFare)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Advance Received & Balance Collection */}
             <div className="mt-4 pt-4 border-t border-slate-200">
               <span className="text-[11px] font-bold uppercase tracking-wider text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md inline-block mb-3">
@@ -882,7 +1373,9 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
                     Balance Amount (₹)
                   </label>
                   <div className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300 flex items-center justify-between text-xs">
-                    <span className="text-amber-800 font-medium">Trip Fare - Advance:</span>
+                    <span className="text-amber-800 font-medium" title="Trip Fare - Broker Fare - Advance Received + Halting Fare">
+                      Fare-Broker-Adv+Halt:
+                    </span>
                     <span className="font-mono font-black text-amber-950">
                       {formatINR(balanceAmount)}
                     </span>
@@ -1005,6 +1498,12 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* BlackBuck API & GPS Settings Modal */}
+      <BlackBuckSettingsModal
+        isOpen={showBlackbuckSettings}
+        onClose={() => setShowBlackbuckSettings(false)}
+      />
     </div>
   );
 };

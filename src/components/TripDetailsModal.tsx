@@ -122,12 +122,16 @@ export const TripDetailsModal: React.FC<TripDetailsModalProps> = ({
 
           {/* Distance & Fuel Performance Stats */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
-              Distance &amp; Fuel Performance
-            </h4>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Distance &amp; Fuel Performance
+              </h4>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="p-3 rounded-xl bg-blue-50 border border-blue-200">
-                <div className="text-xs text-blue-700 font-semibold">Trip Running KMs</div>
+                <div className="text-xs text-blue-700 font-semibold flex items-center justify-between">
+                  <span>Trip Running KMs</span>
+                </div>
                 <div className="text-sm font-mono font-black text-blue-950 mt-0.5">
                   {trip.trip_running_kms} KM
                 </div>
@@ -172,6 +176,17 @@ export const TripDetailsModal: React.FC<TripDetailsModalProps> = ({
                   {formatINR(trip.broker_fare)}
                 </span>
               </div>
+
+              {(Boolean(trip.halting_days) || Boolean(trip.halting_fare)) && (
+                <div className="flex items-center justify-between p-3 bg-purple-50/60">
+                  <span className="text-purple-900 font-medium">
+                    Halting Fare ({trip.halting_days || 0} days @ {formatINR(trip.halting_charge_per_day || 0)}/day)
+                  </span>
+                  <span className="font-mono font-bold text-purple-800">
+                    +{formatINR(trip.halting_fare || 0)}
+                  </span>
+                </div>
+              )}
 
               <div className="flex items-center justify-between p-3">
                 <span className="text-slate-600">
@@ -253,12 +268,22 @@ export const TripDetailsModal: React.FC<TripDetailsModalProps> = ({
                   )}
                 </span>
               </div>
+              {(Boolean(trip.halting_days) || Boolean(trip.halting_fare)) && (
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-purple-800 font-medium">Halting ({trip.halting_days || 0}d @ {formatINR(trip.halting_charge_per_day || 0)}):</span>
+                  <span className="font-mono font-bold text-purple-900">
+                    +{formatINR(trip.halting_fare || 0)}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between items-center text-xs pt-1 border-t border-amber-200">
-                <span className="text-slate-700 font-semibold">Balance Amount:</span>
+                <span className="text-slate-700 font-semibold" title="Trip Fare - Broker Fare - Advance Received + Halting Fare">
+                  Balance Amount:
+                </span>
                 <span className="font-mono font-black text-amber-900">
                   {formatINR(
                     trip.balance_amount ??
-                      trip.trip_fare - (trip.advance_received ?? 0)
+                      trip.trip_fare - (trip.broker_fare || 0) - (trip.advance_received ?? 0) + (trip.halting_fare ?? 0)
                   )}
                   {trip.balance_received_date && (
                     <span className="text-[10px] text-slate-400 font-normal ml-1">

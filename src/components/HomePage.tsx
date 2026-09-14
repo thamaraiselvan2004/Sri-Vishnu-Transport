@@ -12,10 +12,15 @@ import {
   ShieldCheck,
   ChevronRight,
   Edit3,
+  Eye,
+  Clock,
+  Search,
+  X,
 } from "lucide-react";
 import { Trip, Vehicle, MaintenanceRecord, Driver } from "../types";
 import { formatINR, formatIndianDate } from "../lib/calculations";
 import { EditTripModal } from "./EditTripModal";
+import { TripDetailsModal } from "./TripDetailsModal";
 
 interface HomePageProps {
   onNavigate: (tab: string, vehicleId?: string) => void;
@@ -35,8 +40,33 @@ export const HomePage: React.FC<HomePageProps> = ({
   onUpdateTrip,
 }) => {
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
+  const [inspectingTrip, setInspectingTrip] = useState<Trip | null>(null);
+  const [viewAllTrips, setViewAllTrips] = useState<boolean>(false);
+  const [selectedVehicleFilter, setSelectedVehicleFilter] = useState<string>("all");
+  const [tripSearch, setTripSearch] = useState<string>("");
+
   const activeVehicles = vehicles.filter((v) => v.active);
-  const recentTrips = trips.slice(0, 3);
+
+  // Filtered trips based on vehicle filter and search
+  const filteredTrips = trips.filter((t) => {
+    if (selectedVehicleFilter !== "all" && t.vehicle_id !== selectedVehicleFilter) {
+      return false;
+    }
+    if (tripSearch.trim()) {
+      const q = tripSearch.toLowerCase().trim();
+      return (
+        t.from_city.toLowerCase().includes(q) ||
+        t.to_city.toLowerCase().includes(q) ||
+        (t.vehicle_number || "").toLowerCase().includes(q) ||
+        (t.driver_name || "").toLowerCase().includes(q) ||
+        t.transporter_name.toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
+
+  // Display all or recent 3 trips
+  const displayedTrips = viewAllTrips ? filteredTrips : filteredTrips.slice(0, 3);
 
   // Quick total revenue and total profit calculations
   const totalRevenue = trips.reduce((sum, t) => sum + (t.trip_fare || 0), 0);
@@ -213,15 +243,44 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           <div className="space-y-2.5">
+            {/* Show All Vehicles button */}
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedVehicleFilter("all");
+              }}
+              className={`w-full flex items-center justify-between p-2.5 rounded-xl border transition text-left text-xs font-semibold ${
+                selectedVehicleFilter === "all"
+                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                  : "bg-slate-50 text-slate-700 hover:bg-blue-50/50 border-slate-200"
+              }`}
+            >
+              <span>All Vehicles ({trips.length} Trips)</span>
+              <span className="text-[11px] font-mono opacity-90">Show All</span>
+            </button>
+
             {activeVehicles.map((veh) => {
               const vehTrips = trips.filter((t) => t.vehicle_id === veh.id);
               const vehProfit = vehTrips.reduce((s, t) => s + (t.net_profit || 0), 0);
+              const isSelected = selectedVehicleFilter === veh.id;
+
               return (
                 <button
                   key={veh.id}
                   id={`home-vehicle-select-${veh.id}`}
-                  onClick={() => onNavigate("reports", veh.id)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-blue-400 bg-slate-50/50 hover:bg-blue-50/40 transition text-left group"
+                  onClick={() => {
+                    if (isSelected) {
+                      setSelectedVehicleFilter("all");
+                    } else {
+                      setSelectedVehicleFilter(veh.id);
+                      setViewAllTrips(true);
+                    }
+                  }}
+                  className={`w-full flex items-center justify-between p-3 rounded-xl border transition text-left group ${
+                    isSelected
+                      ? "border-blue-600 bg-blue-50/80 shadow-xs ring-2 ring-blue-500/20"
+                      : "border-slate-100 hover:border-blue-400 bg-slate-50/50 hover:bg-blue-50/40"
+                  }`}
                 >
                   <div>
                     <div className="text-sm font-bold text-slate-800 font-mono group-hover:text-blue-700">
@@ -235,7 +294,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                     <span className="text-xs font-semibold text-emerald-700 font-mono">
                       {formatINR(vehProfit)}
                     </span>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                    <span className="text-[11px] text-blue-600 font-medium underline">
+                      {isSelected ? "Active" : "View"}
+                    </span>
                   </div>
                 </button>
               );
@@ -243,117 +304,216 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         </div>
 
-        {/* Recent Trips Section */}
+        {/* Trips Section */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-emerald-600" />
-              <span>Recent Completed Trips</span>
-            </h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-600" />
+                <span>
+                  {viewAllTrips ? "All Completed Trips" : "Recent Completed Trips"}
+                </span>
+                <span className="text-xs font-normal text-slate-500">
+                  ({displayedTrips.length} of {filteredTrips.length})
+                </span>
+              </h3>
+              {selectedVehicleFilter !== "all" && (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs text-blue-700 font-medium bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                    Filtered by vehicle:{" "}
+                    <strong className="font-mono">
+                      {vehicles.find((v) => v.id === selectedVehicleFilter)?.vehicle_number || selectedVehicleFilter}
+                    </strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedVehicleFilter("all")}
+                    className="text-xs text-slate-500 hover:text-slate-800 underline"
+                  >
+                    Clear Filter
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* View All toggle button - directly shows each trip instead of redirecting */}
             <button
-              onClick={() => onNavigate("reports")}
-              className="text-xs text-blue-600 hover:text-blue-700 font-semibold"
+              id="home-view-all-trips-btn"
+              type="button"
+              onClick={() => setViewAllTrips(!viewAllTrips)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition shadow-xs"
             >
-              View All
+              <span>
+                {viewAllTrips
+                  ? "Show Recent (3)"
+                  : `View All (${filteredTrips.length} Trips)`}
+              </span>
+              <ChevronRight
+                className={`w-3.5 h-3.5 transition-transform ${
+                  viewAllTrips ? "rotate-90" : ""
+                }`}
+              />
             </button>
           </div>
 
-          {recentTrips.length === 0 ? (
+          {/* Quick search input when viewing all trips */}
+          {viewAllTrips && (
+            <div className="mb-4 relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search by route, driver, vehicle, transporter..."
+                value={tripSearch}
+                onChange={(e) => setTripSearch(e.target.value)}
+                className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {tripSearch && (
+                <button
+                  type="button"
+                  onClick={() => setTripSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
+
+          {displayedTrips.length === 0 ? (
             <div className="text-center py-10 text-slate-500 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">
-              No trips recorded yet. Click &quot;Add Trip&quot; to log the first trip.
+              {trips.length === 0
+                ? "No trips recorded yet. Click 'Add Trip' to log the first trip."
+                : "No trips found matching the selected filter."}
             </div>
           ) : (
-            <div className="space-y-3">
-              {recentTrips.map((trip) => (
-                <div
-                  key={trip.id}
-                  className="p-4 rounded-xl border border-slate-200/90 bg-slate-50/40 hover:bg-white hover:shadow-xs transition"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">
-                          {trip.vehicle_number}
-                        </span>
-                        <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {formatIndianDate(trip.trip_date)}
-                        </span>
-                      </div>
-                      <div className="text-sm font-semibold text-slate-900 mt-1 flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                        <span>
-                          {trip.from_city} &rarr; {trip.to_city}
-                        </span>
-                      </div>
-                      <div className="text-xs text-slate-500 mt-0.5">
-                        Driver: <span className="font-medium text-slate-700">{trip.driver_name}</span> &bull; Transporter: {trip.transporter_name}
-                      </div>
-                    </div>
+            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+              {displayedTrips.map((trip) => {
+                const balanceAmt =
+                  trip.balance_amount !== undefined && trip.balance_amount !== null
+                    ? Number(trip.balance_amount)
+                    : (Number(trip.trip_fare) || 0) -
+                      (Number(trip.broker_fare) || 0) -
+                      (Number(trip.advance_received) || 0) +
+                      (Number(trip.halting_fare) || 0);
 
-                    <div className="flex sm:flex-col items-baseline sm:items-end justify-between border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200 gap-2">
-                      <div className="text-right">
-                        <div className="text-xs text-slate-500">
-                          Fare: <span className="font-semibold text-slate-800 font-mono">{formatINR(trip.trip_fare)}</span>
+                return (
+                  <div
+                    key={trip.id}
+                    className="p-4 rounded-xl border border-slate-200/90 bg-slate-50/40 hover:bg-white hover:shadow-xs transition"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">
+                            {trip.vehicle_number}
+                          </span>
+                          <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {formatIndianDate(trip.trip_date)}
+                          </span>
+                          {trip.halting_days ? (
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              Halting: {trip.halting_days}d ({formatINR(trip.halting_fare || 0)})
+                            </span>
+                          ) : null}
                         </div>
-                        <div className="text-sm font-bold text-emerald-700 font-mono">
-                          Profit: {formatINR(trip.net_profit)}
+                        <div className="text-sm font-semibold text-slate-900 mt-1 flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span>
+                            {trip.from_city} &rarr; {trip.to_city}
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          Driver: <span className="font-medium text-slate-700">{trip.driver_name}</span> &bull; Transporter: {trip.transporter_name}
                         </div>
                       </div>
 
-                      <button
-                        id={`home-edit-trip-${trip.id}`}
-                        type="button"
-                        onClick={() => setEditingTrip(trip)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                        <span>Edit</span>
-                      </button>
-                    </div>
-                  </div>
+                      <div className="flex sm:flex-col items-baseline sm:items-end justify-between border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200 gap-2">
+                        <div className="text-right">
+                          <div className="text-xs text-slate-500">
+                            Fare: <span className="font-semibold text-slate-800 font-mono">{formatINR(trip.trip_fare)}</span>
+                          </div>
+                          <div className="text-sm font-bold text-emerald-700 font-mono">
+                            Profit: {formatINR(trip.net_profit)}
+                          </div>
+                        </div>
 
-                  {/* Advance Received & Balance Amount Information */}
-                  <div className="mt-3 pt-2.5 border-t border-slate-200/80 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    <div className="flex items-center justify-between sm:justify-start gap-2 bg-white sm:bg-transparent px-2.5 py-1 sm:p-0 rounded-lg border sm:border-0 border-slate-200">
-                      <span className="text-slate-500">Advance Received:</span>
-                      <span className="font-mono font-bold text-slate-800">
-                        {formatINR(trip.advance_received ?? 0)}
-                      </span>
-                      {trip.advance_received_date && (
-                        <span className="text-[11px] text-slate-400 font-mono">
-                          ({formatIndianDate(trip.advance_received_date)})
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setInspectingTrip(trip)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 transition shadow-2xs"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Details</span>
+                          </button>
+
+                          <button
+                            id={`home-edit-trip-${trip.id}`}
+                            type="button"
+                            onClick={() => setEditingTrip(trip)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Advance Received & Balance Amount Information */}
+                    <div className="mt-3 pt-2.5 border-t border-slate-200/80 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      <div className="flex items-center justify-between sm:justify-start gap-2 bg-white sm:bg-transparent px-2.5 py-1 sm:p-0 rounded-lg border sm:border-0 border-slate-200">
+                        <span className="text-slate-500">Advance Received:</span>
+                        <span className="font-mono font-bold text-slate-800">
+                          {formatINR(trip.advance_received ?? 0)}
                         </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between sm:justify-end gap-2 bg-white sm:bg-transparent px-2.5 py-1 sm:p-0 rounded-lg border sm:border-0 border-slate-200">
-                      <span className="text-slate-500">Balance Amount:</span>
-                      <span
-                        className={`font-mono font-black px-2 py-0.5 rounded-md ${
-                          (trip.balance_amount ?? (trip.trip_fare - (trip.advance_received ?? 0))) > 0
-                            ? "bg-amber-100 text-amber-900 border border-amber-300"
-                            : "bg-emerald-100 text-emerald-900 border border-emerald-300"
-                        }`}
-                      >
-                        {formatINR(
-                          trip.balance_amount ??
-                            trip.trip_fare - (trip.advance_received ?? 0)
+                        {trip.advance_received_date && (
+                          <span className="text-[11px] text-slate-400 font-mono">
+                            ({formatIndianDate(trip.advance_received_date)})
+                          </span>
                         )}
-                      </span>
-                      {trip.balance_received_date && (
-                        <span className="text-[11px] text-slate-400 font-mono">
-                          ({formatIndianDate(trip.balance_received_date)})
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-2 bg-white sm:bg-transparent px-2.5 py-1 sm:p-0 rounded-lg border sm:border-0 border-slate-200">
+                        <span className="text-slate-500">Balance Amount:</span>
+                        <span
+                          className={`font-mono font-black px-2 py-0.5 rounded-md ${
+                            balanceAmt > 0
+                              ? "bg-amber-100 text-amber-900 border border-amber-300"
+                              : "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                          }`}
+                        >
+                          {formatINR(balanceAmt)}
                         </span>
-                      )}
+                        {trip.balance_received_date && (
+                          <span className="text-[11px] text-slate-400 font-mono">
+                            ({formatIndianDate(trip.balance_received_date)})
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </div>
+
+      {/* Trip Details Modal */}
+      <TripDetailsModal
+        trip={inspectingTrip}
+        isOpen={!!inspectingTrip}
+        onClose={() => setInspectingTrip(null)}
+        onEdit={() => {
+          if (inspectingTrip) {
+            setEditingTrip(inspectingTrip);
+            setInspectingTrip(null);
+          }
+        }}
+      />
 
       {/* Edit Saved Trip Modal */}
       <EditTripModal

@@ -46,6 +46,27 @@ export function formatIndianDate(dateStr: string | null | undefined): string {
 }
 
 /**
+ * Format a datetime string (ISO or YYYY-MM-DDTHH:mm) into Indian readable format e.g. '14 Sep 2026, 06:30 AM'
+ */
+export function formatIndianDateTime(dateTimeStr: string | null | undefined): string {
+  if (!dateTimeStr) return "-";
+  try {
+    const date = new Date(dateTimeStr);
+    if (isNaN(date.getTime())) return dateTimeStr;
+    return date.toLocaleString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return dateTimeStr;
+  }
+}
+
+/**
  * Calculate Driver Beta
  */
 export function calculateDriverBeta(
@@ -97,11 +118,42 @@ export function calculateMileage(
 }
 
 /**
+ * Calculate Halting Fare
+ * Formula: Halting days * Halting charge/day
+ */
+export function calculateHaltingFare(
+  haltingDays: number,
+  haltingChargePerDay: number
+): number {
+  const days = Number(haltingDays) || 0;
+  const charge = Number(haltingChargePerDay) || 0;
+  return Math.max(0, days * charge);
+}
+
+/**
+ * Calculate Balance Amount
+ * Formula: trip fare - broker fare - advance received + halting fare
+ */
+export function calculateBalanceAmount(
+  tripFare: number,
+  brokerFare: number,
+  advanceReceived: number,
+  haltingFare: number
+): number {
+  const fare = Number(tripFare) || 0;
+  const broker = Number(brokerFare) || 0;
+  const adv = Number(advanceReceived) || 0;
+  const halting = Number(haltingFare) || 0;
+  return fare - broker - adv + halting;
+}
+
+/**
  * Calculate Net Profit for a single trip
- * Net Profit = Trip Fare - Broker Fare - Driver Beta - Loading Expense - Unloading Expense - Toll Charges - Diesel Expense - Other Expenses
+ * Net Profit = (Trip Fare + Halting Fare) - (Broker Fare + Driver Beta + Loading Expense + Unloading Expense + Toll Charges + Diesel Expense + Other Expenses)
  */
 export function calculateTripNetProfit(params: {
   tripFare: number;
+  haltingFare?: number;
   brokerFare: number;
   driverBeta: number;
   loadingExpense: number;
@@ -111,6 +163,7 @@ export function calculateTripNetProfit(params: {
   otherExpenses: number;
 }): number {
   const fare = Number(params.tripFare) || 0;
+  const halting = Number(params.haltingFare) || 0;
   const broker = Number(params.brokerFare) || 0;
   const beta = Number(params.driverBeta) || 0;
   const loading = Number(params.loadingExpense) || 0;
@@ -119,7 +172,7 @@ export function calculateTripNetProfit(params: {
   const diesel = Number(params.dieselExpense) || 0;
   const other = Number(params.otherExpenses) || 0;
 
-  return fare - (broker + beta + loading + unloading + toll + diesel + other);
+  return (fare + halting) - (broker + beta + loading + unloading + toll + diesel + other);
 }
 
 /**
@@ -514,6 +567,7 @@ export function calculateDriverStats(
 
   let overallRunningKms = 0;
   let overallDriverBeta = 0;
+  let overallHaltingDays = 0;
   let overallTotalDieselLitres = 0;
   let overallAmountPaidToDriver = 0;
   let overallRemainingAmountToDriver = 0;
@@ -523,6 +577,7 @@ export function calculateDriverStats(
   for (const t of filteredTrips) {
     const kms = Number(t.trip_running_kms) || 0;
     const beta = Number(t.driver_beta) || 0;
+    const halting = Number(t.halting_days) || 0;
     const dieselL = Number(t.diesel_litres) || 0;
     const paid = Number(t.amount_paid_to_driver) || 0;
 
@@ -534,6 +589,7 @@ export function calculateDriverStats(
 
     overallRunningKms += kms;
     overallDriverBeta += beta;
+    overallHaltingDays += halting;
     overallTotalDieselLitres += dieselL;
     overallAmountPaidToDriver += paid;
     overallRemainingAmountToDriver += remaining;
@@ -553,6 +609,7 @@ export function calculateDriverStats(
     totalTrips: filteredTrips.length,
     overallRunningKms,
     overallDriverBeta,
+    overallHaltingDays,
     overallTotalDieselLitres: Number(overallTotalDieselLitres.toFixed(1)),
     overallMileage,
     overallAmountPaidToDriver,

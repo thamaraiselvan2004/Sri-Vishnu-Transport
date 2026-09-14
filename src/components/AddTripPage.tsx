@@ -13,6 +13,7 @@ import {
   Plus,
   ArrowLeft,
   Calculator,
+  HelpCircle,
 } from "lucide-react";
 import { Vehicle, Driver, Trip, DriverBetaType } from "../types";
 import {
@@ -75,7 +76,7 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
   const [showToStateDropdown, setShowToStateDropdown] = useState(false);
   const [showToCityDropdown, setShowToCityDropdown] = useState(false);
 
-  // Running KMs (Manually entered by user)
+  // Running KMs
   const [tripRunningKms, setTripRunningKms] = useState<string>("");
 
   // Fares
@@ -86,8 +87,12 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
   const [manualDriverBeta, setManualDriverBeta] = useState<string>("");
 
   // Fuel
-  const [dieselExpense, setDieselExpense] = useState<string>("");
-  const [dieselLitres, setDieselLitres] = useState<string>("");
+  const [dieselExpense, setDieselExpense] = useState<string>("0");
+  const [dieselLitres, setDieselLitres] = useState<string>("0");
+
+  // Halting Details
+  const [haltingDays, setHaltingDays] = useState<string>("0");
+  const [haltingChargePerDay, setHaltingChargePerDay] = useState<string>("0");
 
   // Advance & Balance Details
   const [advanceReceived, setAdvanceReceived] = useState<string>("");
@@ -147,9 +152,16 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
     numManualBeta
   );
 
+  // Halting Fare = Halting days * Halting charge/day
+  const numHaltingDays = parseFloat(haltingDays) || 0;
+  const numHaltingChargePerDay = parseFloat(haltingChargePerDay) || 0;
+  const haltingFare = numHaltingDays * numHaltingChargePerDay;
+
   // Derived Advance & Balance Calculation
+  // Formula: balance amount = trip fare - broker fare - advance received + halting fare
   const numAdvanceReceived = parseFloat(advanceReceived) || 0;
-  const balanceAmount = numTripFare - numAdvanceReceived;
+  const balanceAmount =
+    numTripFare - numBrokerFare - numAdvanceReceived + haltingFare;
 
   // Derived Driver Payment & Remaining Calculation
   const numAmountPaidToDriver = parseFloat(amountPaidToDriver) || 0;
@@ -166,6 +178,7 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
 
   const netProfit = calculateTripNetProfit({
     tripFare: numTripFare,
+    haltingFare: haltingFare,
     brokerFare: numBrokerFare,
     driverBeta: calculatedDriverBeta,
     loadingExpense: numLoading,
@@ -341,6 +354,9 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
         broker_fare: numBrokerFare,
         driver_beta: calculatedDriverBeta,
         driver_beta_type: driverBetaType,
+        halting_days: numHaltingDays,
+        halting_charge_per_day: numHaltingChargePerDay,
+        halting_fare: haltingFare,
         from_state: fromState,
         from_city: fromCity,
         to_state: toState,
@@ -874,10 +890,10 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900">
-                D. Trip Date &amp; Trip Running KMs
+                D. Trip Date &amp; Running Distance
               </h2>
               <p className="text-xs text-slate-500">
-                Enter trip date and total distance travelled in kilometers (manual entry)
+                Specify the trip date and total actual running kilometers
               </p>
             </div>
           </div>
@@ -891,57 +907,66 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
               >
                 Trip Date <span className="text-red-500">*</span>
               </label>
-              <input
-                id="trip-date-input"
-                type="date"
-                value={tripDate}
-                onChange={(e) => setTripDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div className="relative">
+                <input
+                  id="trip-date-input"
+                  type="date"
+                  value={tripDate}
+                  onChange={(e) => setTripDate(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
               {errors.tripDate && (
                 <p className="text-xs text-red-600 mt-1">{errors.tripDate}</p>
               )}
             </div>
 
-            {/* Trip Running KMs (Manually entered by user) */}
+            {/* Running KMs Input */}
             <div>
-              <label
-                htmlFor="trip-running-kms-input"
-                className="block text-sm font-semibold text-slate-700 mb-1.5"
-              >
-                Trip Running KMs <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="trip-running-kms-input"
-                type="number"
-                step="any"
-                min="0"
-                placeholder="e.g. 450"
-                value={tripRunningKms}
-                onChange={(e) => setTripRunningKms(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  htmlFor="trip-running-kms-input"
+                  className="block text-sm font-semibold text-slate-700"
+                >
+                  Trip Running KMs <span className="text-red-500">*</span>
+                </label>
+              </div>
+              <div className="relative">
+                <input
+                  id="trip-running-kms-input"
+                  type="number"
+                  step="any"
+                  min="0"
+                  placeholder="e.g. 450"
+                  value={tripRunningKms}
+                  onChange={(e) => setTripRunningKms(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                  KM
+                </span>
+              </div>
               {errors.tripRunningKms && (
                 <p className="text-xs text-red-600 mt-1">
                   {errors.tripRunningKms}
                 </p>
               )}
               <p className="text-xs text-slate-500 mt-1">
-                Enter total actual kilometers travelled for this route
+                Total actual kilometers travelled for this trip
               </p>
             </div>
           </div>
 
           {/* Running Distance Confirmation Banner */}
-          <div className="p-4 rounded-xl bg-blue-50/80 border border-blue-200 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-blue-50/80 border border-blue-200 flex items-center justify-between self-start">
             <div className="flex items-center gap-2">
               <Calculator className="w-5 h-5 text-blue-600" />
               <div>
                 <span className="text-xs font-bold text-blue-900 uppercase tracking-wide">
-                  Trip Running Distance:
+                  Active Trip Distance:
                 </span>
                 <p className="text-xs text-blue-700">
-                  Total distance used for fuel economy and route analytics
+                  Used for fuel economy and route analytics
                 </p>
               </div>
             </div>
@@ -1081,6 +1106,82 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
           </div>
 
           {/* ============================================================ */}
+          {/* HALTING DETAILS (DAYS, CHARGE/DAY & HALTING FARE) */}
+          {/* ============================================================ */}
+          <div className="mt-5 pt-5 border-t border-slate-200">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-purple-900 bg-purple-100 px-2.5 py-0.5 rounded-md">
+                Halting &amp; Detention Details
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+              {/* Halting days */}
+              <div>
+                <label
+                  htmlFor="halting-days-input"
+                  className="block text-xs font-bold text-slate-700 mb-1"
+                >
+                  Halting days
+                </label>
+                <input
+                  id="halting-days-input"
+                  type="number"
+                  step="any"
+                  min="0"
+                  placeholder="0"
+                  value={haltingDays}
+                  onChange={(e) => setHaltingDays(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              {/* Halting charge / day */}
+              <div>
+                <label
+                  htmlFor="halting-charge-per-day-input"
+                  className="block text-xs font-bold text-slate-700 mb-1"
+                >
+                  Halting charge / day (₹)
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold text-xs">
+                    ₹
+                  </span>
+                  <input
+                    id="halting-charge-per-day-input"
+                    type="number"
+                    step="any"
+                    min="0"
+                    placeholder="0"
+                    value={haltingChargePerDay}
+                    onChange={(e) => setHaltingChargePerDay(e.target.value)}
+                    className="w-full pl-7 pr-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+              </div>
+
+              {/* Halting fare = Halting days * Halting charge/day */}
+              <div>
+                <label className="block text-xs font-bold text-purple-900 mb-1">
+                  Halting fare (₹)
+                </label>
+                <div
+                  id="halting-fare-box"
+                  className="px-3.5 py-2 rounded-xl bg-purple-50 border border-purple-300 flex items-center justify-between"
+                >
+                  <span className="text-[11px] text-purple-800 font-semibold">
+                    Days × Charge/day:
+                  </span>
+                  <span className="font-mono font-black text-sm text-purple-950">
+                    {formatINR(haltingFare)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ============================================================ */}
           {/* ADVANCE & BALANCE COLLECTION (PARTY / TRANSPORTER) */}
           {/* ============================================================ */}
           <div className="mt-5 pt-5 border-t border-slate-200">
@@ -1132,14 +1233,14 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
                 />
               </div>
 
-              {/* Balance Amount (Trip Fare - Advance Received) */}
+              {/* Balance Amount (Trip Fare - Broker Fare - Advance Received + Halting Fare) */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Balance Amount (₹)
                 </label>
                 <div className="px-3.5 py-2 rounded-xl bg-amber-50/80 border border-amber-300 flex items-center justify-between">
-                  <span className="text-xs text-amber-800 font-semibold">
-                    Trip Fare - Advance:
+                  <span className="text-[10px] text-amber-800 font-semibold" title="Trip Fare - Broker Fare - Advance Received + Halting Fare">
+                    Fare-Broker-Adv+Halt:
                   </span>
                   <span className="font-mono font-black text-sm text-amber-950">
                     {formatINR(balanceAmount)}

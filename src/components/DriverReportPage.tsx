@@ -122,6 +122,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
         driverName: "",
         totalTrips: 0,
         overallRunningKms: 0,
+        overallHaltingDays: 0,
         overallDriverBeta: 0,
         overallTotalDieselLitres: 0,
         overallMileage: 0,
@@ -183,6 +184,8 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
       "To State",
       "Transporter",
       "Trip Running KMs",
+      "Halting Days",
+      "Halting Fare (Rs)",
       "Trip Fare (Rs)",
       "Driver Beta (Rs)",
       "Amount Paid To Driver (Rs)",
@@ -206,6 +209,8 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
       `"${t.to_state}"`,
       `"${t.transporter_name}"`,
       t.trip_running_kms,
+      t.halting_days ?? 0,
+      t.halting_fare ?? 0,
       t.trip_fare,
       t.driver_beta,
       t.amount_paid_to_driver ?? 0,
@@ -216,7 +221,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
       t.mileage,
       t.toll_charges,
       t.advance_received ?? 0,
-      t.balance_amount ?? (t.trip_fare - (t.advance_received ?? 0)),
+      t.balance_amount ?? (t.trip_fare - (t.broker_fare || 0) - (t.advance_received ?? 0) + (t.halting_fare ?? 0)),
     ]);
 
     // Add summary row
@@ -226,6 +231,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
       ["Driver Name", `"${selectedDriverName}"`],
       ["Date Range Filter", `"${fromDate || "All"} to ${toDate || "All"}"`],
       ["Overall KMs", stats.overallRunningKms],
+      ["Overall Halting Days", stats.overallHaltingDays],
       ["Overall Driver Beta (Rs)", stats.overallDriverBeta],
       ["Overall Total Diesel in Litres", stats.overallTotalDieselLitres],
       ["Overall Mileage (km/L)", stats.overallMileage],
@@ -572,6 +578,24 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
               Formula: (overall driver beta - overall amount paid to driver)
             </div>
           </div>
+
+          {/* 7. Overall Halting Days (Requested by User) */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-xs font-bold uppercase tracking-wide text-purple-900">
+                Halting Days
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                <Clock className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-purple-800 mt-2">
+              {stats.overallHaltingDays} Days
+            </div>
+            <div className="text-xs text-slate-500 mt-1">
+              Overall halting / detention days of {selectedDriverName}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -681,6 +705,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
                   <th className="py-3 px-4">Route</th>
                   <th className="py-3 px-4">Transporter</th>
                   <th className="py-3 px-4 text-right">Distance</th>
+                  <th className="py-3 px-4 text-center">Halting Days</th>
                   <th className="py-3 px-4 text-right">Driver Beta</th>
                   <th className="py-3 px-4 text-right">Paid to Driver</th>
                   <th className="py-3 px-4 text-right">Remaining Beta</th>
@@ -724,6 +749,11 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
                       </td>
                       <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
                         {trip.trip_running_kms} KM
+                      </td>
+                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                        <span className="font-mono font-bold text-xs px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-200">
+                          {trip.halting_days ?? 0} d
+                        </span>
                       </td>
                       <td className="py-3.5 px-4 text-right font-mono font-bold text-emerald-700 whitespace-nowrap">
                         {formatINR(trip.driver_beta)}
