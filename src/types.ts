@@ -9,6 +9,7 @@ export interface Driver {
   id: string;
   driver_name: string;
   active: boolean;
+  halting_amount_per_day?: number;
   created_at: string;
 }
 

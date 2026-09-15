@@ -125,6 +125,12 @@ export async function updateDriverStatus(id: string, active: boolean): Promise<v
   if (error) throw error;
 }
 
+export async function updateDriverHaltingAmount(id: string, amountPerDay: number): Promise<void> {
+  const amount = Math.max(0, Number(amountPerDay) || 0);
+  const { error } = await requireSupabase().from("drivers").update({ halting_amount_per_day: amount }).eq("id", id);
+  if (error) throw error;
+}
+
 export async function getTrips(filter?: { vehicleId?: string; driverId?: string; fromDate?: string; toDate?: string }): Promise<Trip[]> {
   const client = requireSupabase();
   let query = client.from("trips").select("*").order("trip_date", { ascending: false });

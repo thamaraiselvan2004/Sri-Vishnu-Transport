@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   User,
   Calendar,
@@ -27,6 +27,7 @@ import {
 import { EditTripModal } from "./EditTripModal";
 import { TripDetailsModal } from "./TripDetailsModal";
 import { HaltingDetailsModal } from "./HaltingDetailsModal";
+import { updateDriverHaltingAmount } from "../lib/database";
 
 interface DriverReportPageProps {
   drivers: Driver[];
@@ -79,6 +80,12 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
   const [showHaltingDetails, setShowHaltingDetails] = useState(false);
   const [showDriverPaymentDetails, setShowDriverPaymentDetails] = useState(false);
   const [showOtherExpenseDetails, setShowOtherExpenseDetails] = useState(false);
+  const [haltingAmountPerDay, setHaltingAmountPerDay] = useState(0);
+  const [savingHaltingAmount, setSavingHaltingAmount] = useState(false);
+
+  useEffect(() => {
+    setHaltingAmountPerDay(Number(selectedDriver?.halting_amount_per_day) || 0);
+  }, [selectedDriverId, selectedDriver?.halting_amount_per_day]);
 
   // Quick preset helper
   const handleQuickPreset = (preset: "all" | "thisMonth" | "last30" | "thisYear") => {
@@ -110,6 +117,25 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
   }, [drivers, selectedDriverId]);
 
   const selectedDriverName = selectedDriver?.driver_name || "";
+
+  const overallHaltingAmount = useMemo(() => {
+    return Math.max(0, Number(stats.overallHaltingDays) || 0) * Math.max(0, Number(haltingAmountPerDay) || 0);
+  }, [stats.overallHaltingDays, haltingAmountPerDay]);
+
+  const adjustedOverallDriverBeta = (Number(stats.overallDriverBeta) || 0) + overallHaltingAmount;
+
+  const saveHaltingAmountPerDay = async () => {
+    if (!selectedDriverId) return;
+    setSavingHaltingAmount(true);
+    try {
+      await updateDriverHaltingAmount(selectedDriverId, haltingAmountPerDay);
+    } catch (error) {
+      console.error("Failed to save driver halting amount/day", error);
+      alert("Could not save the driver halting amount. Please check your database setup.");
+    } finally {
+      setSavingHaltingAmount(false);
+    }
+  };
 
   // Calculate driver-specific metrics strictly matching the selected driver
   const dateRange = useMemo(() => {
@@ -236,7 +262,9 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
       ["Date Range Filter", `"${fromDate || "All"} to ${toDate || "All"}"`],
       ["Overall KMs", stats.overallRunningKms],
       ["Overall Halting Days", stats.overallHaltingDays],
-      ["Overall Driver Beta (Rs)", stats.overallDriverBeta],
+      ["Halting Amount / per (Rs)", haltingAmountPerDay],
+      ["Overall Halting Amount (Rs)", overallHaltingAmount],
+      ["Overall Driver Beta (Rs)", adjustedOverallDriverBeta],
       ["Overall Total Diesel in Litres", stats.overallTotalDieselLitres],
       ["Overall Mileage (km/L)", stats.overallMileage],
       ["Overall Amount Paid to Driver (Rs)", stats.overallAmountPaidToDriver],
@@ -473,6 +501,39 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
             </div>
           </div>
 
+          {/* Driver-specific halting amount fields */}
+          <div className="bg-white p-5 rounded-2xl border border-purple-200 shadow-xs hover:shadow-sm transition">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-xs font-bold uppercase tracking-wide text-purple-900">Halting Amount / per</span>
+              <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center"><IndianRupee className="w-4 h-4" /></div>
+            </div>
+            <div className="flex items-center gap-2 mt-3">
+              <span className="text-lg font-black text-slate-600">₹</span>
+              <input
+                id="driver-halting-amount-per-day"
+                type="number"
+                min="0"
+                step="0.01"
+                value={haltingAmountPerDay}
+                onChange={(e) => setHaltingAmountPerDay(Math.max(0, Number(e.target.value) || 0))}
+                onBlur={saveHaltingAmountPerDay}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-black font-mono text-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Enter amount/day"
+              />
+            </div>
+            <div className="text-[11px] text-slate-500 mt-2">Driver-specific amount. Saved per driver.</div>
+            {savingHaltingAmount && <div className="text-[10px] text-purple-600 mt-1 font-semibold">Saving...</div>}
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-purple-200 shadow-xs hover:shadow-sm transition">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-xs font-bold uppercase tracking-wide text-purple-900">Overall Halting Amount</span>
+              <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center"><Clock className="w-4 h-4" /></div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-purple-800 mt-2">{formatINR(overallHaltingAmount)}</div>
+            <div className="text-xs text-slate-500 mt-1">{stats.overallHaltingDays} days × {formatINR(haltingAmountPerDay)} / day</div>
+          </div>
+
           {/* 2. Overall Driver Beta */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition">
             <div className="flex items-center justify-between text-slate-500">
@@ -484,10 +545,10 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
               </div>
             </div>
             <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 mt-2">
-              {formatINR(stats.overallDriverBeta)}
+              {formatINR(adjustedOverallDriverBeta)}
             </div>
             <div className="text-xs text-slate-500 mt-1">
-              Total trip allowances earned (15% or manual)
+              Existing driver beta + overall halting amount
             </div>
           </div>
 
@@ -623,16 +684,16 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
             </span>
             <div className="text-sm font-bold text-slate-900 mt-0.5">
               {formatINR(stats.overallAmountPaidToDriver)} paid of{" "}
-              {formatINR(stats.overallDriverBeta)} total beta
+              {formatINR(adjustedOverallDriverBeta)} total beta
             </div>
           </div>
           <div className="text-right">
             <span className="text-lg font-black font-mono text-blue-700">
-              {stats.overallDriverBeta > 0
+              {adjustedOverallDriverBeta > 0
                 ? Math.min(
                     100,
                     Math.round(
-                      (stats.overallAmountPaidToDriver / stats.overallDriverBeta) * 100
+                      (stats.overallAmountPaidToDriver / adjustedOverallDriverBeta) * 100
                     )
                   )
                 : 100}
@@ -652,10 +713,10 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
             }`}
             style={{
               width: `${
-                stats.overallDriverBeta > 0
+                adjustedOverallDriverBeta > 0
                   ? Math.min(
                       100,
-                      (stats.overallAmountPaidToDriver / stats.overallDriverBeta) * 100
+                      (stats.overallAmountPaidToDriver / adjustedOverallDriverBeta) * 100
                     )
                   : 100
               }%`,

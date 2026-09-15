@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   vehicle_number TEXT NOT NULL UNIQUE,
   active BOOLEAN NOT NULL DEFAULT true,
+  halting_amount_per_day NUMERIC(12, 2) NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
