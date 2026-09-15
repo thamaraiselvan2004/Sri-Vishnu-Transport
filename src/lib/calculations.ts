@@ -577,7 +577,8 @@ export function calculateDriverStats(
   for (const t of filteredTrips) {
     const kms = Number(t.trip_running_kms) || 0;
     const beta = Number(t.driver_beta) || 0;
-    const halting = Number(t.halting_days) || 0;
+    const splitHalting = (Number(t.loading_halting_days) || 0) + (Number(t.unloading_halting_days) || 0);
+    const halting = splitHalting > 0 ? splitHalting : (Number(t.halting_days) || 0);
     const dieselL = Number(t.diesel_litres) || 0;
     const paid = Number(t.amount_paid_to_driver) || 0;
 

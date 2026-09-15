@@ -26,6 +26,7 @@ import {
 } from "../lib/calculations";
 import { EditTripModal } from "./EditTripModal";
 import { TripDetailsModal } from "./TripDetailsModal";
+import { HaltingDetailsModal } from "./HaltingDetailsModal";
 
 interface DriverReportPageProps {
   drivers: Driver[];
@@ -75,6 +76,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
   // Modals
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [inspectingTrip, setInspectingTrip] = useState<Trip | null>(null);
+  const [showHaltingDetails, setShowHaltingDetails] = useState(false);
 
   // Quick preset helper
   const handleQuickPreset = (preset: "all" | "thisMonth" | "last30" | "thisYear") => {
@@ -580,7 +582,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
           </div>
 
           {/* 7. Overall Halting Days (Requested by User) */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition">
+          <button type="button" onClick={() => setShowHaltingDetails(true)} className="w-full text-left bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-purple-300 cursor-pointer">
             <div className="flex items-center justify-between text-slate-500">
               <span className="text-xs font-bold uppercase tracking-wide text-purple-900">
                 Halting Days
@@ -595,9 +597,11 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
             <div className="text-xs text-slate-500 mt-1">
               Overall halting / detention days of {selectedDriverName}
             </div>
-          </div>
+          </button>
         </div>
       </div>
+
+      <HaltingDetailsModal isOpen={showHaltingDetails} onClose={() => setShowHaltingDetails(false)} driverName={selectedDriverName} trips={driverTrips} />
 
       {/* Driver Settlement Progress Bar */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
@@ -722,6 +726,9 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
                     trip.remaining_amount_to_driver !== null
                       ? Number(trip.remaining_amount_to_driver)
                       : Number(trip.driver_beta) - paid;
+                  const loadingDays = Number(trip.loading_halting_days) || 0;
+                  const unloadingDays = Number(trip.unloading_halting_days) || 0;
+                  const displayHaltingDays = loadingDays + unloadingDays > 0 ? loadingDays + unloadingDays : Number(trip.halting_days) || 0;
 
                   return (
                     <tr
@@ -752,8 +759,9 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
                       </td>
                       <td className="py-3.5 px-4 text-center whitespace-nowrap">
                         <span className="font-mono font-bold text-xs px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-200">
-                          {trip.halting_days ?? 0} d
+                          {displayHaltingDays} d
                         </span>
+                        {(loadingDays > 0 || unloadingDays > 0) && <div className="mt-1 text-[10px] text-slate-500">L {loadingDays} · U {unloadingDays}</div>}
                       </td>
                       <td className="py-3.5 px-4 text-right font-mono font-bold text-emerald-700 whitespace-nowrap">
                         {formatINR(trip.driver_beta)}

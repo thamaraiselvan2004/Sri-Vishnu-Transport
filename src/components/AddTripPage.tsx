@@ -93,6 +93,10 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
   // Halting Details
   const [haltingDays, setHaltingDays] = useState<string>("0");
   const [haltingChargePerDay, setHaltingChargePerDay] = useState<string>("0");
+  const [loadingHaltingDays, setLoadingHaltingDays] = useState<string>("0");
+  const [loadingHaltingChargePerDay, setLoadingHaltingChargePerDay] = useState<string>("0");
+  const [unloadingHaltingDays, setUnloadingHaltingDays] = useState<string>("0");
+  const [unloadingHaltingChargePerDay, setUnloadingHaltingChargePerDay] = useState<string>("0");
 
   // Advance & Balance Details
   const [advanceReceived, setAdvanceReceived] = useState<string>("");
@@ -153,9 +157,15 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
   );
 
   // Halting Fare = Halting days * Halting charge/day
-  const numHaltingDays = parseFloat(haltingDays) || 0;
-  const numHaltingChargePerDay = parseFloat(haltingChargePerDay) || 0;
-  const haltingFare = numHaltingDays * numHaltingChargePerDay;
+  const numLoadingHaltingDays = parseFloat(loadingHaltingDays) || 0;
+  const numLoadingHaltingChargePerDay = parseFloat(loadingHaltingChargePerDay) || 0;
+  const loadingHaltingFare = numLoadingHaltingDays * numLoadingHaltingChargePerDay;
+  const numUnloadingHaltingDays = parseFloat(unloadingHaltingDays) || 0;
+  const numUnloadingHaltingChargePerDay = parseFloat(unloadingHaltingChargePerDay) || 0;
+  const unloadingHaltingFare = numUnloadingHaltingDays * numUnloadingHaltingChargePerDay;
+  const numHaltingDays = numLoadingHaltingDays + numUnloadingHaltingDays;
+  const haltingFare = loadingHaltingFare + unloadingHaltingFare;
+  const numHaltingChargePerDay = numHaltingDays > 0 ? haltingFare / numHaltingDays : 0;
 
   // Derived Advance & Balance Calculation
   // Formula: balance amount = trip fare - broker fare - advance received + halting fare
@@ -357,6 +367,12 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
         halting_days: numHaltingDays,
         halting_charge_per_day: numHaltingChargePerDay,
         halting_fare: haltingFare,
+        loading_halting_days: numLoadingHaltingDays,
+        loading_halting_charge_per_day: numLoadingHaltingChargePerDay,
+        loading_halting_fare: loadingHaltingFare,
+        unloading_halting_days: numUnloadingHaltingDays,
+        unloading_halting_charge_per_day: numUnloadingHaltingChargePerDay,
+        unloading_halting_fare: unloadingHaltingFare,
         from_state: fromState,
         from_city: fromCity,
         to_state: toState,
@@ -1106,82 +1122,33 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
           </div>
 
           {/* ============================================================ */}
-          {/* HALTING DETAILS (DAYS, CHARGE/DAY & HALTING FARE) */}
-          {/* ============================================================ */}
+          {/* HALTING DETAILS — SEPARATE LOADING & UNLOADING */}
           <div className="mt-5 pt-5 border-t border-slate-200">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-purple-900 bg-purple-100 px-2.5 py-0.5 rounded-md">
-                Halting &amp; Detention Details
-              </span>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-bold uppercase tracking-wider text-purple-900 bg-purple-100 px-2.5 py-0.5 rounded-md">Halting / Detention Details</span>
+              <span className="text-[11px] text-slate-500">Loading and unloading halting are stored separately.</span>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-              {/* Halting days */}
-              <div>
-                <label
-                  htmlFor="halting-days-input"
-                  className="block text-xs font-bold text-slate-700 mb-1"
-                >
-                  Halting days
-                </label>
-                <input
-                  id="halting-days-input"
-                  type="number"
-                  step="any"
-                  min="0"
-                  placeholder="0"
-                  value={haltingDays}
-                  onChange={(e) => setHaltingDays(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-              </div>
-
-              {/* Halting charge / day */}
-              <div>
-                <label
-                  htmlFor="halting-charge-per-day-input"
-                  className="block text-xs font-bold text-slate-700 mb-1"
-                >
-                  Halting charge / day (₹)
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold text-xs">
-                    ₹
-                  </span>
-                  <input
-                    id="halting-charge-per-day-input"
-                    type="number"
-                    step="any"
-                    min="0"
-                    placeholder="0"
-                    value={haltingChargePerDay}
-                    onChange={(e) => setHaltingChargePerDay(e.target.value)}
-                    className="w-full pl-7 pr-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-purple-200 bg-purple-50/40 p-4">
+                <div className="flex items-center justify-between mb-3"><h3 className="text-sm font-extrabold text-purple-900">Loading Halting</h3><span className="text-[10px] font-bold uppercase tracking-wide text-purple-600">Loading point</span></div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                  <label><span className="block text-xs font-bold text-slate-700 mb-1">Days</span><input type="number" min="0" step="any" value={loadingHaltingDays} onChange={(e) => setLoadingHaltingDays(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" /></label>
+                  <label><span className="block text-xs font-bold text-slate-700 mb-1">Charge / Day (₹)</span><input type="number" min="0" step="any" value={loadingHaltingChargePerDay} onChange={(e) => setLoadingHaltingChargePerDay(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" /></label>
+                  <div className="rounded-xl bg-white border border-purple-200 px-3 py-2"><div className="text-[10px] text-purple-700 font-semibold">Loading Halting Fare</div><div className="font-mono font-black text-sm text-purple-950">{formatINR(loadingHaltingFare)}</div></div>
                 </div>
               </div>
-
-              {/* Halting fare = Halting days * Halting charge/day */}
-              <div>
-                <label className="block text-xs font-bold text-purple-900 mb-1">
-                  Halting fare (₹)
-                </label>
-                <div
-                  id="halting-fare-box"
-                  className="px-3.5 py-2 rounded-xl bg-purple-50 border border-purple-300 flex items-center justify-between"
-                >
-                  <span className="text-[11px] text-purple-800 font-semibold">
-                    Days × Charge/day:
-                  </span>
-                  <span className="font-mono font-black text-sm text-purple-950">
-                    {formatINR(haltingFare)}
-                  </span>
+              <div className="rounded-2xl border border-indigo-200 bg-indigo-50/40 p-4">
+                <div className="flex items-center justify-between mb-3"><h3 className="text-sm font-extrabold text-indigo-900">Unloading Halting</h3><span className="text-[10px] font-bold uppercase tracking-wide text-indigo-600">Unloading point</span></div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                  <label><span className="block text-xs font-bold text-slate-700 mb-1">Days</span><input type="number" min="0" step="any" value={unloadingHaltingDays} onChange={(e) => setUnloadingHaltingDays(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" /></label>
+                  <label><span className="block text-xs font-bold text-slate-700 mb-1">Charge / Day (₹)</span><input type="number" min="0" step="any" value={unloadingHaltingChargePerDay} onChange={(e) => setUnloadingHaltingChargePerDay(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" /></label>
+                  <div className="rounded-xl bg-white border border-indigo-200 px-3 py-2"><div className="text-[10px] text-indigo-700 font-semibold">Unloading Halting Fare</div><div className="font-mono font-black text-sm text-indigo-950">{formatINR(unloadingHaltingFare)}</div></div>
                 </div>
               </div>
             </div>
+            <div className="mt-4 rounded-xl bg-purple-100 border border-purple-200 px-4 py-3 flex items-center justify-between"><div><div className="text-xs font-bold text-purple-900">Total Halting</div><div className="text-[11px] text-purple-700">{numHaltingDays} days · Loading + Unloading</div></div><div className="font-mono font-black text-lg text-purple-950">{formatINR(haltingFare)}</div></div>
           </div>
 
-          {/* ============================================================ */}
           {/* ADVANCE & BALANCE COLLECTION (PARTY / TRANSPORTER) */}
           {/* ============================================================ */}
           <div className="mt-5 pt-5 border-t border-slate-200">

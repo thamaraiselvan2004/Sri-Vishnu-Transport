@@ -48,6 +48,10 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
   const [otherExpenses, setOtherExpenses] = useState("");
   const [haltingDays, setHaltingDays] = useState("");
   const [haltingChargePerDay, setHaltingChargePerDay] = useState("");
+  const [loadingHaltingDays, setLoadingHaltingDays] = useState("0");
+  const [loadingHaltingChargePerDay, setLoadingHaltingChargePerDay] = useState("0");
+  const [unloadingHaltingDays, setUnloadingHaltingDays] = useState("0");
+  const [unloadingHaltingChargePerDay, setUnloadingHaltingChargePerDay] = useState("0");
   const [advanceReceived, setAdvanceReceived] = useState("");
   const [advanceReceivedDate, setAdvanceReceivedDate] = useState("");
   const [balanceReceivedDate, setBalanceReceivedDate] = useState("");
@@ -79,6 +83,10 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
     setOtherExpenses(String(trip.other_expenses ?? "0"));
     setHaltingDays(String(trip.halting_days ?? "0"));
     setHaltingChargePerDay(String(trip.halting_charge_per_day ?? "0"));
+    setLoadingHaltingDays(String(trip.loading_halting_days ?? "0"));
+    setLoadingHaltingChargePerDay(String(trip.loading_halting_charge_per_day ?? "0"));
+    setUnloadingHaltingDays(String(trip.unloading_halting_days ?? "0"));
+    setUnloadingHaltingChargePerDay(String(trip.unloading_halting_charge_per_day ?? "0"));
     setAdvanceReceived(String(trip.advance_received ?? ""));
     setAdvanceReceivedDate(trip.advance_received_date || "");
     setBalanceReceivedDate(trip.balance_received_date || "");
@@ -90,7 +98,10 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
   const runningKms = numberValue(tripRunningKms);
   const diesel = numberValue(dieselLitres);
   const mileage = calculateMileage(runningKms, diesel);
-  const haltingFare = numberValue(haltingDays) * numberValue(haltingChargePerDay);
+  const loadingHaltingFare = numberValue(loadingHaltingDays) * numberValue(loadingHaltingChargePerDay);
+  const unloadingHaltingFare = numberValue(unloadingHaltingDays) * numberValue(unloadingHaltingChargePerDay);
+  const totalHaltingDays = numberValue(loadingHaltingDays) + numberValue(unloadingHaltingDays);
+  const haltingFare = loadingHaltingFare + unloadingHaltingFare;
   const driverBeta = calculateDriverBeta(
     numberValue(tripFare),
     driverBetaType,
@@ -158,6 +169,14 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
         halting_days: numberValue(haltingDays),
         halting_charge_per_day: numberValue(haltingChargePerDay),
         halting_fare: haltingFare,
+        halting_days: totalHaltingDays,
+        halting_charge_per_day: totalHaltingDays > 0 ? haltingFare / totalHaltingDays : 0,
+        loading_halting_days: numberValue(loadingHaltingDays),
+        loading_halting_charge_per_day: numberValue(loadingHaltingChargePerDay),
+        loading_halting_fare: loadingHaltingFare,
+        unloading_halting_days: numberValue(unloadingHaltingDays),
+        unloading_halting_charge_per_day: numberValue(unloadingHaltingChargePerDay),
+        unloading_halting_fare: unloadingHaltingFare,
         advance_received: numberValue(advanceReceived),
         advance_received_date: advanceReceivedDate || undefined,
         balance_amount: balanceAmount,
@@ -232,12 +251,12 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
           </section>
 
           <section>
-            <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Halting</h3>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <label><span className={labelClass}>Halting Days</span><input type="number" min="0" className={inputClass} value={haltingDays} onChange={e => setHaltingDays(e.target.value)} /></label>
-              <label><span className={labelClass}>Charge Per Day</span><input type="number" min="0" className={inputClass} value={haltingChargePerDay} onChange={e => setHaltingChargePerDay(e.target.value)} /></label>
-              <div className="rounded-xl bg-purple-50 p-3 text-sm text-purple-800">Halting Fare<br /><b>{formatINR(haltingFare)}</b></div>
+            <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Halting / Detention</h3>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-purple-200 bg-purple-50/50 p-4"><div className="mb-3 text-sm font-bold text-purple-900">Loading Halting</div><div className="grid grid-cols-1 sm:grid-cols-3 gap-3"><label><span className={labelClass}>Days</span><input type="number" min="0" className={inputClass} value={loadingHaltingDays} onChange={e => setLoadingHaltingDays(e.target.value)} /></label><label><span className={labelClass}>Charge / Day</span><input type="number" min="0" className={inputClass} value={loadingHaltingChargePerDay} onChange={e => setLoadingHaltingChargePerDay(e.target.value)} /></label><div className="rounded-xl bg-white border border-purple-200 p-3 text-sm text-purple-800">Fare<br /><b>{formatINR(loadingHaltingFare)}</b></div></div></div>
+              <div className="rounded-2xl border border-indigo-200 bg-indigo-50/50 p-4"><div className="mb-3 text-sm font-bold text-indigo-900">Unloading Halting</div><div className="grid grid-cols-1 sm:grid-cols-3 gap-3"><label><span className={labelClass}>Days</span><input type="number" min="0" className={inputClass} value={unloadingHaltingDays} onChange={e => setUnloadingHaltingDays(e.target.value)} /></label><label><span className={labelClass}>Charge / Day</span><input type="number" min="0" className={inputClass} value={unloadingHaltingChargePerDay} onChange={e => setUnloadingHaltingChargePerDay(e.target.value)} /></label><div className="rounded-xl bg-white border border-indigo-200 p-3 text-sm text-indigo-800">Fare<br /><b>{formatINR(unloadingHaltingFare)}</b></div></div></div>
             </div>
+            <div className="mt-3 rounded-xl bg-purple-100 p-3 text-sm text-purple-900 flex items-center justify-between"><span><b>Total Halting:</b> {totalHaltingDays} days</span><b>{formatINR(haltingFare)}</b></div>
           </section>
 
           <section>
