@@ -226,9 +226,6 @@ export function calculateVehicleStats(
   let totalOtherExpenses = 0;
   let overallRunningKms = 0;
   let totalTripNetProfit = 0;
-  let totalHaltingDays = 0;
-  let totalHaltingAmount = 0;
-  let haltingTripCount = 0;
 
   for (const t of filteredTrips) {
     totalTripRevenue += Number(t.trip_fare) || 0;
@@ -240,13 +237,6 @@ export function calculateVehicleStats(
     overallDieselExpense += Number(t.diesel_expense) || 0;
     overallDieselLitres += Number(t.diesel_litres) || 0;
     totalOtherExpenses += Number(t.other_expenses) || 0;
-    const splitDays = (Number(t.loading_halting_days) || 0) + (Number(t.unloading_halting_days) || 0);
-    const haltingDays = splitDays > 0 ? splitDays : (Number(t.halting_days) || 0);
-    const splitAmount = (Number(t.loading_halting_fare) || 0) + (Number(t.unloading_halting_fare) || 0);
-    const haltingAmount = splitAmount > 0 ? splitAmount : (Number(t.halting_fare) || 0);
-    totalHaltingDays += haltingDays;
-    totalHaltingAmount += haltingAmount;
-    if (haltingDays > 0 || haltingAmount > 0) haltingTripCount += 1;
     overallRunningKms += Number(t.trip_running_kms) || 0;
     totalTripNetProfit += Number(t.net_profit) || 0;
   }
@@ -334,9 +324,6 @@ export function calculateVehicleStats(
     averageProfitPerTrip,
     fuelCostPerKm,
     tollCostPerKm,
-    totalHaltingDays,
-    totalHaltingAmount,
-    haltingTripCount,
   };
 }
 
@@ -586,7 +573,6 @@ export function calculateDriverStats(
   let overallRemainingAmountToDriver = 0;
   let overallDieselExpense = 0;
   let overallTripRevenue = 0;
-  let overallOtherExpenses = 0;
 
   for (const t of filteredTrips) {
     const kms = Number(t.trip_running_kms) || 0;
@@ -610,11 +596,6 @@ export function calculateDriverStats(
     overallRemainingAmountToDriver += remaining;
     overallDieselExpense += Number(t.diesel_expense) || 0;
     overallTripRevenue += Number(t.trip_fare) || 0;
-    overallOtherExpenses += Number(t.other_expenses) || 0;
-    overallOtherExpenses += Number(t.other_expenses) || 0;
-    overallOtherExpenses += Number(t.other_expenses) || 0;
-    overallOtherExpenses += Number(t.other_expenses) || 0;
-    overallOtherExpenses += Number(t.other_expenses) || 0;
   }
 
   // overall mileage = (overall kms / overall Total Diesel in Litres)
@@ -636,7 +617,6 @@ export function calculateDriverStats(
     overallRemainingAmountToDriver,
     overallDieselExpense,
     overallTripRevenue,
-    overallOtherExpenses,
   };
 }
 

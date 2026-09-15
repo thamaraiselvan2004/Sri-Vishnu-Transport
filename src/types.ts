@@ -9,7 +9,6 @@ export interface Driver {
   id: string;
   driver_name: string;
   active: boolean;
-  halting_amount_per_day?: number;
   created_at: string;
 }
 
@@ -78,7 +77,6 @@ export interface DriverReportStats {
   overallRemainingAmountToDriver: number;
   overallDieselExpense: number;
   overallTripRevenue: number;
-  overallOtherExpenses: number;
 }
 
 export interface ManualMileageRecord {
@@ -133,9 +131,6 @@ export interface VehicleReportStats {
   averageProfitPerTrip: number;
   fuelCostPerKm: number;
   tollCostPerKm: number;
-  totalHaltingDays: number;
-  totalHaltingAmount: number;
-  haltingTripCount: number;
 }
 
 export interface FleetStats {
