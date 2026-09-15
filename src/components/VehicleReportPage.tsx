@@ -209,6 +209,22 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
 
       <TripDetailsModal trip={selectedTripForModal} onClose={() => setSelectedTripForModal(null)} onDeleteTrip={onDeleteTrip} onEditTrip={(tripToEdit) => { setSelectedTripForModal(null); setEditingTrip(tripToEdit); }} />
       <EditTripModal trip={editingTrip} isOpen={!!editingTrip} onClose={() => setEditingTrip(null)} onTripUpdated={async (updated) => { if (onUpdateTrip) await onUpdateTrip(updated.id, updated); setEditingTrip(null); }} vehicles={allVehicles} drivers={drivers} />
+
+      <div id="vehicle-halting-financial-summary" className="bg-white rounded-3xl border border-purple-200 shadow-xs p-5 sm:p-6">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 className="text-sm font-black uppercase tracking-wider text-purple-900">Halting &amp; Profit Summary</h3>
+            <p className="text-xs text-slate-500 mt-1">Halting is shown separately so the report clearly shows the contribution to profit and driver beta.</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="rounded-2xl bg-purple-50 border border-purple-100 p-4"><div className="text-[11px] font-bold text-purple-700 uppercase">Halting Trips</div><div className="text-xl font-black font-mono text-purple-950 mt-1">{reportHaltingTripCount}</div></div>
+          <div className="rounded-2xl bg-purple-50 border border-purple-100 p-4"><div className="text-[11px] font-bold text-purple-700 uppercase">Halting Days</div><div className="text-xl font-black font-mono text-purple-950 mt-1">{reportTotalHaltingDays}</div></div>
+          <div className="rounded-2xl bg-purple-50 border border-purple-100 p-4"><div className="text-[11px] font-bold text-purple-700 uppercase">Total Halting</div><div className="text-xl font-black font-mono text-purple-950 mt-1">{formatINR(reportTotalHaltingAmount)}</div></div>
+          <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4"><div className="text-[11px] font-bold text-emerald-700 uppercase">Net Profit + Halting</div><div className="text-xl font-black font-mono text-emerald-800 mt-1">{formatINR(reportNetProfitIncludingHalting)}</div></div>
+          <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4"><div className="text-[11px] font-bold text-indigo-700 uppercase">Driver Beta + Halting</div><div className="text-xl font-black font-mono text-indigo-800 mt-1">{formatINR(reportDriverBetaIncludingHalting)}</div></div>
+        </div>
+      </div>
     </div>
   );
 };

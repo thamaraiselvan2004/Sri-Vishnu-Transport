@@ -28,6 +28,7 @@ import { EditTripModal } from "./EditTripModal";
 import { TripDetailsModal } from "./TripDetailsModal";
 import { HaltingDetailsModal } from "./HaltingDetailsModal";
 import { updateDriverHaltingAmount } from "../lib/database";
+import { updateDriverHaltingAmount } from "../lib/database";
 
 interface DriverReportPageProps {
   drivers: Driver[];

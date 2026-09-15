@@ -614,6 +614,7 @@ export function calculateDriverStats(
     overallOtherExpenses += Number(t.other_expenses) || 0;
     overallOtherExpenses += Number(t.other_expenses) || 0;
     overallOtherExpenses += Number(t.other_expenses) || 0;
+    overallOtherExpenses += Number(t.other_expenses) || 0;
   }
 
   // overall mileage = (overall kms / overall Total Diesel in Litres)
