@@ -22,9 +22,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     setErrorMessage("");
 
     // Private owner PIN verification
-    // Default PIN: 2026 or 1234 or SVL2026
-    const validPins = ["2026", "1234", "SVL", "svl"];
-    if (validPins.includes(pin.trim()) || pin.trim().length >= 4) {
+    const validPin = "1978";
+    if (pin.trim() === validPin) {
       const session: UserSession = {
         email: "owner@srivishnulogistics.com",
         role: "owner",
@@ -33,7 +32,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       localStorage.setItem("svl_auth_session", JSON.stringify(session));
       onLoginSuccess(session);
     } else {
-      setErrorMessage("Incorrect PIN. Please enter a valid 4-digit business PIN (e.g. 2026).");
+      setErrorMessage("Incorrect PIN. Please enter the valid 4-digit business PIN.");
     }
   };
 
@@ -64,7 +63,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           return;
         }
       } else {
-        // Fallback local authenticated user check
         if (email.includes("@") && password.length >= 4) {
           const session: UserSession = {
             email: email.trim(),
@@ -96,11 +94,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center px-4 py-8 relative overflow-hidden">
-      {/* Subtle Background Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10">
-        {/* Brand Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 text-white shadow-xl shadow-blue-500/20 ring-4 ring-blue-500/20 mb-4">
             <Truck className="w-8 h-8" />
@@ -113,9 +109,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           </p>
         </div>
 
-        {/* Card Container */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl">
-          {/* Method Selection Tabs */}
           <div className="flex rounded-xl bg-slate-800/80 p-1 mb-6 border border-slate-700/60">
             <button
               id="auth-tab-pin"
@@ -151,7 +145,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </button>
           </div>
 
-          {/* Error notification */}
           {errorMessage && (
             <div className="mb-5 p-3.5 rounded-xl bg-red-950/70 border border-red-800/80 text-red-200 text-sm flex items-start gap-2.5">
               <ShieldAlert className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
@@ -159,7 +152,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </div>
           )}
 
-          {/* PIN Form */}
           {authMethod === "pin" && (
             <form onSubmit={handlePinSubmit} className="space-y-4">
               <div>
@@ -175,7 +167,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     type="password"
                     inputMode="numeric"
                     autoComplete="current-password"
-                    placeholder="Enter PIN (e.g. 2026)"
+                    placeholder="Enter 4-digit PIN"
                     value={pin}
                     onChange={(e) => setPin(e.target.value)}
                     className="w-full pl-11 pr-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg tracking-widest"
@@ -183,7 +175,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   />
                 </div>
                 <p className="text-xs text-slate-400 mt-2">
-                  Designed for fast mobile access by father and fleet managers. Default PIN: <span className="text-blue-400 font-mono font-bold">2026</span>
+                  Enter your 4-digit business security PIN to access the system.
                 </p>
               </div>
 
@@ -198,75 +190,36 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </form>
           )}
 
-          {/* Email / Password Form */}
           {authMethod === "email" && (
             <form onSubmit={handleEmailSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Email Address
-                </label>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Email Address</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                     <Mail className="w-4 h-4" />
                   </div>
-                  <input
-                    id="login-email-input"
-                    type="email"
-                    placeholder="owner@srivishnulogistics.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    required
-                  />
+                  <input id="login-email-input" type="email" placeholder="owner@srivishnulogistics.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" required />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Password
-                </label>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Password</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                     <Lock className="w-4 h-4" />
                   </div>
-                  <input
-                    id="login-password-input"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    required
-                  />
+                  <input id="login-password-input" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" required />
                 </div>
               </div>
 
-              <button
-                id="submit-email-login-btn"
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:opacity-50 text-white font-semibold text-base flex items-center justify-center gap-2 transition shadow-lg shadow-blue-600/20"
-              >
-                {isLoading ? (
-                  <span>Signing In...</span>
-                ) : (
-                  <>
-                    <span>Sign In</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
+              <button id="submit-email-login-btn" type="submit" disabled={isLoading} className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:opacity-50 text-white font-semibold text-base flex items-center justify-center gap-2 transition shadow-lg shadow-blue-600/20">
+                {isLoading ? <span>Signing In...</span> : <><span>Sign In</span><ArrowRight className="w-5 h-5" /></>}
               </button>
             </form>
           )}
 
-          {/* Instant 1-click Father Access */}
           <div className="mt-6 pt-5 border-t border-slate-800 text-center">
-            <button
-              id="instant-access-btn"
-              type="button"
-              onClick={handleQuickDemoLogin}
-              className="text-xs text-blue-400 hover:text-blue-300 font-medium underline underline-offset-4"
-            >
+            <button id="instant-access-btn" type="button" onClick={handleQuickDemoLogin} className="text-xs text-blue-400 hover:text-blue-300 font-medium underline underline-offset-4">
               1-Click Owner Fast Entry (Father / Family Device)
             </button>
           </div>
