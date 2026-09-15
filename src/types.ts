@@ -17,10 +17,6 @@ export type DriverBetaType = 'percentage' | 'manual';
 export interface Trip {
   id: string;
   trip_date: string; // YYYY-MM-DD
-  trip_start_datetime?: string; // YYYY-MM-DDTHH:mm
-  trip_end_datetime?: string;   // YYYY-MM-DDTHH:mm
-  gps_source?: 'blackbuck' | 'manual' | 'odometer';
-  gps_distance_km?: number;
   vehicle_id: string;
   driver_id: string;
   transporter_name: string;
@@ -32,8 +28,6 @@ export interface Trip {
   from_city: string;
   to_state: string;
   to_city: string;
-  starting_odometer?: number;
-  ending_odometer?: number;
   trip_running_kms: number;
   toll_charges: number;
   diesel_expense: number;
@@ -72,13 +66,13 @@ export interface DriverReportStats {
   driverId: string;
   driverName: string;
   totalTrips: number;
-  overallRunningKms: number; // overall kms
-  overallDriverBeta: number; // overall driver beta
-  overallHaltingDays: number; // overall halting days
-  overallTotalDieselLitres: number; // overall Total Diesel in Litres
-  overallMileage: number; // (overall kms / overall Total Diesel in Litres)
-  overallAmountPaidToDriver: number; // overall Amount paid to driver
-  overallRemainingAmountToDriver: number; // overall Remaining amount to driver
+  overallRunningKms: number;
+  overallDriverBeta: number;
+  overallHaltingDays: number;
+  overallTotalDieselLitres: number;
+  overallMileage: number;
+  overallAmountPaidToDriver: number;
+  overallRemainingAmountToDriver: number;
   overallDieselExpense: number;
   overallTripRevenue: number;
 }
@@ -86,15 +80,13 @@ export interface DriverReportStats {
 export interface MaintenanceRecord {
   id: string;
   vehicle_id: string;
-  maintenance_date: string; // YYYY-MM-DD
+  maintenance_date: string;
   odometer_reading: number;
   service_type: string;
   description: string;
   amount: number;
   notes: string;
   created_at: string;
-
-  // Joined display field
   vehicle_number?: string;
 }
 
@@ -119,8 +111,6 @@ export interface VehicleReportStats {
   finalVehicleProfit: number;
   profitMargin: number;
   maintenanceRecordCount?: number;
-
-  // Profit improvement metrics
   revenuePerKm: number;
   profitPerKm: number;
   averageProfitPerTrip: number;
