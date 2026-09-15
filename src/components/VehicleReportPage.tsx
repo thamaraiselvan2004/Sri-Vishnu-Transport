@@ -167,31 +167,6 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
     );
   }, [vehicle.id, vehicle.vehicle_number, vehicleTrips, vehicleMaintenance]);
 
-  const reportTotalHaltingDays = useMemo(() => {
-    return vehicleTrips.reduce((sum, t) => {
-      const split = (Number(t.loading_halting_days) || 0) + (Number(t.unloading_halting_days) || 0);
-      return sum + (split > 0 ? split : Number(t.halting_days) || 0);
-    }, 0);
-  }, [vehicleTrips]);
-
-  const reportTotalHaltingAmount = useMemo(() => {
-    return vehicleTrips.reduce((sum, t) => {
-      const split = (Number(t.loading_halting_fare) || 0) + (Number(t.unloading_halting_fare) || 0);
-      return sum + (split > 0 ? split : Number(t.halting_fare) || 0);
-    }, 0);
-  }, [vehicleTrips]);
-
-  const reportHaltingTripCount = useMemo(() => {
-    return vehicleTrips.filter((t) => {
-      const days = (Number(t.loading_halting_days) || 0) + (Number(t.unloading_halting_days) || 0);
-      const amount = (Number(t.loading_halting_fare) || 0) + (Number(t.unloading_halting_fare) || 0);
-      return days > 0 || amount > 0 || Number(t.halting_days) > 0 || Number(t.halting_fare) > 0;
-    }).length;
-  }, [vehicleTrips]);
-
-  const reportNetProfitIncludingHalting = stats.finalVehicleProfit + reportTotalHaltingAmount;
-  const reportDriverBetaIncludingHalting = stats.overallDriverBeta + reportTotalHaltingAmount;
-
   const insights = useMemo(() => {
     return generateVehicleInsights(stats, vehicleTrips, vehicleMaintenance);
   }, [stats, vehicleTrips, vehicleMaintenance]);
@@ -1007,22 +982,6 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
         vehicles={allVehicles}
         drivers={drivers}
       />
-
-      <div id="vehicle-halting-financial-summary" className="bg-white rounded-3xl border border-purple-200 shadow-xs p-5 sm:p-6">
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-wider text-purple-900">Halting &amp; Profit Summary</h3>
-            <p className="text-xs text-slate-500 mt-1">Halting is shown separately so the report clearly shows the contribution to profit and driver beta.</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div className="rounded-2xl bg-purple-50 border border-purple-100 p-4"><div className="text-[11px] font-bold text-purple-700 uppercase">Halting Trips</div><div className="text-xl font-black font-mono text-purple-950 mt-1">{reportHaltingTripCount}</div></div>
-          <div className="rounded-2xl bg-purple-50 border border-purple-100 p-4"><div className="text-[11px] font-bold text-purple-700 uppercase">Halting Days</div><div className="text-xl font-black font-mono text-purple-950 mt-1">{reportTotalHaltingDays}</div></div>
-          <div className="rounded-2xl bg-purple-50 border border-purple-100 p-4"><div className="text-[11px] font-bold text-purple-700 uppercase">Total Halting</div><div className="text-xl font-black font-mono text-purple-950 mt-1">{formatINR(reportTotalHaltingAmount)}</div></div>
-          <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4"><div className="text-[11px] font-bold text-emerald-700 uppercase">Net Profit + Halting</div><div className="text-xl font-black font-mono text-emerald-800 mt-1">{formatINR(reportNetProfitIncludingHalting)}</div></div>
-          <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4"><div className="text-[11px] font-bold text-indigo-700 uppercase">Driver Beta + Halting</div><div className="text-xl font-black font-mono text-indigo-800 mt-1">{formatINR(reportDriverBetaIncludingHalting)}</div></div>
-        </div>
-      </div>
     </div>
   );
 };
