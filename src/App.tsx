@@ -14,6 +14,8 @@ import { HomePage } from "./components/HomePage";
 import { AddTripPage } from "./components/AddTripPage";
 import { ReportAnalysisContainer } from "./components/ReportAnalysisContainer";
 import { ManualMileageSection } from "./components/ManualMileageSection";
+import { MileageStatusHomeCard } from "./components/MileageStatusHomeCard";
+import { MileageStatusPage } from "./components/MileageStatusPage";
 import { ServiceMaintenancePage } from "./components/ServiceMaintenancePage";
 import { FleetManagementPage } from "./components/FleetManagementPage";
 import { ExportBackupPage } from "./components/ExportBackupPage";
@@ -155,18 +157,26 @@ export function App() {
         ) : (
           <>
             {currentTab === "home" && (
-              <HomePage
-                trips={trips}
-                vehicles={vehicles}
-                drivers={drivers}
-                maintenance={maintenance}
-                onUpdateTrip={handleUpdateTrip}
-                onNavigate={(tab, vehicleId) => {
-                  setSelectedVehicleForReport(vehicleId);
-                  setCurrentTab(tab);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-              />
+              <>
+                <HomePage
+                  trips={trips}
+                  vehicles={vehicles}
+                  drivers={drivers}
+                  maintenance={maintenance}
+                  onUpdateTrip={handleUpdateTrip}
+                  onNavigate={(tab, vehicleId) => {
+                    setSelectedVehicleForReport(vehicleId);
+                    setCurrentTab(tab);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                />
+                <MileageStatusHomeCard
+                  onNavigate={() => {
+                    setCurrentTab("mileage-status");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                />
+              </>
             )}
 
             {currentTab === "add-trip" && (
@@ -200,6 +210,16 @@ export function App() {
                   </div>
                 )}
               </>
+            )}
+
+            {currentTab === "mileage-status" && (
+              <MileageStatusPage
+                vehicles={vehicles}
+                onNavigateHome={() => {
+                  setCurrentTab("home");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              />
             )}
 
             {currentTab === "service" && (
