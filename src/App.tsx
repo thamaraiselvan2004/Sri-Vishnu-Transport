@@ -14,7 +14,6 @@ import { HomePage } from "./components/HomePage";
 import { AddTripPage } from "./components/AddTripPage";
 import { ReportAnalysisContainer } from "./components/ReportAnalysisContainer";
 import { ManualMileageSection } from "./components/ManualMileageSection";
-import { MileageStatusHomeCard } from "./components/MileageStatusHomeCard";
 import { MileageStatusPage } from "./components/MileageStatusPage";
 import { ServiceMaintenancePage } from "./components/ServiceMaintenancePage";
 import { FleetManagementPage } from "./components/FleetManagementPage";
@@ -167,12 +166,6 @@ export function App() {
                   onNavigate={(tab, vehicleId) => {
                     setSelectedVehicleForReport(vehicleId);
                     setCurrentTab(tab);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                />
-                <MileageStatusHomeCard
-                  onNavigate={() => {
-                    setCurrentTab("mileage-status");
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
                 />

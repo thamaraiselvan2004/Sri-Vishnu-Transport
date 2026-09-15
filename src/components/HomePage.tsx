@@ -21,6 +21,7 @@ import { Trip, Vehicle, MaintenanceRecord, Driver } from "../types";
 import { formatINR, formatIndianDate } from "../lib/calculations";
 import { EditTripModal } from "./EditTripModal";
 import { TripDetailsModal } from "./TripDetailsModal";
+import { MileageStatusHomeCard } from "./MileageStatusHomeCard";
 
 interface HomePageProps {
   onNavigate: (tab: string, vehicleId?: string) => void;
@@ -175,6 +176,12 @@ export const HomePage: React.FC<HomePageProps> = ({
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </button>
+        </div>
+
+        <div className="md:col-start-3 mt-5">
+          <MileageStatusHomeCard
+            onNavigate={() => onNavigate("mileage-status")}
+          />
         </div>
       </div>
 
