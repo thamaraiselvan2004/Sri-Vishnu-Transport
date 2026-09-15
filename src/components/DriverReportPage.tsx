@@ -28,7 +28,6 @@ import { EditTripModal } from "./EditTripModal";
 import { TripDetailsModal } from "./TripDetailsModal";
 import { HaltingDetailsModal } from "./HaltingDetailsModal";
 import { updateDriverHaltingAmount } from "../lib/database";
-import { updateDriverHaltingAmount } from "../lib/database";
 
 interface DriverReportPageProps {
   drivers: Driver[];
@@ -123,7 +122,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
     return Math.max(0, Number(stats.overallHaltingDays) || 0) * Math.max(0, Number(haltingAmountPerDay) || 0);
   }, [stats.overallHaltingDays, haltingAmountPerDay]);
 
-  const adjustedOverallDriverBeta = (Number(stats.overallDriverBeta) || 0) + overallHaltingAmount;
+  const adjustedOverallDriverBeta = Number(stats.overallDriverBeta) || 0;
 
   const saveHaltingAmountPerDay = async () => {
     if (!selectedDriverId) return;
