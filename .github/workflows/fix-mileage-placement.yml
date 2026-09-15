@@ -1,9 +1,9 @@
 name: Fix Mileage Status Placement
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -25,8 +25,6 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
-
           app = Path('src/App.tsx')
           text = app.read_text()
           block = '''                <MileageStatusHomeCard
@@ -35,22 +33,22 @@ jobs:
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
                 />'''
-          if block not in text:
-              raise SystemExit('MileageStatusHomeCard block not found in App.tsx')
-          text = text.replace(block + '\n', '', 1)
-          text = text.replace('import { MileageStatusHomeCard } from "./components/MileageStatusHomeCard";\n', '', 1)
-          app.write_text(text)
+          if block in text:
+              text = text.replace(block + '\n', '', 1)
+              text = text.replace('import { MileageStatusHomeCard } from "./components/MileageStatusHomeCard";\n', '', 1)
+              app.write_text(text)
 
           home = Path('src/components/HomePage.tsx')
           h = home.read_text()
           if 'import { MileageStatusHomeCard } from "./MileageStatusHomeCard";' not in h:
               h = h.replace('import { TripDetailsModal } from "./TripDetailsModal";\n', 'import { TripDetailsModal } from "./TripDetailsModal";\nimport { MileageStatusHomeCard } from "./MileageStatusHomeCard";\n', 1)
 
-          marker = '''        </div>\n      </div>\n\n      {/* Quick Business KPI Summary */}'''
-          replacement = '''        </div>\n\n        {/* Card 4: Mileage Status — directly below Service Maintenance */}\n        <div className="mt-5 md:col-span-3">\n          <MileageStatusHomeCard\n            onNavigate={() => onNavigate("mileage-status")}\n          />\n        </div>\n      </div>\n\n      {/* Quick Business KPI Summary */}'''
-          if marker not in h:
-              raise SystemExit('Quick Actions closing marker not found in HomePage.tsx')
-          h = h.replace(marker, replacement, 1)
+          if 'id="home-action-mileage-status-btn"' not in h:
+              marker = '''        </div>\n      </div>\n\n      {/* Quick Business KPI Summary */}'''
+              replacement = '''        </div>\n\n        {/* Card 4: Mileage Status — directly below Service Maintenance */}\n        <div className="mt-5 md:col-span-3">\n          <MileageStatusHomeCard\n            onNavigate={() => onNavigate("mileage-status")}\n          />\n        </div>\n      </div>\n\n      {/* Quick Business KPI Summary */}'''
+              if marker not in h:
+                  raise SystemExit('Quick Actions closing marker not found in HomePage.tsx')
+              h = h.replace(marker, replacement, 1)
           home.write_text(h)
           PY
 
@@ -81,11 +79,3 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
-
-      - name: Commit final placement
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/App.tsx src/components/HomePage.tsx
-          git commit -m "Place Mileage Status below Service Maintenance" || exit 0
-          git push
