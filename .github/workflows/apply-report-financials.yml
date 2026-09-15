@@ -1,6 +1,9 @@
 name: Apply Report Financial Enhancements
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
