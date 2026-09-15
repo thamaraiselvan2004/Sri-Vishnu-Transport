@@ -18,7 +18,7 @@ import { MileageStatusPage } from "./components/MileageStatusPage";
 import { ServiceMaintenancePage } from "./components/ServiceMaintenancePage";
 import { FleetManagementPage } from "./components/FleetManagementPage";
 import { ExportBackupPage } from "./components/ExportBackupPage";
-import { PlusCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, PlusCircle, Loader2, CheckCircle2 } from "lucide-react";
 
 export function App() {
   const [session, setSession] = useState<UserSession | null>(() => {
@@ -34,6 +34,7 @@ export function App() {
   });
 
   const [currentTab, setCurrentTab] = useState<string>("home");
+  const [tabHistory, setTabHistory] = useState<string[]>([]);
   const [selectedVehicleForReport, setSelectedVehicleForReport] = useState<string | undefined>(undefined);
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -104,10 +105,46 @@ export function App() {
     };
   }, [session, loadData, refreshSilent]);
 
+  const navigateTo = useCallback((tab: string, vehicleId?: string) => {
+    if (tab === "home") {
+      setTabHistory([]);
+      setSelectedVehicleForReport(undefined);
+      setCurrentTab("home");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    setCurrentTab((current) => {
+      if (current !== tab) setTabHistory((history) => [...history, current]);
+      return tab;
+    });
+    setSelectedVehicleForReport(vehicleId);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  const handleBack = useCallback(() => {
+    if (selectedVehicleForReport) {
+      setSelectedVehicleForReport(undefined);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    setTabHistory((history) => {
+      if (history.length === 0) return history;
+      const next = [...history];
+      const previous = next.pop()!;
+      setCurrentTab(previous);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return next;
+    });
+  }, [selectedVehicleForReport]);
+
   const handleLogout = () => {
     localStorage.removeItem("svl_auth_session");
     setSession(null);
     setCurrentTab("home");
+    setTabHistory([]);
+    setSelectedVehicleForReport(undefined);
   };
 
   const handleDeleteTrip = async (id: string) => {
@@ -134,18 +171,34 @@ export function App() {
     ? vehicles.find((v) => v.id === selectedVehicleForReport)
     : undefined;
 
+  const showBackButton = currentTab !== "home" && (tabHistory.length > 0 || !!selectedVehicleForReport);
+
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
       <Navbar
         currentTab={currentTab}
         setCurrentTab={(tab) => {
           if (tab !== "reports") setSelectedVehicleForReport(undefined);
-          setCurrentTab(tab);
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          navigateTo(tab);
         }}
         onLogout={handleLogout}
         userEmail={session.email}
       />
+
+      {showBackButton && (
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4">
+          <button
+            id="global-back-btn"
+            type="button"
+            onClick={handleBack}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm text-sm font-bold transition"
+            aria-label={selectedVehicleForReport ? "Back to report analysis" : "Go back to previous page"}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </button>
+        </div>
+      )}
 
       <main className="flex-1 pb-16">
         {isLoading && trips.length === 0 ? (
@@ -156,20 +209,14 @@ export function App() {
         ) : (
           <>
             {currentTab === "home" && (
-              <>
-                <HomePage
-                  trips={trips}
-                  vehicles={vehicles}
-                  drivers={drivers}
-                  maintenance={maintenance}
-                  onUpdateTrip={handleUpdateTrip}
-                  onNavigate={(tab, vehicleId) => {
-                    setSelectedVehicleForReport(vehicleId);
-                    setCurrentTab(tab);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                />
-              </>
+              <HomePage
+                trips={trips}
+                vehicles={vehicles}
+                drivers={drivers}
+                maintenance={maintenance}
+                onUpdateTrip={handleUpdateTrip}
+                onNavigate={(tab, vehicleId) => navigateTo(tab, vehicleId)}
+              />
             )}
 
             {currentTab === "add-trip" && (
@@ -177,7 +224,7 @@ export function App() {
                 vehicles={vehicles}
                 drivers={drivers}
                 onTripAdded={handleTripAdded}
-                onNavigateHome={() => setCurrentTab("home")}
+                onNavigateHome={() => navigateTo("home")}
                 onRefreshMasterData={loadData}
               />
             )}
@@ -208,10 +255,7 @@ export function App() {
             {currentTab === "mileage-status" && (
               <MileageStatusPage
                 vehicles={vehicles}
-                onNavigateHome={() => {
-                  setCurrentTab("home");
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
+                onNavigateHome={() => navigateTo("home")}
               />
             )}
 
@@ -263,10 +307,7 @@ export function App() {
         <div className="sm:hidden fixed bottom-6 right-6 z-30">
           <button
             id="fab-add-trip-btn"
-            onClick={() => {
-              setCurrentTab("add-trip");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
+            onClick={() => navigateTo("add-trip")}
             className="w-14 h-14 rounded-full bg-blue-600 active:bg-blue-700 text-white shadow-xl shadow-blue-600/40 flex items-center justify-center ring-4 ring-blue-400/20"
             aria-label="Add Trip Quick Button"
           >
