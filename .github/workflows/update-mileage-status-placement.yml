@@ -1,6 +1,9 @@
 name: Update Mileage Status Placement
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -8,6 +11,7 @@ permissions:
 
 jobs:
   update:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -22,7 +26,6 @@ jobs:
           home = Path('src/components/HomePage.tsx')
           text = home.read_text()
 
-          # Keep only the first Mileage Status home card if duplicate copies exist.
           pattern = re.compile(
               r'\n\s*<div className="md:col-start-3 mt-5">\s*\n'
               r'\s*<MileageStatusHomeCard\s*\n'
@@ -46,8 +49,7 @@ jobs:
                   1,
               )
 
-          marker = '      <MileageStatusPage\n'
-          if marker not in text:
+          if '<MileageStatusPage\n' not in text:
               needle = '    </div>\n  );\n};\n'
               addition = '''
 
@@ -69,12 +71,12 @@ jobs:
           npm install
           npx vite build
 
-      - name: Commit changes
+      - name: Commit source changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/components/HomePage.tsx src/components/VehicleReportPage.tsx
-          git diff --cached --quiet && echo "No source changes needed" || git commit -m "Fix Mileage Status placement and add to vehicle reports"
+          git diff --cached --quiet || git commit -m "Fix Mileage Status placement and add to vehicle reports"
           git push
 
       - name: Remove one-time workflow
