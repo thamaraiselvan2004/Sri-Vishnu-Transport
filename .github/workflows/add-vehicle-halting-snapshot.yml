@@ -16,34 +16,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Update Vehicle Report
+      - name: Fix Vehicle Report
         run: |
           python - <<'PY'
           from pathlib import Path
-
           path = Path('src/components/VehicleReportPage.tsx')
           text = path.read_text(encoding='utf-8')
 
-          if 'Card 10: Total Halting Days' in text:
-              print('Vehicle Report halting snapshot cards already present.')
-              raise SystemExit(0)
+          # Close Service Maintenance card before Card 10.
+          bad = '''            </div>\n\n          {/* Card 10: Total Halting Days */}'''
+          good = '''            </div>\n          </div>\n\n          {/* Card 10: Total Halting Days */}'''
+          if bad in text:
+              text = text.replace(bad, good, 1)
 
-          derived_marker = 'const totalHaltingDays = useMemo(() => {'
-          if derived_marker not in text:
-              marker = '''  const insights = useMemo(() => {\n'''
-              insert = '''  const totalHaltingDays = useMemo(() => {\n    return vehicleTrips.reduce((total, trip) => {\n      const hasSeparateHalting =\n        trip.loading_halting_days !== undefined ||\n        trip.loading_halting_charge_per_day !== undefined ||\n        trip.loading_halting_fare !== undefined ||\n        trip.unloading_halting_days !== undefined ||\n        trip.unloading_halting_charge_per_day !== undefined ||\n        trip.unloading_halting_fare !== undefined;\n\n      if (hasSeparateHalting) {\n        return total +\n          (Number(trip.loading_halting_days) || 0) +\n          (Number(trip.unloading_halting_days) || 0);\n      }\n\n      return total + (Number(trip.halting_days) || 0);\n    }, 0);\n  }, [vehicleTrips]);\n\n  const totalHaltingCharges = useMemo(() => {\n    return vehicleTrips.reduce((total, trip) => {\n      const hasSeparateHalting =\n        trip.loading_halting_days !== undefined ||\n        trip.loading_halting_charge_per_day !== undefined ||\n        trip.loading_halting_fare !== undefined ||\n        trip.unloading_halting_days !== undefined ||\n        trip.unloading_halting_charge_per_day !== undefined ||\n        trip.unloading_halting_fare !== undefined;\n\n      if (hasSeparateHalting) {\n        return total +\n          (Number(trip.loading_halting_fare) || 0) +\n          (Number(trip.unloading_halting_fare) || 0);\n      }\n\n      return total + (Number(trip.halting_fare) || 0);\n    }, 0);\n  }, [vehicleTrips]);\n\n  const overallProfit = stats.finalVehicleProfit + totalHaltingCharges;\n\n'''
-              if marker not in text:
-                  raise SystemExit('Insights marker not found')
-              text = text.replace(marker, insert + marker, 1)
-
-          closing_marker = '''          </div>\n        </div>\n      </div>\n\n      {/* Tabs Navigation for Report Sections */}\n'''
-          if closing_marker not in text:
-              raise SystemExit('Snapshot closing marker not found')
-
-          new_cards = '''\n          {/* Card 10: Total Halting Days */}\n          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">\n            <div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">\n              <Clock className="w-3.5 h-3.5 text-violet-600" />\n              <span>Total Halting Days</span>\n            </div>\n            <div className="text-2xl sm:text-3xl font-black font-mono text-violet-700 mt-1">\n              {totalHaltingDays} Days\n            </div>\n            <div className="text-xs text-slate-500 mt-1">Loading + Unloading halting</div>\n          </div>\n\n          {/* Card 11: Total Halting Charges */}\n          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">\n            <div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">\n              <IndianRupee className="w-3.5 h-3.5 text-rose-600" />\n              <span>Total Halting Charges</span>\n            </div>\n            <div className="text-2xl sm:text-3xl font-black font-mono text-rose-700 mt-1">\n              {formatINR(totalHaltingCharges)}\n            </div>\n            <div className="text-xs text-slate-500 mt-1">Total loading + unloading halting</div>\n          </div>\n\n          {/* Card 12: Overall Profit */}\n          <div className="bg-white p-5 rounded-2xl border-2 border-violet-500/80 shadow-xs bg-violet-50/20">\n            <div className="text-xs font-bold text-violet-800 uppercase tracking-wide">\n              Overall Profit\n            </div>\n            <div className={`text-2xl sm:text-3xl font-black font-mono mt-1 ${overallProfit >= 0 ? "text-violet-700" : "text-red-700"}`}>\n              {formatINR(overallProfit)}\n            </div>\n            <div className="text-xs text-violet-700 font-semibold mt-1">\n              Final Net Profit + Total Halting Charges\n            </div>\n          </div>\n'''
-          text = text.replace(closing_marker, new_cards + closing_marker, 1)
           path.write_text(text, encoding='utf-8')
-          print('Vehicle Report halting snapshot update applied.')
+          print('Vehicle Report structure fixed.')
           PY
 
       - name: Install dependencies
@@ -61,5 +48,5 @@ jobs:
             echo 'No Vehicle Report changes needed.'
             exit 0
           fi
-          git commit -m 'Add halting metrics and overall profit to vehicle snapshot'
+          git commit -m 'Fix vehicle halting snapshot layout'
           git push
