@@ -13,7 +13,6 @@ import { Navbar } from "./components/Navbar";
 import { HomePage } from "./components/HomePage";
 import { AddTripPage } from "./components/AddTripPage";
 import { ReportAnalysisContainer } from "./components/ReportAnalysisContainer";
-import { ManualMileageSection } from "./components/ManualMileageSection";
 import { MileageStatusPage } from "./components/MileageStatusPage";
 import { ServiceMaintenancePage } from "./components/ServiceMaintenancePage";
 import { FleetManagementPage } from "./components/FleetManagementPage";
@@ -189,10 +188,6 @@ export function App() {
     return <LoginView onLoginSuccess={(sess) => setSession(sess)} />;
   }
 
-  const selectedVehicle = selectedVehicleForReport
-    ? vehicles.find((v) => v.id === selectedVehicleForReport)
-    : undefined;
-
   const showBackButton = currentTab !== "home" && (tabHistory.length > 0 || !!selectedVehicleForReport);
 
   return (
@@ -263,14 +258,11 @@ export function App() {
                   onDeleteTrip={handleDeleteTrip}
                   onUpdateTrip={handleUpdateTrip}
                 />
-                {selectedVehicle && (
-                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
-                    <ManualMileageSection
-                      vehicle={selectedVehicle}
-                      allVehicles={vehicles.filter((v) => v.active)}
-                      onVehicleChange={(vehicleId) => setSelectedVehicleForReport(vehicleId)}
-                    />
-                  </div>
+                {selectedVehicleForReport && (
+                  <MileageStatusPage
+                    vehicles={vehicles}
+                    onNavigateHome={handleBack}
+                  />
                 )}
               </>
             )}
