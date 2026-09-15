@@ -1,0 +1,29 @@
+name: Diagnose TypeScript
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+      - run: npm install
+      - name: TypeScript diagnostics
+        run: |
+          set +e
+          npx tsc --noEmit > /tmp/tsc.log 2>&1
+          code=$?
+          cat /tmp/tsc.log
+          echo "exit_code=$code" >> /tmp/tsc.log
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tsc-diagnostics
+          path: /tmp/tsc.log
