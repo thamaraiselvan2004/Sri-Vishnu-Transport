@@ -38,12 +38,10 @@ export interface Trip {
   other_expenses: number;
   net_profit: number;
 
-  // Existing combined halting values are retained for compatibility.
   halting_days?: number;
   halting_charge_per_day?: number;
   halting_fare?: number;
 
-  // New separate loading/unloading halting values.
   loading_halting_days?: number;
   loading_halting_charge_per_day?: number;
   loading_halting_fare?: number;
@@ -84,6 +82,19 @@ export interface ManualMileageRecord {
   vehicle_id: string;
   record_date: string;
   trip_number: number;
+  starting_odometer: number;
+  ending_odometer: number;
+  diesel_litres: number;
+  mileage: number;
+  created_at: string;
+  vehicle_number?: string;
+}
+
+export interface MileageStatusRecord {
+  id: string;
+  vehicle_id: string;
+  starting_datetime: string;
+  ending_datetime: string;
   starting_odometer: number;
   ending_odometer: number;
   diesel_litres: number;
