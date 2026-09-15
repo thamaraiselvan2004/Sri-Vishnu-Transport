@@ -16,7 +16,7 @@ export type DriverBetaType = 'percentage' | 'manual';
 
 export interface Trip {
   id: string;
-  trip_date: string; // YYYY-MM-DD
+  trip_date: string;
   vehicle_id: string;
   driver_id: string;
   transporter_name: string;
@@ -38,26 +38,28 @@ export interface Trip {
   other_expenses: number;
   net_profit: number;
 
-  // Halting Details
+  // Existing combined halting values are retained for compatibility.
   halting_days?: number;
   halting_charge_per_day?: number;
-  halting_fare?: number; // Halting days * Halting charge/day
+  halting_fare?: number;
 
-  // Advance and Balance Collections
+  // New separate loading/unloading halting values.
+  loading_halting_days?: number;
+  loading_halting_charge_per_day?: number;
+  loading_halting_fare?: number;
+  unloading_halting_days?: number;
+  unloading_halting_charge_per_day?: number;
+  unloading_halting_fare?: number;
+
   advance_received?: number;
-  advance_received_date?: string; // YYYY-MM-DD
-  balance_amount?: number; // Trip fare - broker fare - advance received + halting fare
-  balance_received_date?: string; // YYYY-MM-DD
-
-  // Driver Settlement Payments
+  advance_received_date?: string;
+  balance_amount?: number;
+  balance_received_date?: string;
   amount_paid_to_driver?: number;
-  driver_payment_date?: string; // YYYY-MM-DD
-  remaining_amount_to_driver?: number; // Driver beta - amount paid to driver
-
+  driver_payment_date?: string;
+  remaining_amount_to_driver?: number;
   created_at: string;
   updated_at?: string;
-
-  // Joined/denormalized fields for display & historical safety
   vehicle_number?: string;
   driver_name?: string;
 }
@@ -75,6 +77,19 @@ export interface DriverReportStats {
   overallRemainingAmountToDriver: number;
   overallDieselExpense: number;
   overallTripRevenue: number;
+}
+
+export interface ManualMileageRecord {
+  id: string;
+  vehicle_id: string;
+  record_date: string;
+  trip_number: number;
+  starting_odometer: number;
+  ending_odometer: number;
+  diesel_litres: number;
+  mileage: number;
+  created_at: string;
+  vehicle_number?: string;
 }
 
 export interface MaintenanceRecord {
