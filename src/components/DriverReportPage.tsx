@@ -77,6 +77,8 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [inspectingTrip, setInspectingTrip] = useState<Trip | null>(null);
   const [showHaltingDetails, setShowHaltingDetails] = useState(false);
+  const [showDriverPaymentDetails, setShowDriverPaymentDetails] = useState(false);
+  const [showOtherExpenseDetails, setShowOtherExpenseDetails] = useState(false);
 
   // Quick preset helper
   const handleQuickPreset = (preset: "all" | "thisMonth" | "last30" | "thisYear") => {
@@ -528,9 +530,9 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
           {/* 5. Overall Amount Paid to Driver */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition">
             <div className="flex items-center justify-between text-slate-500">
-              <span className="text-xs font-bold uppercase tracking-wide">
+              <button type="button" onClick={() => setShowDriverPaymentDetails(true)} className="text-xs font-bold uppercase tracking-wide text-left hover:text-indigo-700">
                 Overall Amount Paid to Driver
-              </span>
+              </button>
               <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
                 <Wallet className="w-4 h-4" />
               </div>
@@ -542,6 +544,15 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
               Disbursed advances and cash payments to driver
             </div>
           </div>
+
+          <button id="driver-overall-other-expenses-card" type="button" onClick={() => setShowOtherExpenseDetails(true)} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition text-left">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-xs font-bold uppercase tracking-wide">Overall Other Expenses</span>
+              <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center"><IndianRupee className="w-4 h-4" /></div>
+            </div>
+            <div className="text-2xl font-black font-mono text-rose-700 mt-2">{formatINR(stats.overallOtherExpenses)}</div>
+            <div className="text-[11px] text-slate-500 mt-1">Click to view trip-wise details</div>
+          </button>
 
           {/* 6. Overall Remaining Amount to Driver */}
           <div
@@ -853,6 +864,28 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
           vehicles={vehicles}
           drivers={drivers}
         />
+      )}
+
+      {showDriverPaymentDetails && (
+        <div id="driver-payment-details-modal" className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowDriverPaymentDetails(false)}>
+          <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-white rounded-3xl shadow-2xl p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4"><div><h3 className="text-lg font-black text-slate-900">Driver Payment Details</h3><p className="text-xs text-slate-500">Every payment recorded for {selectedDriverName}</p></div><button type="button" onClick={() => setShowDriverPaymentDetails(false)} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">Close</button></div>
+            <div className="space-y-2">
+              {driverTrips.filter((t) => Number(t.amount_paid_to_driver) > 0).length === 0 ? <div className="text-sm text-slate-500 p-4 text-center">No driver payments recorded in this date range.</div> : driverTrips.filter((t) => Number(t.amount_paid_to_driver) > 0).map((t) => <div key={`pay-${t.id}`} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200"><div><div className="font-bold text-slate-800">{formatIndianDate(t.driver_payment_date || t.trip_date)}</div><div className="text-xs text-slate-500">Trip: {formatIndianDate(t.trip_date)} · {t.vehicle_number || "Vehicle"}</div></div><div className="font-mono font-black text-indigo-700">{formatINR(Number(t.amount_paid_to_driver) || 0)}</div></div>)}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showOtherExpenseDetails && (
+        <div id="driver-other-expense-details-modal" className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowOtherExpenseDetails(false)}>
+          <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-white rounded-3xl shadow-2xl p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4"><div><h3 className="text-lg font-black text-slate-900">Other Expense Details</h3><p className="text-xs text-slate-500">Trip-wise other expenses for {selectedDriverName}</p></div><button type="button" onClick={() => setShowOtherExpenseDetails(false)} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">Close</button></div>
+            <div className="space-y-2">
+              {driverTrips.filter((t) => Number(t.other_expenses) > 0).length === 0 ? <div className="text-sm text-slate-500 p-4 text-center">No other expenses recorded in this date range.</div> : driverTrips.filter((t) => Number(t.other_expenses) > 0).map((t) => <div key={`other-${t.id}`} className="p-3 rounded-xl border border-slate-200"><div className="flex items-center justify-between gap-3"><div className="font-bold text-slate-800">{formatIndianDate(t.trip_date)} · {t.vehicle_number || "Vehicle"}</div><div className="font-mono font-black text-rose-700">{formatINR(Number(t.other_expenses) || 0)}</div></div><div className="text-xs text-slate-500 mt-1">{t.from_city} → {t.to_city}</div></div>)}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

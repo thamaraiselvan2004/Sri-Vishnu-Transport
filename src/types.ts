@@ -77,6 +77,7 @@ export interface DriverReportStats {
   overallRemainingAmountToDriver: number;
   overallDieselExpense: number;
   overallTripRevenue: number;
+  overallOtherExpenses: number;
 }
 
 export interface ManualMileageRecord {
@@ -131,6 +132,9 @@ export interface VehicleReportStats {
   averageProfitPerTrip: number;
   fuelCostPerKm: number;
   tollCostPerKm: number;
+  totalHaltingDays: number;
+  totalHaltingAmount: number;
+  haltingTripCount: number;
 }
 
 export interface FleetStats {
