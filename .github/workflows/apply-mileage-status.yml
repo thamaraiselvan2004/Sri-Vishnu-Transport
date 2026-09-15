@@ -1,34 +1,16 @@
 name: Apply Mileage Status
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
   apply:
-    if: github.event_name == "workflow_dispatch" || !contains(github.event.head_commit.message, "Mileage Status integration applied")
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Apply database type import
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path('src/lib/database.ts')
-          text = p.read_text()
-          old = 'import { Vehicle, Driver, Trip, MaintenanceRecord, ManualMileageRecord } from "../types";'
-          new = 'import { Vehicle, Driver, Trip, MaintenanceRecord, ManualMileageRecord, MileageStatusRecord } from "../types";'
-          if new not in text:
-              if old not in text:
-                  raise SystemExit('database.ts import line not found')
-              p.write_text(text.replace(old, new, 1))
-          PY
 
       - name: Apply Mileage Status source integration
         run: python scripts/apply-mileage-status.py
