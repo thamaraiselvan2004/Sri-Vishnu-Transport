@@ -122,18 +122,40 @@ export function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  // Keep the app-level navigation state in sync when a vehicle card is opened
+  // from inside Report Analysis. This allows Back to return to the vehicle list.
+  useEffect(() => {
+    if (!session || currentTab !== "reports") return;
+
+    const handleVehicleCardClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      const card = target?.closest<HTMLElement>('[id^="vehicle-card-"]');
+      if (!card) return;
+
+      const vehicleId = card.id.replace("vehicle-card-", "");
+      if (vehicleId) setSelectedVehicleForReport(vehicleId);
+    };
+
+    document.addEventListener("click", handleVehicleCardClick);
+    return () => document.removeEventListener("click", handleVehicleCardClick);
+  }, [session, currentTab]);
+
   const handleBack = useCallback(() => {
+    // Step 1: leave the currently opened vehicle report and return to
+    // Report Analysis → Vehicles instead of jumping directly to Home.
     if (selectedVehicleForReport) {
       setSelectedVehicleForReport(undefined);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
+    // Step 2+: walk through the actual top-level pages visited.
     setTabHistory((history) => {
       if (history.length === 0) return history;
       const next = [...history];
       const previous = next.pop()!;
       setCurrentTab(previous);
+      setSelectedVehicleForReport(undefined);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return next;
     });
@@ -232,6 +254,7 @@ export function App() {
             {currentTab === "reports" && (
               <>
                 <ReportAnalysisContainer
+                  key={selectedVehicleForReport || "report-analysis-list"}
                   vehicles={vehicles}
                   drivers={drivers}
                   trips={trips}
