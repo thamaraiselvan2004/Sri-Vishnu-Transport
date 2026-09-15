@@ -1,0 +1,91 @@
+name: Fix Mileage Status Placement
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  fix-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Move Mileage Status below Service Maintenance
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          app = Path('src/App.tsx')
+          text = app.read_text()
+          block = '''                <MileageStatusHomeCard
+                  onNavigate={() => {
+                    setCurrentTab("mileage-status");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                />'''
+          if block not in text:
+              raise SystemExit('MileageStatusHomeCard block not found in App.tsx')
+          text = text.replace(block + '\n', '', 1)
+          text = text.replace('import { MileageStatusHomeCard } from "./components/MileageStatusHomeCard";\n', '', 1)
+          app.write_text(text)
+
+          home = Path('src/components/HomePage.tsx')
+          h = home.read_text()
+          if 'import { MileageStatusHomeCard } from "./MileageStatusHomeCard";' not in h:
+              h = h.replace('import { TripDetailsModal } from "./TripDetailsModal";\n', 'import { TripDetailsModal } from "./TripDetailsModal";\nimport { MileageStatusHomeCard } from "./MileageStatusHomeCard";\n', 1)
+
+          marker = '''        </div>\n      </div>\n\n      {/* Quick Business KPI Summary */}'''
+          replacement = '''        </div>\n\n        {/* Card 4: Mileage Status — directly below Service Maintenance */}\n        <div className="mt-5 md:col-span-3">\n          <MileageStatusHomeCard\n            onNavigate={() => onNavigate("mileage-status")}\n          />\n        </div>\n      </div>\n\n      {/* Quick Business KPI Summary */}'''
+          if marker not in h:
+              raise SystemExit('Quick Actions closing marker not found in HomePage.tsx')
+          h = h.replace(marker, replacement, 1)
+          home.write_text(h)
+          PY
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Vite app
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npx vite build
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload dist
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./dist
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Commit final placement
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/App.tsx src/components/HomePage.tsx
+          git commit -m "Place Mileage Status below Service Maintenance" || exit 0
+          git push
