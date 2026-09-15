@@ -1,10 +1,14 @@
 name: Restore Driver Report
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   restore:
+    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'Restore Driver Report to original pre-financial version')
     runs-on: ubuntu-latest
     permissions:
       contents: write
