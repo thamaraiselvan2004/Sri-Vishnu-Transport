@@ -1,0 +1,42 @@
+name: Restore Original Driver Calculations
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/restore-original-driver-calculations.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Restore original Driver Report dependencies
+        run: |
+          git fetch origin 15aa787e02e15bad082888ca000b73ec6f4c43d4 --depth=1
+          git checkout 15aa787e02e15bad082888ca000b73ec6f4c43d4 -- src/lib/calculations.ts
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build verification
+        run: npx vite build
+
+      - name: Commit restored calculations
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/lib/calculations.ts
+          if git diff --cached --quiet; then
+            echo 'Calculations already matches the original source.'
+          else
+            git commit -m 'Restore original Driver Report calculations'
+            git push origin HEAD:main
+          fi
