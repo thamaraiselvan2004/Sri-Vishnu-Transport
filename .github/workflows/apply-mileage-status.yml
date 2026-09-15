@@ -8,7 +8,7 @@ on:
 
 jobs:
   apply:
-    if: github.event_name == "workflow_dispatch" || !contains(github.event.head_commit.message, "Mileage Status integration applied")
+    if: github.event_name == "workflow_dispatch" || (!contains(github.event.head_commit.message, "Mileage Status integration applied") && !contains(github.event.head_commit.message, "Mileage Status build verified"))
     runs-on: ubuntu-latest
     permissions:
       contents: write
