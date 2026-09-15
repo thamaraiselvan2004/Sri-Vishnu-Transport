@@ -18,6 +18,9 @@ jobs:
       - name: Apply report financial patch
         run: python scripts/patch_report_financials.py
 
+      - name: Apply driver-specific halting amount patch
+        run: python scripts/patch_driver_halting_amount.py
+
       - name: Install dependencies
         run: npm install
 
@@ -31,6 +34,6 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/types.ts src/lib/calculations.ts src/components/VehicleReportPage.tsx src/components/DriverReportPage.tsx scripts/patch_report_financials.py
-          git diff --cached --quiet && echo 'No source changes to commit' || git commit -m 'Enhance vehicle and driver financial reports'
+          git add src/types.ts src/lib/calculations.ts src/components/VehicleReportPage.tsx src/components/DriverReportPage.tsx src/lib/database.ts supabase_schema.sql scripts/patch_report_financials.py scripts/patch_driver_halting_amount.py
+          git diff --cached --quiet && echo 'No source changes to commit' || git commit -m 'Add driver-specific halting amount to reports'
           git push
