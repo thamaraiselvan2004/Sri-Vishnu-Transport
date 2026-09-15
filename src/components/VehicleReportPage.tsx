@@ -167,6 +167,48 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
     );
   }, [vehicle.id, vehicle.vehicle_number, vehicleTrips, vehicleMaintenance]);
 
+  const totalHaltingDays = useMemo(() => {
+    return vehicleTrips.reduce((total, trip) => {
+      const hasSeparateHalting =
+        trip.loading_halting_days !== undefined ||
+        trip.loading_halting_charge_per_day !== undefined ||
+        trip.loading_halting_fare !== undefined ||
+        trip.unloading_halting_days !== undefined ||
+        trip.unloading_halting_charge_per_day !== undefined ||
+        trip.unloading_halting_fare !== undefined;
+
+      if (hasSeparateHalting) {
+        return total +
+          (Number(trip.loading_halting_days) || 0) +
+          (Number(trip.unloading_halting_days) || 0);
+      }
+
+      return total + (Number(trip.halting_days) || 0);
+    }, 0);
+  }, [vehicleTrips]);
+
+  const totalHaltingCharges = useMemo(() => {
+    return vehicleTrips.reduce((total, trip) => {
+      const hasSeparateHalting =
+        trip.loading_halting_days !== undefined ||
+        trip.loading_halting_charge_per_day !== undefined ||
+        trip.loading_halting_fare !== undefined ||
+        trip.unloading_halting_days !== undefined ||
+        trip.unloading_halting_charge_per_day !== undefined ||
+        trip.unloading_halting_fare !== undefined;
+
+      if (hasSeparateHalting) {
+        return total +
+          (Number(trip.loading_halting_fare) || 0) +
+          (Number(trip.unloading_halting_fare) || 0);
+      }
+
+      return total + (Number(trip.halting_fare) || 0);
+    }, 0);
+  }, [vehicleTrips]);
+
+  const overallProfit = stats.finalVehicleProfit + totalHaltingCharges;
+
   const insights = useMemo(() => {
     return generateVehicleInsights(stats, vehicleTrips, vehicleMaintenance);
   }, [stats, vehicleTrips, vehicleMaintenance]);
@@ -584,6 +626,43 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
             <div className="text-xs text-slate-500 mt-1">
               {vehicleMaintenance.length} service records
             </div>
+
+          {/* Card 10: Total Halting Days */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5 text-violet-600" />
+              <span>Total Halting Days</span>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-violet-700 mt-1">
+              {totalHaltingDays} Days
+            </div>
+            <div className="text-xs text-slate-500 mt-1">Loading + Unloading halting</div>
+          </div>
+
+          {/* Card 11: Total Halting Charges */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+              <IndianRupee className="w-3.5 h-3.5 text-rose-600" />
+              <span>Total Halting Charges</span>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-rose-700 mt-1">
+              {formatINR(totalHaltingCharges)}
+            </div>
+            <div className="text-xs text-slate-500 mt-1">Total loading + unloading halting</div>
+          </div>
+
+          {/* Card 12: Overall Profit */}
+          <div className="bg-white p-5 rounded-2xl border-2 border-violet-500/80 shadow-xs bg-violet-50/20">
+            <div className="text-xs font-bold text-violet-800 uppercase tracking-wide">
+              Overall Profit
+            </div>
+            <div className={`text-2xl sm:text-3xl font-black font-mono mt-1 ${overallProfit >= 0 ? "text-violet-700" : "text-red-700"}`}>
+              {formatINR(overallProfit)}
+            </div>
+            <div className="text-xs text-violet-700 font-semibold mt-1">
+              Final Net Profit + Total Halting Charges
+            </div>
+          </div>
           </div>
         </div>
       </div>
