@@ -1,4 +1,4 @@
-import { Vehicle, Driver, Trip, MaintenanceRecord, ManualMileageRecord } from "../types";
+import { Vehicle, Driver, Trip, MaintenanceRecord, ManualMileageRecord, MileageStatusRecord } from "../types";
 import { supabase } from "./supabase";
 
 function requireSupabase() {
@@ -186,6 +186,44 @@ export async function addManualMileageRecord(data: Omit<ManualMileageRecord, "id
 
 export async function deleteManualMileageRecord(id: string): Promise<void> {
   const { error } = await requireSupabase().from("manual_mileage").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function getMileageStatusRecords(vehicleId?: string): Promise<MileageStatusRecord[]> {
+  const client = requireSupabase();
+  let query = client.from("mileage_status").select("*").order("starting_datetime", { ascending: false });
+  if (vehicleId) query = query.eq("vehicle_id", vehicleId);
+  const { data, error } = await query;
+  if (error) throw error;
+  const vehicles = await getVehicles();
+  const vehicleMap = new Map(vehicles.map((v) => [v.id, v.vehicle_number]));
+  return ((data ?? []) as MileageStatusRecord[]).map((r) => ({
+    ...r,
+    starting_odometer: Number(r.starting_odometer) || 0,
+    ending_odometer: Number(r.ending_odometer) || 0,
+    diesel_litres: Number(r.diesel_litres) || 0,
+    mileage: Number(r.mileage) || 0,
+    vehicle_number: vehicleMap.get(r.vehicle_id) ?? r.vehicle_number,
+  }));
+}
+
+export async function addMileageStatusRecord(data: Omit<MileageStatusRecord, "id" | "created_at" | "vehicle_number">): Promise<MileageStatusRecord> {
+  const client = requireSupabase();
+  const payload = {
+    ...data,
+    starting_odometer: Number(data.starting_odometer) || 0,
+    ending_odometer: Number(data.ending_odometer) || 0,
+    diesel_litres: Number(data.diesel_litres) || 0,
+    mileage: Number(data.mileage) || 0,
+  };
+  const { data: row, error } = await client.from("mileage_status").insert(payload).select().single();
+  if (error) throw error;
+  const vehicles = await getVehicles();
+  return { ...(row as MileageStatusRecord), vehicle_number: vehicles.find((v) => v.id === data.vehicle_id)?.vehicle_number };
+}
+
+export async function deleteMileageStatusRecord(id: string): Promise<void> {
+  const { error } = await requireSupabase().from("mileage_status").delete().eq("id", id);
   if (error) throw error;
 }
 
