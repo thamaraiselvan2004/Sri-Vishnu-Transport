@@ -1,0 +1,92 @@
+name: Repair Vehicle Report Halting Display
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore Vehicle Report and apply requested changes
+        run: |
+          git checkout 44797f85917d68f1db0949d484dc1d6809458100 -- src/components/VehicleReportPage.tsx
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/components/VehicleReportPage.tsx')
+          s = p.read_text()
+
+          # Remove the old Halting & Profit Summary calculations.
+          start = s.find('  const reportTotalHaltingDays = useMemo(() => {')
+          end = s.find('  const insights = useMemo(() => {', start)
+          if start != -1 and end != -1:
+              s = s[:start] + s[end:]
+
+          # Add only Halting Days and Total Halting to Vehicle Performance Snapshot.
+          anchor = '''          {/* Card 9: Service Maintenance */}'''
+          cards = '''          {/* Card 10: Halting Days */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+              Halting Days
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-purple-700 mt-1">
+              {stats.totalHaltingDays}
+            </div>
+            <div className="text-xs text-slate-500 mt-1">
+              Total loading + unloading halting days
+            </div>
+          </div>
+
+          {/* Card 11: Total Halting */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+              Total Halting
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-purple-700 mt-1">
+              {formatINR(stats.totalHaltingAmount)}
+            </div>
+            <div className="text-xs text-slate-500 mt-1">
+              Vehicle halting amount
+            </div>
+          </div>
+
+'''
+          if 'id="vehicle-halting-financial-summary"' not in s and 'Halting Days' not in s[s.find('Vehicle Performance Snapshot'):s.find('Vehicle Performance Snapshot') + 10000]:
+              s = s.replace(anchor, cards + anchor, 1)
+
+          # Remove the old summary block if present.
+          block_start = s.find('      <div id="vehicle-halting-financial-summary"')
+          if block_start != -1:
+              block_end = s.find('      </div>\n    </div>\n  );', block_start)
+              if block_end != -1:
+                  # The summary has nested divs, so remove from its opening through the final summary closing div.
+                  summary_end = s.find('      </div>\n    </div>\n  );', block_start)
+                  if summary_end != -1:
+                      s = s[:block_start] + s[summary_end + len('      </div>\n'):]
+
+          p.write_text(s)
+          PY
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build application
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npm run build
+
+      - name: Commit repair
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/VehicleReportPage.tsx
+          git diff --cached --quiet && echo 'No repair changes' || git commit -m 'Simplify vehicle report halting display'
+          git push
