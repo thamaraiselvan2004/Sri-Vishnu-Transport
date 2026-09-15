@@ -142,6 +142,10 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
     );
   }, [selectedDriverId, selectedDriverName, allTrips, dateRange]);
 
+  const overallHaltingAmount = useMemo(() => {
+    return Math.max(0, Number(stats.overallHaltingDays) || 0) * Math.max(0, Number(haltingAmountPerDay) || 0);
+  }, [stats.overallHaltingDays, haltingAmountPerDay]);
+
   // Filter trips for the selected driver and date range
   const driverTrips = useMemo(() => {
     const normSelectedName = selectedDriverName.toLowerCase().trim();
