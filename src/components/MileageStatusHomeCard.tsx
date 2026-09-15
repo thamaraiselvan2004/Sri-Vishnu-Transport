@@ -10,7 +10,7 @@ export const MileageStatusHomeCard: React.FC<MileageStatusHomeCardProps> = ({ on
     id="home-action-mileage-status-btn"
     type="button"
     onClick={onNavigate}
-    className="w-full group text-left bg-white hover:bg-violet-50/60 active:bg-violet-100/80 rounded-2xl p-6 sm:p-7 border-2 border-slate-200 hover:border-violet-600 transition-all duration-200 shadow-sm hover:shadow-md flex flex-col justify-between min-h-[190px]"
+    className="w-full md:w-[calc((100%-2.5rem)/3)] group text-left bg-white hover:bg-violet-50/60 active:bg-violet-100/80 rounded-2xl p-6 sm:p-7 border-2 border-slate-200 hover:border-violet-600 transition-all duration-200 shadow-sm hover:shadow-md flex flex-col justify-between min-h-[190px]"
   >
     <div>
       <div className="w-14 h-14 rounded-2xl bg-violet-600 text-white flex items-center justify-center mb-5 group-hover:scale-105 transition-transform shadow-md shadow-violet-600/25">
