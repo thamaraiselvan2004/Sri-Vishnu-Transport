@@ -1,0 +1,33 @@
+name: Apply Simple Navigation and Vehicle Report Update
+
+on:
+  workflow_dispatch:
+
+jobs:
+  patch-and-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply isolated UI patch
+        run: python scripts/apply-simple-navigation-vehicle-report.py
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build application
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npm run build
+
+      - name: Commit source changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/App.tsx src/components/VehicleReportPage.tsx scripts/apply-simple-navigation-vehicle-report.py
+          git diff --cached --quiet && echo 'No source changes to commit' || git commit -m 'Add back navigation and vehicle report halting metrics'
+          git push
