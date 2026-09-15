@@ -1,6 +1,8 @@
 name: Diagnose TypeScript
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
