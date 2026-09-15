@@ -76,7 +76,11 @@ export const HomePage: React.FC<HomePageProps> = ({
     (sum, m) => sum + (m.amount || 0),
     0
   );
-  const finalProfit = totalTripProfit - totalMaintenanceExpense;
+  const totalHalting = trips.reduce(
+    (sum, t) => sum + (Number(t.loading_halting_fare) || 0) + (Number(t.unloading_halting_fare) || 0),
+    0
+  );
+  const finalProfit = totalTripProfit - totalMaintenanceExpense + totalHalting;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
