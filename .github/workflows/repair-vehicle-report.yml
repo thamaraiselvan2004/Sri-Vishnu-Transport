@@ -16,8 +16,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Restore Vehicle Report to previous version
-        run: git checkout 44797f85917d68f1db0949d484dc1d6809458100 -- src/components/VehicleReportPage.tsx
+      - name: Restore exact historical Vehicle Report
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/thamaraiselvan2004/Sri-Vishnu-Transport/44797f85917d68f1db0949d484dc1d6809458100/src/components/VehicleReportPage.tsx" -o src/components/VehicleReportPage.tsx
+          test -s src/components/VehicleReportPage.tsx
 
       - name: Install dependencies
         run: npm install
