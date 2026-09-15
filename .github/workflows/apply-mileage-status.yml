@@ -1,10 +1,14 @@
 name: Apply Mileage Status
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   apply:
+    if: github.event_name == "workflow_dispatch" || !contains(github.event.head_commit.message, "Mileage Status integration applied")
     runs-on: ubuntu-latest
     permissions:
       contents: write
