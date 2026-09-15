@@ -13,6 +13,7 @@ import { Navbar } from "./components/Navbar";
 import { HomePage } from "./components/HomePage";
 import { AddTripPage } from "./components/AddTripPage";
 import { ReportAnalysisContainer } from "./components/ReportAnalysisContainer";
+import { ManualMileageSection } from "./components/ManualMileageSection";
 import { ServiceMaintenancePage } from "./components/ServiceMaintenancePage";
 import { FleetManagementPage } from "./components/FleetManagementPage";
 import { ExportBackupPage } from "./components/ExportBackupPage";
@@ -32,9 +33,7 @@ export function App() {
   });
 
   const [currentTab, setCurrentTab] = useState<string>("home");
-  const [selectedVehicleForReport, setSelectedVehicleForReport] = useState<
-    string | undefined
-  >(undefined);
+  const [selectedVehicleForReport, setSelectedVehicleForReport] = useState<string | undefined>(undefined);
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -50,7 +49,6 @@ export function App() {
     }, 4000);
   }, []);
 
-  // Load all logistics data
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -60,7 +58,6 @@ export function App() {
         getTrips(),
         getMaintenanceRecords(),
       ]);
-
       setVehicles(vData);
       setDrivers(dData);
       setTrips(tData);
@@ -72,7 +69,6 @@ export function App() {
     }
   }, []);
 
-  // Silent sync in the background without triggering full loading skeleton
   const refreshSilent = useCallback(async () => {
     try {
       const [vData, dData, tData, mData] = await Promise.all([
@@ -93,26 +89,13 @@ export function App() {
   useEffect(() => {
     if (!session) return;
     loadData();
-
-    // Auto-sync every 8 seconds so trips added on other phones appear promptly
-    const pollTimer = setInterval(() => {
-      refreshSilent();
-    }, 8000);
-
-    // Auto-sync immediately when returning to the tab or browser
-    const onFocus = () => {
-      refreshSilent();
-    };
-
+    const pollTimer = setInterval(() => refreshSilent(), 8000);
+    const onFocus = () => refreshSilent();
     const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        refreshSilent();
-      }
+      if (document.visibilityState === "visible") refreshSilent();
     };
-
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVisibilityChange);
-
     return () => {
       clearInterval(pollTimer);
       window.removeEventListener("focus", onFocus);
@@ -142,20 +125,20 @@ export function App() {
     showToast("Trip saved sucessfully");
   };
 
-  // If not authenticated, display clean private login view
   if (!session) {
     return <LoginView onLoginSuccess={(sess) => setSession(sess)} />;
   }
 
+  const selectedVehicle = selectedVehicleForReport
+    ? vehicles.find((v) => v.id === selectedVehicleForReport)
+    : undefined;
+
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
-      {/* Top Application Navbar */}
       <Navbar
         currentTab={currentTab}
         setCurrentTab={(tab) => {
-          if (tab !== "reports") {
-            setSelectedVehicleForReport(undefined);
-          }
+          if (tab !== "reports") setSelectedVehicleForReport(undefined);
           setCurrentTab(tab);
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}
@@ -163,14 +146,11 @@ export function App() {
         userEmail={session.email}
       />
 
-      {/* Main Content Area */}
       <main className="flex-1 pb-16">
         {isLoading && trips.length === 0 ? (
           <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3">
             <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-            <p className="text-sm font-medium text-slate-600">
-              Loading Sri Vishnu Logistics records...
-            </p>
+            <p className="text-sm font-medium text-slate-600">Loading Sri Vishnu Logistics records...</p>
           </div>
         ) : (
           <>
@@ -200,15 +180,26 @@ export function App() {
             )}
 
             {currentTab === "reports" && (
-              <ReportAnalysisContainer
-                vehicles={vehicles}
-                drivers={drivers}
-                trips={trips}
-                maintenance={maintenance}
-                initialVehicleId={selectedVehicleForReport}
-                onDeleteTrip={handleDeleteTrip}
-                onUpdateTrip={handleUpdateTrip}
-              />
+              <>
+                <ReportAnalysisContainer
+                  vehicles={vehicles}
+                  drivers={drivers}
+                  trips={trips}
+                  maintenance={maintenance}
+                  initialVehicleId={selectedVehicleForReport}
+                  onDeleteTrip={handleDeleteTrip}
+                  onUpdateTrip={handleUpdateTrip}
+                />
+                {selectedVehicle && (
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+                    <ManualMileageSection
+                      vehicle={selectedVehicle}
+                      allVehicles={vehicles.filter((v) => v.active)}
+                      onVehicleChange={(vehicleId) => setSelectedVehicleForReport(vehicleId)}
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             {currentTab === "service" && (
@@ -241,12 +232,8 @@ export function App() {
         )}
       </main>
 
-      {/* Toast Notification */}
       {toastMessage && (
-        <div
-          id="global-toast-notification"
-          className="fixed bottom-6 right-6 z-50 animate-bounce duration-300 max-w-sm"
-        >
+        <div id="global-toast-notification" className="fixed bottom-6 right-6 z-50 animate-bounce duration-300 max-w-sm">
           <div className="flex items-center gap-3 px-5 py-3.5 bg-slate-900 text-white rounded-2xl shadow-2xl border-2 border-emerald-500/80">
             <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
               <CheckCircle2 className="w-5 h-5" />
@@ -259,7 +246,6 @@ export function App() {
         </div>
       )}
 
-      {/* Mobile Floating Action Button to Add Trip (Quick Access) */}
       {currentTab !== "add-trip" && (
         <div className="sm:hidden fixed bottom-6 right-6 z-30">
           <button
@@ -276,16 +262,10 @@ export function App() {
         </div>
       )}
 
-      {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4">
-          <p className="font-semibold text-slate-700">
-            Sri Vishnu Logistics &mdash; Private Fleet Management Portal
-          </p>
-          <p className="mt-1 text-slate-400">
-            Designed for mobile &amp; desktop &bull; 15% Automated Driver Beta
-            &bull; Vehicle-wise Analytics &bull; &copy; 2026
-          </p>
+          <p className="font-semibold text-slate-700">Sri Vishnu Logistics &mdash; Private Fleet Management Portal</p>
+          <p className="mt-1 text-slate-400">Designed for mobile &amp; desktop &bull; 15% Automated Driver Beta &bull; Vehicle-wise Analytics &bull; &copy; 2026</p>
         </div>
       </footer>
     </div>
