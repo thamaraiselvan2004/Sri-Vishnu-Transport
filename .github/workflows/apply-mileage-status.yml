@@ -8,7 +8,7 @@ on:
 
 jobs:
   apply:
-    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'Apply Mileage Status integration')
+    if: github.event_name == "workflow_dispatch" || !contains(github.event.head_commit.message, "Mileage Status integration applied")
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -47,5 +47,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add src/lib/database.ts src/App.tsx supabase_schema.sql scripts/apply-mileage-status.py .github/workflows/apply-mileage-status.yml
-          git diff --cached --quiet && echo 'No source changes to commit' || git commit -m 'Apply Mileage Status integration'
+          git diff --cached --quiet && echo 'No source changes to commit' || git commit -m 'Mileage Status integration applied'
           git push
