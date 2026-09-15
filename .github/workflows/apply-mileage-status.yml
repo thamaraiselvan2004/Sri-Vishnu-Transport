@@ -52,3 +52,12 @@ jobs:
           git add src/lib/database.ts src/App.tsx supabase_schema.sql scripts/apply-mileage-status.py .github/workflows/apply-mileage-status.yml
           git diff --cached --quiet && echo 'No source changes to commit' || git commit -m 'Mileage Status integration applied'
           git push
+
+      - name: Record verified build
+        run: |
+          printf 'Mileage Status integration passed npm run lint and npm run build on %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > MILEAGE_STATUS_BUILD_VERIFIED.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add MILEAGE_STATUS_BUILD_VERIFIED.md
+          git diff --cached --quiet || git commit -m 'Mileage Status build verified'
+          git push
