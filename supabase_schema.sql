@@ -4,7 +4,6 @@
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 1. Vehicles
 CREATE TABLE IF NOT EXISTS vehicles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   vehicle_number TEXT NOT NULL UNIQUE,
@@ -12,7 +11,6 @@ CREATE TABLE IF NOT EXISTS vehicles (
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- 2. Drivers
 CREATE TABLE IF NOT EXISTS drivers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   driver_name TEXT NOT NULL,
@@ -20,9 +18,6 @@ CREATE TABLE IF NOT EXISTS drivers (
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- 3. Trips
--- Distance is entered directly as trip_running_kms.
--- GPS, BlackBuck and start/end odometer fields are intentionally not used.
 CREATE TABLE IF NOT EXISTS trips (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   trip_date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -47,27 +42,30 @@ CREATE TABLE IF NOT EXISTS trips (
   other_expenses NUMERIC(12, 2) NOT NULL DEFAULT 0,
   net_profit NUMERIC(12, 2) NOT NULL DEFAULT 0,
 
-  -- Halting
+  -- Existing combined halting values retained for compatibility.
   halting_days NUMERIC(10, 2) NOT NULL DEFAULT 0,
   halting_charge_per_day NUMERIC(12, 2) NOT NULL DEFAULT 0,
   halting_fare NUMERIC(12, 2) NOT NULL DEFAULT 0,
 
-  -- Advance & balance collections
+  -- Separate loading and unloading halting.
+  loading_halting_days NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  loading_halting_charge_per_day NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  loading_halting_fare NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  unloading_halting_days NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  unloading_halting_charge_per_day NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  unloading_halting_fare NUMERIC(12, 2) NOT NULL DEFAULT 0,
+
   advance_received NUMERIC(12, 2) NOT NULL DEFAULT 0,
   advance_received_date DATE,
   balance_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
   balance_received_date DATE,
-
-  -- Driver settlement
   amount_paid_to_driver NUMERIC(12, 2) NOT NULL DEFAULT 0,
   driver_payment_date DATE,
   remaining_amount_to_driver NUMERIC(12, 2) NOT NULL DEFAULT 0,
-
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- 4. Maintenance
 CREATE TABLE IF NOT EXISTS maintenance (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   vehicle_id UUID NOT NULL REFERENCES vehicles(id) ON DELETE RESTRICT,
@@ -80,38 +78,67 @@ CREATE TABLE IF NOT EXISTS maintenance (
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- 5. Indexes
+-- Manual mileage is intentionally separate from trips so the existing trip mileage calculation is untouched.
+CREATE TABLE IF NOT EXISTS manual_mileage (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  vehicle_id UUID NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+  record_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  trip_number INTEGER NOT NULL,
+  starting_odometer NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  ending_odometer NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  diesel_litres NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  mileage NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
 CREATE INDEX IF NOT EXISTS idx_trips_vehicle_id ON trips(vehicle_id);
 CREATE INDEX IF NOT EXISTS idx_trips_driver_id ON trips(driver_id);
 CREATE INDEX IF NOT EXISTS idx_trips_date ON trips(trip_date DESC);
 CREATE INDEX IF NOT EXISTS idx_trips_vehicle_date ON trips(vehicle_id, trip_date DESC);
 CREATE INDEX IF NOT EXISTS idx_maintenance_vehicle_date ON maintenance(vehicle_id, maintenance_date DESC);
+CREATE INDEX IF NOT EXISTS idx_manual_mileage_vehicle_id ON manual_mileage(vehicle_id);
+CREATE INDEX IF NOT EXISTS idx_manual_mileage_vehicle_trip ON manual_mileage(vehicle_id, trip_number);
 
--- 6. Row Level Security
 ALTER TABLE vehicles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE drivers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE trips ENABLE ROW LEVEL SECURITY;
 ALTER TABLE maintenance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE manual_mileage ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Authenticated users can select vehicles" ON vehicles FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Authenticated users can insert vehicles" ON vehicles FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Authenticated users can update vehicles" ON vehicles FOR UPDATE TO authenticated USING (true);
+DROP POLICY IF EXISTS "Authenticated users can select vehicles" ON vehicles;
+DROP POLICY IF EXISTS "Authenticated users can insert vehicles" ON vehicles;
+DROP POLICY IF EXISTS "Authenticated users can update vehicles" ON vehicles;
+DROP POLICY IF EXISTS "Authenticated users can select drivers" ON drivers;
+DROP POLICY IF EXISTS "Authenticated users can insert drivers" ON drivers;
+DROP POLICY IF EXISTS "Authenticated users can update drivers" ON drivers;
+DROP POLICY IF EXISTS "Authenticated users can select trips" ON trips;
+DROP POLICY IF EXISTS "Authenticated users can insert trips" ON trips;
+DROP POLICY IF EXISTS "Authenticated users can update trips" ON trips;
+DROP POLICY IF EXISTS "Authenticated users can delete trips" ON trips;
+DROP POLICY IF EXISTS "Authenticated users can select maintenance" ON maintenance;
+DROP POLICY IF EXISTS "Authenticated users can insert maintenance" ON maintenance;
+DROP POLICY IF EXISTS "Authenticated users can update maintenance" ON maintenance;
+DROP POLICY IF EXISTS "Authenticated users can delete maintenance" ON maintenance;
 
-CREATE POLICY "Authenticated users can select drivers" ON drivers FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Authenticated users can insert drivers" ON drivers FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Authenticated users can update drivers" ON drivers FOR UPDATE TO authenticated USING (true);
+CREATE POLICY vehicles_anon_select ON vehicles FOR SELECT TO anon USING (true);
+CREATE POLICY vehicles_anon_insert ON vehicles FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY vehicles_anon_update ON vehicles FOR UPDATE TO anon USING (true) WITH CHECK (true);
+CREATE POLICY drivers_anon_select ON drivers FOR SELECT TO anon USING (true);
+CREATE POLICY drivers_anon_insert ON drivers FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY drivers_anon_update ON drivers FOR UPDATE TO anon USING (true) WITH CHECK (true);
+CREATE POLICY trips_anon_select ON trips FOR SELECT TO anon USING (true);
+CREATE POLICY trips_anon_insert ON trips FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY trips_anon_update ON trips FOR UPDATE TO anon USING (true) WITH CHECK (true);
+CREATE POLICY trips_anon_delete ON trips FOR DELETE TO anon USING (true);
+CREATE POLICY maintenance_anon_select ON maintenance FOR SELECT TO anon USING (true);
+CREATE POLICY maintenance_anon_insert ON maintenance FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY maintenance_anon_update ON maintenance FOR UPDATE TO anon USING (true) WITH CHECK (true);
+CREATE POLICY maintenance_anon_delete ON maintenance FOR DELETE TO anon USING (true);
+CREATE POLICY manual_mileage_anon_select ON manual_mileage FOR SELECT TO anon USING (true);
+CREATE POLICY manual_mileage_anon_insert ON manual_mileage FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY manual_mileage_anon_update ON manual_mileage FOR UPDATE TO anon USING (true) WITH CHECK (true);
+CREATE POLICY manual_mileage_anon_delete ON manual_mileage FOR DELETE TO anon USING (true);
 
-CREATE POLICY "Authenticated users can select trips" ON trips FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Authenticated users can insert trips" ON trips FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Authenticated users can update trips" ON trips FOR UPDATE TO authenticated USING (true);
-CREATE POLICY "Authenticated users can delete trips" ON trips FOR DELETE TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can select maintenance" ON maintenance FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Authenticated users can insert maintenance" ON maintenance FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Authenticated users can update maintenance" ON maintenance FOR UPDATE TO authenticated USING (true);
-CREATE POLICY "Authenticated users can delete maintenance" ON maintenance FOR DELETE TO authenticated USING (true);
-
--- 7. Seed Default Vehicles
 INSERT INTO vehicles (vehicle_number, active) VALUES
   ('TN 25 AK 4061', true),
   ('TN 54 AA 4710', true),
@@ -120,7 +147,6 @@ INSERT INTO vehicles (vehicle_number, active) VALUES
   ('TN 12 P 1359', true)
 ON CONFLICT (vehicle_number) DO NOTHING;
 
--- 8. Seed Default Drivers
 INSERT INTO drivers (driver_name, active) VALUES
   ('Paranthaman', true),
   ('Sivaguru', true),
