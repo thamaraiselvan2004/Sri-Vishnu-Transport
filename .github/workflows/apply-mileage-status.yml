@@ -16,11 +16,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Ensure Mileage Status type import
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/lib/database.ts')
+          text = p.read_text()
+          old = 'import { Vehicle, Driver, Trip, MaintenanceRecord, ManualMileageRecord } from "../types";'
+          new = 'import { Vehicle, Driver, Trip, MaintenanceRecord, ManualMileageRecord, MileageStatusRecord } from "../types";'
+          if new not in text:
+              if old not in text:
+                  raise SystemExit('database.ts import line not found')
+              p.write_text(text.replace(old, new, 1))
+          PY
+
       - name: Apply Mileage Status source integration
         run: python scripts/apply-mileage-status.py
 
       - name: Install dependencies
         run: npm install
+
+      - name: Type-check application
+        run: npm run lint
 
       - name: Build application
         env:
