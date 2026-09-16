@@ -2,6 +2,10 @@ import { supabase } from "./lib/supabase";
 
 let started = false;
 let refreshTimer: number | undefined;
+let monthlyRows: Array<[string, { trips: number; revenue: number; profit: number }]> = [];
+let currentMonthKey = "";
+let currentMonthLabel = "";
+let reportExpanded = false;
 
 const money = (value: number) =>
   new Intl.NumberFormat("en-IN", {
@@ -39,8 +43,8 @@ async function refreshMonthlyBusinessSummary() {
   ]);
 
   const now = new Date();
-  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const currentLabel = now.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  currentMonthLabel = now.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
 
   const monthly = new Map<string, { trips: number; revenue: number; profit: number }>();
 
@@ -64,7 +68,7 @@ async function refreshMonthlyBusinessSummary() {
     monthly.set(key, row);
   }
 
-  const current = monthly.get(currentMonth) || { trips: 0, revenue: 0, profit: 0 };
+  const current = monthly.get(currentMonthKey) || { trips: 0, revenue: 0, profit: 0 };
 
   const updateCard = (label: string, value: string, subtitle: string) => {
     const labelEl = Array.from(document.querySelectorAll<HTMLElement>("div")).find(
@@ -78,9 +82,9 @@ async function refreshMonthlyBusinessSummary() {
     if (subtitleEl) subtitleEl.textContent = subtitle;
   };
 
-  updateCard("Total Trips", String(current.trips), currentLabel);
-  updateCard("Total Revenue", money(current.revenue), currentLabel);
-  updateCard("Net Business Profit", money(current.profit), `After all trip & service costs • ${currentLabel}`);
+  updateCard("Total Trips", String(current.trips), currentMonthLabel);
+  updateCard("Total Revenue", money(current.revenue), currentMonthLabel);
+  updateCard("Net Business Profit", money(current.profit), `After all trip & service costs • ${currentMonthLabel}`);
 
   const fleetLabel = Array.from(document.querySelectorAll<HTMLElement>("div")).find(
     (el) => el.textContent?.trim() === "Fleet Vehicles"
@@ -96,14 +100,17 @@ async function refreshMonthlyBusinessSummary() {
     kpiGrid.insertAdjacentElement("afterend", report);
   }
 
-  const sortedMonths = Array.from(monthly.entries()).sort(([a], [b]) => b.localeCompare(a));
+  monthlyRows = Array.from(monthly.entries()).sort(([a], [b]) => b.localeCompare(a));
+  if (monthlyRows.length <= 1) reportExpanded = false;
 
-  const mobileRows = sortedMonths
+  const visibleRows = reportExpanded ? monthlyRows : monthlyRows.slice(0, 1);
+
+  const mobileRows = visibleRows
     .map(([key, row]) => `
-      <div class="p-4 rounded-xl border ${key === currentMonth ? "border-blue-300 bg-blue-50/50" : "border-slate-200 bg-white"}">
+      <div class="p-4 rounded-xl border ${key === currentMonthKey ? "border-blue-300 bg-blue-50/50" : "border-slate-200 bg-white"}">
         <div class="flex items-center justify-between gap-2 mb-3">
           <div class="font-bold text-slate-900">${monthLabel(key)}</div>
-          ${key === currentMonth ? '<span class="shrink-0 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-blue-100 text-blue-700">Current</span>' : ""}
+          ${key === currentMonthKey ? '<span class="shrink-0 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-blue-100 text-blue-700">Current</span>' : ""}
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div class="rounded-lg bg-slate-50 p-3">
@@ -123,32 +130,37 @@ async function refreshMonthlyBusinessSummary() {
     `)
     .join("");
 
-  const desktopRows = sortedMonths
+  const desktopRows = visibleRows
     .map(([key, row]) => `
-      <tr class="${key === currentMonth ? "bg-blue-50/50" : "bg-white"}">
-        <td class="px-6 py-4 font-bold text-slate-800">
-          <div class="flex items-center gap-2">
+      <tr class="${key === currentMonthKey ? "bg-blue-50/50" : "bg-white"}">
+        <td class="px-4 sm:px-6 py-4 font-bold text-slate-800">
+          <div class="flex items-center gap-2 flex-wrap">
             <span>${monthLabel(key)}</span>
-            ${key === currentMonth ? '<span class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Current</span>' : ""}
+            ${key === currentMonthKey ? '<span class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Current</span>' : ""}
           </div>
         </td>
-        <td class="px-6 py-4 text-right font-semibold text-slate-700">${row.trips}</td>
-        <td class="px-6 py-4 text-right font-semibold text-blue-700 font-mono">${money(row.revenue)}</td>
-        <td class="px-6 py-4 text-right font-bold text-emerald-700 font-mono">${money(row.profit)}</td>
+        <td class="px-4 sm:px-6 py-4 text-right font-semibold text-slate-700">${row.trips}</td>
+        <td class="px-4 sm:px-6 py-4 text-right font-semibold text-blue-700 font-mono">${money(row.revenue)}</td>
+        <td class="px-4 sm:px-6 py-4 text-right font-bold text-emerald-700 font-mono">${money(row.profit)}</td>
       </tr>
     `)
     .join("");
 
   const emptyMessage = '<div class="px-4 py-8 text-center text-slate-500">No monthly business data yet.</div>';
+  const showViewAll = monthlyRows.length > 1;
+  const viewAllLabel = reportExpanded ? "View Less" : "View All";
 
   report.innerHTML = `
     <div class="p-5 sm:p-6 border-b border-slate-200 bg-slate-50/70">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 class="text-lg font-bold text-slate-900">Monthly Business Report</h2>
           <p class="text-xs text-slate-500 mt-1">Monthly totals are calculated from the existing trip and maintenance records.</p>
         </div>
-        <div class="w-fit text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5">Current: ${currentLabel}</div>
+        <div class="flex items-center justify-between sm:justify-end gap-2">
+          <div class="w-fit text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5">Current: ${currentMonthLabel}</div>
+          ${showViewAll ? `<button id="monthly-business-report-toggle" type="button" class="shrink-0 text-xs sm:text-sm font-bold text-blue-700 hover:text-blue-800 bg-white border border-blue-200 hover:border-blue-300 rounded-lg px-3 py-1.5 transition-colors">${viewAllLabel}</button>` : ""}
+        </div>
       </div>
     </div>
 
@@ -160,10 +172,10 @@ async function refreshMonthlyBusinessSummary() {
       <table class="w-full text-sm">
         <thead class="bg-slate-100/80 text-xs uppercase tracking-wide text-slate-500">
           <tr>
-            <th class="text-left px-6 py-3 font-bold">Month</th>
-            <th class="text-right px-6 py-3 font-bold">Total Trips</th>
-            <th class="text-right px-6 py-3 font-bold">Total Revenue</th>
-            <th class="text-right px-6 py-3 font-bold">Net Profit</th>
+            <th class="text-left px-4 sm:px-6 py-3 font-bold">Month</th>
+            <th class="text-right px-4 sm:px-6 py-3 font-bold">Total Trips</th>
+            <th class="text-right px-4 sm:px-6 py-3 font-bold">Total Revenue</th>
+            <th class="text-right px-4 sm:px-6 py-3 font-bold">Net Profit</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
@@ -172,6 +184,12 @@ async function refreshMonthlyBusinessSummary() {
       </table>
     </div>
   `;
+
+  const toggleButton = document.getElementById("monthly-business-report-toggle");
+  toggleButton?.addEventListener("click", () => {
+    reportExpanded = !reportExpanded;
+    void refreshMonthlyBusinessSummary();
+  });
 }
 
 export function startMonthlyBusinessSummary() {
