@@ -10,16 +10,12 @@ import {
 interface MileageStatusPageProps {
   vehicles: Vehicle[];
   onNavigateHome: () => void;
+  initialVehicleId?: string;
 }
 
-const toLocalDateTimeInput = (date: Date) => {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-};
-
-export const MileageStatusPage: React.FC<MileageStatusPageProps> = ({ vehicles, onNavigateHome }) => {
+export const MileageStatusPage: React.FC<MileageStatusPageProps> = ({ vehicles, onNavigateHome, initialVehicleId }) => {
   const activeVehicles = vehicles.filter((v) => v.active);
-  const [vehicleId, setVehicleId] = useState(activeVehicles[0]?.id || "");
+  const [vehicleId, setVehicleId] = useState(initialVehicleId || activeVehicles[0]?.id || "");
   const [startingDateTime, setStartingDateTime] = useState("");
   const [endingDateTime, setEndingDateTime] = useState("");
   const [startingOdometer, setStartingOdometer] = useState("");
@@ -31,8 +27,12 @@ export const MileageStatusPage: React.FC<MileageStatusPageProps> = ({ vehicles, 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!vehicleId && activeVehicles[0]) setVehicleId(activeVehicles[0].id);
-  }, [activeVehicles, vehicleId]);
+    if (initialVehicleId) {
+      setVehicleId(initialVehicleId);
+    } else if (!vehicleId && activeVehicles[0]) {
+      setVehicleId(activeVehicles[0].id);
+    }
+  }, [initialVehicleId, activeVehicles, vehicleId]);
 
   const loadRecords = async () => {
     if (!vehicleId) return;
@@ -119,6 +119,8 @@ export const MileageStatusPage: React.FC<MileageStatusPageProps> = ({ vehicles, 
   const formatDateTime = (value: string) =>
     new Date(value).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
 
+  const selectedVehicleNumber = activeVehicles.find((v) => v.id === vehicleId)?.vehicle_number;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <div className="flex items-center gap-3 mb-6">
@@ -142,13 +144,20 @@ export const MileageStatusPage: React.FC<MileageStatusPageProps> = ({ vehicles, 
         <form onSubmit={handleSave} className="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">Vehicle</label>
-            <div className="relative">
-              <Truck className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-              <select value={vehicleId} onChange={(e) => setVehicleId(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold" required>
-                <option value="">Select vehicle</option>
-                {activeVehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.vehicle_number}</option>)}
-              </select>
-            </div>
+            {initialVehicleId ? (
+              <div className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl border border-violet-200 bg-violet-50 text-sm font-bold text-violet-900">
+                <Truck className="w-4 h-4 text-violet-600" />
+                <span>{selectedVehicleNumber || "Selected vehicle"}</span>
+              </div>
+            ) : (
+              <div className="relative">
+                <Truck className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                <select value={vehicleId} onChange={(e) => setVehicleId(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold" required>
+                  <option value="">Select vehicle</option>
+                  {activeVehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.vehicle_number}</option>)}
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 gap-4">
@@ -197,7 +206,7 @@ export const MileageStatusPage: React.FC<MileageStatusPageProps> = ({ vehicles, 
               <h2 className="text-lg font-bold text-slate-900">Saved Mileage Records</h2>
               <p className="text-xs text-slate-500 mt-1">Each record is saved separately for the selected vehicle.</p>
             </div>
-            {vehicleId && <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">{activeVehicles.find((v) => v.id === vehicleId)?.vehicle_number}</span>}
+            {vehicleId && <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">{selectedVehicleNumber}</span>}
           </div>
 
           {loading ? (
