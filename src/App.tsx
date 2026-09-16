@@ -268,6 +268,7 @@ export function App() {
                 {selectedVehicleForReport && (
                   <MileageStatusPage
                     vehicles={vehicles}
+                    initialVehicleId={selectedVehicleForReport}
                     onNavigateHome={handleBack}
                   />
                 )}
