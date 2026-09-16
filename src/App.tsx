@@ -14,6 +14,7 @@ import { HomePage } from "./components/HomePage";
 import { AddTripPage } from "./components/AddTripPage";
 import { ReportAnalysisContainer } from "./components/ReportAnalysisContainer";
 import { MileageStatusPage } from "./components/MileageStatusPage";
+import { VehicleMonthlyProfitReport } from "./components/VehicleMonthlyProfitReport";
 import { ServiceMaintenancePage } from "./components/ServiceMaintenancePage";
 import { FleetManagementPage } from "./components/FleetManagementPage";
 import { ExportBackupPage } from "./components/ExportBackupPage";
@@ -121,8 +122,6 @@ export function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  // Keep the app-level navigation state in sync when a vehicle card is opened
-  // from inside Report Analysis. This allows Back to return to the vehicle list.
   useEffect(() => {
     if (!session || currentTab !== "reports") return;
 
@@ -140,15 +139,12 @@ export function App() {
   }, [session, currentTab]);
 
   const handleBack = useCallback(() => {
-    // Step 1: leave the currently opened vehicle report and return to
-    // Report Analysis → Vehicles instead of jumping directly to Home.
     if (selectedVehicleForReport) {
       setSelectedVehicleForReport(undefined);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
-    // Step 2+: walk through the actual top-level pages visited.
     setTabHistory((history) => {
       if (history.length === 0) return history;
       const next = [...history];
@@ -189,6 +185,10 @@ export function App() {
   }
 
   const showBackButton = currentTab !== "home" && (tabHistory.length > 0 || !!selectedVehicleForReport);
+
+  const selectedVehicle = selectedVehicleForReport
+    ? vehicles.find((v) => v.id === selectedVehicleForReport)
+    : undefined;
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
@@ -258,6 +258,13 @@ export function App() {
                   onDeleteTrip={handleDeleteTrip}
                   onUpdateTrip={handleUpdateTrip}
                 />
+                {selectedVehicle && (
+                  <VehicleMonthlyProfitReport
+                    vehicle={selectedVehicle}
+                    trips={trips}
+                    maintenance={maintenance}
+                  />
+                )}
                 {selectedVehicleForReport && (
                   <MileageStatusPage
                     vehicles={vehicles}
