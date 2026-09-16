@@ -79,3 +79,5 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
+# Keep the deployment path fresh so the Home Page renders the single Mileage Status card from main.
