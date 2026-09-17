@@ -111,8 +111,12 @@ export function App() {
           {currentTab === "add-trip" && <AddTripPage vehicles={vehicles} drivers={drivers} onTripAdded={handleTripAdded} onNavigateHome={() => navigateTo("home")} onRefreshMasterData={loadData} />}
           {currentTab === "reports" && <ReportAnalysisContainer key={selectedVehicleForReport || "report-analysis-list"} vehicles={vehicles} drivers={drivers} trips={trips} maintenance={maintenance} initialVehicleId={selectedVehicleForReport} onDeleteTrip={handleDeleteTrip} onUpdateTrip={handleUpdateTrip} />}
           {currentTab === "reports" && selectedVehicle && <MonthlyVehiclePerformanceSnapshot vehicle={selectedVehicle} trips={trips} maintenance={maintenance} />}
-          {currentTab === "reports" && selectedVehicle && <VehicleMonthlyProfitReport vehicle={selectedVehicle} trips={trips} maintenance={maintenance} />}
-          {currentTab === "reports" && selectedVehicle && <VehicleSavedMileageRecords vehicle={selectedVehicle} />}
+          {currentTab === "reports" && selectedVehicle && (
+            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-8 mt-8">
+              <VehicleMonthlyProfitReport vehicle={selectedVehicle} trips={trips} maintenance={maintenance} />
+              <VehicleSavedMileageRecords vehicle={selectedVehicle} />
+            </div>
+          )}
           {currentTab === "mileage-status" && <MileageStatusPage vehicles={vehicles} onNavigateHome={() => navigateTo("home")} />}
           {currentTab === "service" && <ServiceMaintenancePage vehicles={vehicles} maintenanceRecords={maintenance} onMaintenanceUpdated={loadData} />}
           {currentTab === "drivers-vehicles" && <FleetManagementPage vehicles={vehicles} drivers={drivers} trips={trips} onRefreshData={loadData} />}
