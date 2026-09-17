@@ -6,7 +6,7 @@ interface PrivateAccessGateProps {
 }
 
 const ACCESS_KEY = "sri-vishnu-private-access";
-const PASSWORD_HASH = "a2b7d7c2d3c5b6d6f8c1c6f0a5d5f0b0f5c6c5d4e3c2b1a0f9e8d7c6b5a4";
+const PASSWORD_HASH = "46635b56d3c7f0b7bb26adae2a1692debbfd145d4a0986a9137fe91e73e70360";
 
 async function sha256(value: string): Promise<string> {
   const bytes = new TextEncoder().encode(value);
