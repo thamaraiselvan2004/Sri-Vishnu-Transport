@@ -8,6 +8,7 @@ import { AddTripPage } from "./components/AddTripPage";
 import { ReportAnalysisContainer } from "./components/ReportAnalysisContainer";
 import { MileageStatusPage } from "./components/MileageStatusPage";
 import { VehicleMonthlyProfitReport } from "./components/VehicleMonthlyProfitReport";
+import { VehicleSavedMileageRecords } from "./components/VehicleSavedMileageRecords";
 import { ServiceMaintenancePage } from "./components/ServiceMaintenancePage";
 import { FleetManagementPage } from "./components/FleetManagementPage";
 import { ExportBackupPage } from "./components/ExportBackupPage";
@@ -109,6 +110,7 @@ export function App() {
           {currentTab === "add-trip" && <AddTripPage vehicles={vehicles} drivers={drivers} onTripAdded={handleTripAdded} onNavigateHome={() => navigateTo("home")} onRefreshMasterData={loadData} />}
           {currentTab === "reports" && <ReportAnalysisContainer key={selectedVehicleForReport || "report-analysis-list"} vehicles={vehicles} drivers={drivers} trips={trips} maintenance={maintenance} initialVehicleId={selectedVehicleForReport} onDeleteTrip={handleDeleteTrip} onUpdateTrip={handleUpdateTrip} />}
           {currentTab === "reports" && selectedVehicle && <VehicleMonthlyProfitReport vehicle={selectedVehicle} trips={trips} maintenance={maintenance} />}
+          {currentTab === "reports" && selectedVehicle && <VehicleSavedMileageRecords vehicle={selectedVehicle} />}
           {currentTab === "mileage-status" && <MileageStatusPage vehicles={vehicles} onNavigateHome={() => navigateTo("home")} />}
           {currentTab === "service" && <ServiceMaintenancePage vehicles={vehicles} maintenanceRecords={maintenance} onMaintenanceUpdated={loadData} />}
           {currentTab === "drivers-vehicles" && <FleetManagementPage vehicles={vehicles} drivers={drivers} trips={trips} onRefreshData={loadData} />}
