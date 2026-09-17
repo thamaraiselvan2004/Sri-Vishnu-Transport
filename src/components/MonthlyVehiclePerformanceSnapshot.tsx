@@ -129,13 +129,13 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-          <div className="text-xs font-bold text-slate-500 uppercase tracking-wide">Total Trips</div>
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wide">No.of.Trips</div>
           <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">{stats.totalTrips}</div>
           <div className="text-xs text-slate-500 mt-1">Current month completed runs</div>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-          <div className="text-xs font-bold text-slate-500 uppercase tracking-wide">Total Revenue</div>
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wide">Total Freight Fare</div>
           <div className="text-2xl sm:text-3xl font-black font-mono text-blue-700 mt-1">{formatINR(stats.totalTripRevenue)}</div>
           <div className="text-xs text-slate-500 mt-1">Current month gross freight fare</div>
         </div>
