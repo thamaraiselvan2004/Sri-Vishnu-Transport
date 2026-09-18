@@ -69,15 +69,46 @@ export const HomePage: React.FC<HomePageProps> = ({
   // Display all or recent 3 trips
   const displayedTrips = viewAllTrips ? filteredTrips : filteredTrips.slice(0, 3);
 
-  // Quick total revenue and total profit calculations
-  const totalRevenue = trips.reduce((sum, t) => sum + (t.trip_fare || 0), 0);
-  const totalTripProfit = trips.reduce((sum, t) => sum + (t.net_profit || 0), 0);
-  const totalMaintenanceExpense = maintenance.reduce(
-    (sum, m) => sum + (m.amount || 0),
+  // Home Page business KPIs are calculated for the current month only.
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const currentMonthLabel = now.toLocaleDateString("en-IN", {
+    month: "long",
+    year: "numeric",
+  });
+  const getMonthKey = (value: string | null | undefined) => {
+    if (!value) return "";
+    const match = String(value).match(/^(\\d{4})-(\\d{2})/);
+    if (match) return `${match[1]}-${match[2]}`;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime())
+      ? ""
+      : `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}`;
+  };
+
+  const currentMonthTrips = trips.filter(
+    (t) => getMonthKey(t.trip_date) === currentMonthKey
+  );
+  const currentMonthMaintenance = maintenance.filter(
+    (m) => getMonthKey(m.maintenance_date) === currentMonthKey
+  );
+  const totalRevenue = currentMonthTrips.reduce(
+    (sum, t) => sum + (Number(t.trip_fare) || 0),
     0
   );
-  const totalHalting = trips.reduce(
-    (sum, t) => sum + (Number(t.loading_halting_fare) || 0) + (Number(t.unloading_halting_fare) || 0),
+  const totalTripProfit = currentMonthTrips.reduce(
+    (sum, t) => sum + (Number(t.net_profit) || 0),
+    0
+  );
+  const totalMaintenanceExpense = currentMonthMaintenance.reduce(
+    (sum, m) => sum + (Number(m.amount) || 0),
+    0
+  );
+  const totalHalting = currentMonthTrips.reduce(
+    (sum, t) =>
+      sum +
+      (Number(t.loading_halting_fare) || 0) +
+      (Number(t.unloading_halting_fare) || 0),
     0
   );
   const finalProfit = totalTripProfit - totalMaintenanceExpense + totalHalting;
@@ -208,10 +239,10 @@ export const HomePage: React.FC<HomePageProps> = ({
             Total Trips
           </div>
           <div className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">
-            {trips.length}
+            {currentMonthTrips.length}
           </div>
           <div className="text-xs text-slate-500 mt-1">
-            Digitally logged trips
+            {currentMonthLabel}
           </div>
         </div>
 
@@ -222,7 +253,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           <div className="text-2xl sm:text-3xl font-bold text-blue-700 mt-1">
             {formatINR(totalRevenue)}
           </div>
-          <div className="text-xs text-slate-500 mt-1">Gross freight fare</div>
+          <div className="text-xs text-slate-500 mt-1">{currentMonthLabel}</div>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
@@ -232,7 +263,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           <div className="text-2xl sm:text-3xl font-bold text-emerald-700 mt-1">
             {formatINR(finalProfit)}
           </div>
-          <div className="text-xs text-slate-500 mt-1">After all trip &amp; service costs</div>
+          <div className="text-xs text-slate-500 mt-1">{currentMonthLabel}</div>
         </div>
       </div>
 
