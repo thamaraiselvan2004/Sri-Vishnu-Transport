@@ -184,12 +184,13 @@ function showVehicleMonthlyPerformance(key: string) {
   const vehicleNumberMap = new Map(
     monthlyVehiclesData.map((vehicle) => [String(vehicle.id), String(vehicle.vehicle_number || vehicle.id)])
   );
-  const vehicles = new Map<string, { vehicleNumber: string; freightFare: number; profit: number }>();
+  const vehicles = new Map<string, { vehicleNumber: string; trips: number; freightFare: number; profit: number }>();
 
   for (const trip of monthTrips) {
     const vehicleId = String(trip.vehicle_id || "unknown");
     const vehicleNumber = vehicleNumberMap.get(vehicleId) || String(trip.vehicle_number || vehicleId);
-    const row = vehicles.get(vehicleId) || { vehicleNumber, freightFare: 0, profit: 0 };
+    const row = vehicles.get(vehicleId) || { vehicleNumber, trips: 0, freightFare: 0, profit: 0 };
+    row.trips += 1;
     row.freightFare += Number(trip.trip_fare) || 0;
     // Overall Profit = trip net profit + this month's loading/unloading halting charges.
     row.profit += Number(trip.net_profit) || 0;
@@ -218,11 +219,12 @@ function showVehicleMonthlyPerformance(key: string) {
     ? rows.map((row) => `
         <tr class="border-b border-slate-100">
           <td class="px-4 sm:px-6 py-4 font-bold text-slate-800 font-mono">${row.vehicleNumber}</td>
+          <td class="px-4 sm:px-6 py-4 text-right font-bold text-slate-700 font-mono">${row.trips}</td>
           <td class="px-4 sm:px-6 py-4 text-right font-bold text-blue-700 font-mono">${money(row.freightFare)}</td>
           <td class="px-4 sm:px-6 py-4 text-right font-bold text-emerald-700 font-mono">${money(row.profit)}</td>
         </tr>
       `).join("")
-    : '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-500">No vehicle trip data for this month.</td></tr>';
+    : '<tr><td colspan="4" class="px-6 py-10 text-center text-slate-500">No vehicle trip data for this month.</td></tr>';
 
   modal.innerHTML = `
     <div class="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6" data-monthly-modal-backdrop>
@@ -242,6 +244,7 @@ function showVehicleMonthlyPerformance(key: string) {
               <thead class="bg-slate-100 sticky top-0">
                 <tr>
                   <th class="text-left px-4 sm:px-6 py-3 text-xs uppercase tracking-wide text-slate-500 font-bold">Vehicle Numbers</th>
+                  <th class="text-right px-4 sm:px-6 py-3 text-xs uppercase tracking-wide text-slate-500 font-bold">Total Trips</th>
                   <th class="text-right px-4 sm:px-6 py-3 text-xs uppercase tracking-wide text-slate-500 font-bold">Total Freight Fare</th>
                   <th class="text-right px-4 sm:px-6 py-3 text-xs uppercase tracking-wide text-slate-500 font-bold">Overall Profit</th>
                 </tr>
@@ -250,6 +253,7 @@ function showVehicleMonthlyPerformance(key: string) {
               <tfoot class="bg-slate-50 border-t-2 border-slate-200">
                 <tr>
                   <td class="px-4 sm:px-6 py-4 font-black text-slate-900">Overall Total</td>
+                  <td class="px-4 sm:px-6 py-4 text-right font-black text-slate-700 font-mono">${rows.reduce((sum, row) => sum + row.trips, 0)}</td>
                   <td class="px-4 sm:px-6 py-4 text-right font-black text-blue-700 font-mono">${money(totalFare)}</td>
                   <td class="px-4 sm:px-6 py-4 text-right font-black text-emerald-700 font-mono">${money(totalProfit)}</td>
                 </tr>
@@ -260,13 +264,13 @@ function showVehicleMonthlyPerformance(key: string) {
             ${rows.length ? rows.map((row) => `
               <div class="rounded-xl border border-slate-200 p-4 bg-white">
                 <div class="font-bold text-slate-900 font-mono">${row.vehicleNumber}</div>
-                <div class="grid grid-cols-2 gap-3 mt-3">
-                  <div class="rounded-lg bg-blue-50 p-3"><div class="text-[10px] uppercase tracking-wide text-blue-700">Total Freight Fare</div><div class="font-bold text-blue-700 font-mono mt-1">${money(row.freightFare)}</div></div>
+                <div class="grid grid-cols-3 gap-3 mt-3">
+                  <div class="rounded-lg bg-slate-50 p-3"><div class="text-[10px] uppercase tracking-wide text-slate-600">Total Trips</div><div class="font-bold text-slate-700 font-mono mt-1">${row.trips}</div></div><div class="rounded-lg bg-blue-50 p-3"><div class="text-[10px] uppercase tracking-wide text-blue-700">Total Freight Fare</div><div class="font-bold text-blue-700 font-mono mt-1">${money(row.freightFare)}</div></div>
                   <div class="rounded-lg bg-emerald-50 p-3"><div class="text-[10px] uppercase tracking-wide text-emerald-700">Overall Profit</div><div class="font-bold text-emerald-700 font-mono mt-1">${money(row.profit)}</div></div>
                 </div>
               </div>
             `).join("") : '<div class="py-10 text-center text-slate-500">No vehicle trip data for this month.</div>'}
-            ${rows.length ? `<div class="rounded-xl border border-slate-200 bg-slate-50 p-4"><div class="font-black text-slate-900">Overall Total</div><div class="grid grid-cols-2 gap-3 mt-3"><div><div class="text-[10px] uppercase text-slate-500">Freight Fare</div><div class="font-black text-blue-700 font-mono">${money(totalFare)}</div></div><div><div class="text-[10px] uppercase text-slate-500">Overall Profit</div><div class="font-black text-emerald-700 font-mono">${money(totalProfit)}</div></div></div></div>` : ""}
+            ${rows.length ? `<div class="rounded-xl border border-slate-200 bg-slate-50 p-4"><div class="font-black text-slate-900">Overall Total</div><div class="grid grid-cols-3 gap-3 mt-3"><div><div class="text-[10px] uppercase text-slate-500">Total Trips</div><div class="font-black text-slate-700 font-mono">${rows.reduce((sum, row) => sum + row.trips, 0)}</div></div><div><div class="text-[10px] uppercase text-slate-500">Freight Fare</div><div class="font-black text-blue-700 font-mono">${money(totalFare)}</div></div><div><div class="text-[10px] uppercase text-slate-500">Overall Profit</div><div class="font-black text-emerald-700 font-mono">${money(totalProfit)}</div></div></div></div>` : ""}
           </div>
         </div>
         <div class="flex justify-end px-5 sm:px-6 py-4 border-t border-slate-200 bg-slate-50">
