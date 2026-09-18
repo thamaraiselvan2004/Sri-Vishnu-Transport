@@ -210,22 +210,22 @@ function showVehicleMonthlyPerformance(key: string) {
   }
 
   const tableRows = rows.length
-    ? rows.map((row) => \`
+    ? rows.map((row) => `
         <tr class="border-b border-slate-100">
-          <td class="px-4 sm:px-6 py-4 font-bold text-slate-800 font-mono">\${row.vehicleNumber}</td>
-          <td class="px-4 sm:px-6 py-4 text-right font-bold text-blue-700 font-mono">\${money(row.freightFare)}</td>
-          <td class="px-4 sm:px-6 py-4 text-right font-bold text-emerald-700 font-mono">\${money(row.profit)}</td>
+          <td class="px-4 sm:px-6 py-4 font-bold text-slate-800 font-mono">${row.vehicleNumber}</td>
+          <td class="px-4 sm:px-6 py-4 text-right font-bold text-blue-700 font-mono">${money(row.freightFare)}</td>
+          <td class="px-4 sm:px-6 py-4 text-right font-bold text-emerald-700 font-mono">${money(row.profit)}</td>
         </tr>
-      \`).join("")
+      `).join("")
     : '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-500">No vehicle trip data for this month.</td></tr>';
 
-  modal.innerHTML = \`
+  modal.innerHTML = `
     <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" data-monthly-modal-backdrop>
       <div class="w-full max-w-4xl max-h-[85vh] overflow-hidden bg-white rounded-2xl shadow-2xl border border-slate-200">
         <div class="flex items-center justify-between gap-4 px-5 sm:px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div>
             <h2 class="text-lg sm:text-xl font-black text-slate-900">Vehicle-wise Monthly Performance</h2>
-            <p class="text-sm text-slate-500 mt-1">\${monthLabel(key)}</p>
+            <p class="text-sm text-slate-500 mt-1">${monthLabel(key)}</p>
           </div>
           <button type="button" data-monthly-modal-close class="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200 transition" aria-label="Close">
             <span class="text-2xl leading-none">&times;</span>
@@ -241,27 +241,27 @@ function showVehicleMonthlyPerformance(key: string) {
                   <th class="text-right px-4 sm:px-6 py-3 text-xs uppercase tracking-wide text-slate-500 font-bold">Overall Profit</th>
                 </tr>
               </thead>
-              <tbody>\${tableRows}</tbody>
+              <tbody>${tableRows}</tbody>
               <tfoot class="bg-slate-50 border-t-2 border-slate-200">
                 <tr>
                   <td class="px-4 sm:px-6 py-4 font-black text-slate-900">Overall Total</td>
-                  <td class="px-4 sm:px-6 py-4 text-right font-black text-blue-700 font-mono">\${money(totalFare)}</td>
-                  <td class="px-4 sm:px-6 py-4 text-right font-black text-emerald-700 font-mono">\${money(totalProfit)}</td>
+                  <td class="px-4 sm:px-6 py-4 text-right font-black text-blue-700 font-mono">${money(totalFare)}</td>
+                  <td class="px-4 sm:px-6 py-4 text-right font-black text-emerald-700 font-mono">${money(totalProfit)}</td>
                 </tr>
               </tfoot>
             </table>
           </div>
           <div class="sm:hidden p-4 space-y-3">
-            \${rows.length ? rows.map((row) => \`
+            ${rows.length ? rows.map((row) => `
               <div class="rounded-xl border border-slate-200 p-4 bg-white">
-                <div class="font-bold text-slate-900 font-mono">\${row.vehicleNumber}</div>
+                <div class="font-bold text-slate-900 font-mono">${row.vehicleNumber}</div>
                 <div class="grid grid-cols-2 gap-3 mt-3">
-                  <div class="rounded-lg bg-blue-50 p-3"><div class="text-[10px] uppercase tracking-wide text-blue-700">Total Freight Fare</div><div class="font-bold text-blue-700 font-mono mt-1">\${money(row.freightFare)}</div></div>
-                  <div class="rounded-lg bg-emerald-50 p-3"><div class="text-[10px] uppercase tracking-wide text-emerald-700">Overall Profit</div><div class="font-bold text-emerald-700 font-mono mt-1">\${money(row.profit)}</div></div>
+                  <div class="rounded-lg bg-blue-50 p-3"><div class="text-[10px] uppercase tracking-wide text-blue-700">Total Freight Fare</div><div class="font-bold text-blue-700 font-mono mt-1">${money(row.freightFare)}</div></div>
+                  <div class="rounded-lg bg-emerald-50 p-3"><div class="text-[10px] uppercase tracking-wide text-emerald-700">Overall Profit</div><div class="font-bold text-emerald-700 font-mono mt-1">${money(row.profit)}</div></div>
                 </div>
               </div>
-            \`).join("") : '<div class="py-10 text-center text-slate-500">No vehicle trip data for this month.</div>'}
-            \${rows.length ? \`<div class="rounded-xl border border-slate-200 bg-slate-50 p-4"><div class="font-black text-slate-900">Overall Total</div><div class="grid grid-cols-2 gap-3 mt-3"><div><div class="text-[10px] uppercase text-slate-500">Freight Fare</div><div class="font-black text-blue-700 font-mono">\${money(totalFare)}</div></div><div><div class="text-[10px] uppercase text-slate-500">Profit</div><div class="font-black text-emerald-700 font-mono">\${money(totalProfit)}</div></div></div></div>\` : ""}
+            `).join("") : '<div class="py-10 text-center text-slate-500">No vehicle trip data for this month.</div>'}
+            ${rows.length ? `<div class="rounded-xl border border-slate-200 bg-slate-50 p-4"><div class="font-black text-slate-900">Overall Total</div><div class="grid grid-cols-2 gap-3 mt-3"><div><div class="text-[10px] uppercase text-slate-500">Freight Fare</div><div class="font-black text-blue-700 font-mono">${money(totalFare)}</div></div><div><div class="text-[10px] uppercase text-slate-500">Profit</div><div class="font-black text-emerald-700 font-mono">${money(totalProfit)}</div></div></div></div>` : ""}
           </div>
         </div>
         <div class="flex justify-end px-5 sm:px-6 py-4 border-t border-slate-200 bg-slate-50">
@@ -269,7 +269,7 @@ function showVehicleMonthlyPerformance(key: string) {
         </div>
       </div>
     </div>
-  \`;
+  `;
 
   const close = () => { modal?.remove(); };
   modal.querySelectorAll<HTMLElement>("[data-monthly-modal-close]").forEach((button) => button.addEventListener("click", close));
