@@ -320,9 +320,6 @@ async function refreshMonthlyBusinessSummary() {
   monthlyRows = Array.from(monthly.entries()).sort(([a], [b]) => b.localeCompare(a));
 
   const current = monthly.get(currentMonthKey) || { trips: 0, revenue: 0, profit: 0 };
-  updateCard("Total Trips", String(current.trips), currentMonthLabel);
-  updateCard("Total Revenue", money(current.revenue), currentMonthLabel);
-  updateCard("Net Business Profit", money(current.profit), `After all trip & service costs • ${currentMonthLabel}`);
 
   renderMonthlyReport();
 }
