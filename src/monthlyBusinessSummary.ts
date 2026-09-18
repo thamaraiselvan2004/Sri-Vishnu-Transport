@@ -117,7 +117,7 @@ function renderMonthlyReport() {
     const emptyMessage = '<div class="px-4 py-8 text-center text-slate-500">No monthly business data yet.</div>';
     const showViewAll = monthlyRows.length > 0;
     const viewAllLabel = reportExpanded
-      ? "Show Current"
+      ? "Show Current (1)"
       : `View All (${monthlyRows.length} Months)`;
 
     report.innerHTML = `
@@ -129,7 +129,7 @@ function renderMonthlyReport() {
           </div>
           <div class="flex items-center justify-between sm:justify-end gap-2">
             <div class="w-fit text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5">Current: ${currentMonthLabel}</div>
-            ${showViewAll ? `<button id="monthly-business-report-toggle" type="button" class="inline-flex items-center gap-1.5 shrink-0 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition shadow-xs touch-manipulation">${viewAllLabel}<span class="text-base leading-none transition-transform ${reportExpanded ? "rotate-90" : ""}">›</span></button>` : ""}
+            ${showViewAll ? `<button id="monthly-business-report-toggle" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition shadow-xs"><span>${viewAllLabel}</span><span class="text-[14px] transition-transform ${reportExpanded ? "rotate-90" : ""}">›</span></button>` : ""}
           </div>
         </div>
       </div>
