@@ -45,6 +45,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [viewAllTrips, setViewAllTrips] = useState<boolean>(false);
   const [selectedVehicleFilter, setSelectedVehicleFilter] = useState<string>("all");
   const [tripSearch, setTripSearch] = useState<string>("");
+  const [selectedKpi, setSelectedKpi] = useState<"trips" | "revenue" | "profit" | null>(null);
 
   const activeVehicles = vehicles.filter((v) => v.active);
 
@@ -234,37 +235,35 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-            Total Trips
-          </div>
-          <div className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">
-            {currentMonthTrips.length}
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            {currentMonthLabel}
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={() => setSelectedKpi("trips")}
+          className="text-left bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/30 transition shadow-xs"
+        >
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Trips</div>
+          <div className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">{currentMonthTrips.length}</div>
+          <div className="text-xs text-slate-500 mt-1">{currentMonthLabel} • Click for vehicle details</div>
+        </button>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-            Total Revenue
-          </div>
-          <div className="text-2xl sm:text-3xl font-bold text-blue-700 mt-1">
-            {formatINR(totalRevenue)}
-          </div>
-          <div className="text-xs text-slate-500 mt-1">{currentMonthLabel}</div>
-        </div>
+        <button
+          type="button"
+          onClick={() => setSelectedKpi("revenue")}
+          className="text-left bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/30 transition shadow-xs"
+        >
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Revenue</div>
+          <div className="text-2xl sm:text-3xl font-bold text-blue-700 mt-1">{formatINR(totalRevenue)}</div>
+          <div className="text-xs text-slate-500 mt-1">{currentMonthLabel} • Click for vehicle details</div>
+        </button>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-            Net Business Profit
-          </div>
-          <div className="text-2xl sm:text-3xl font-bold text-emerald-700 mt-1">
-            {formatINR(finalProfit)}
-          </div>
-          <div className="text-xs text-slate-500 mt-1">{currentMonthLabel}</div>
-        </div>
+        <button
+          type="button"
+          onClick={() => setSelectedKpi("profit")}
+          className="text-left bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/30 transition shadow-xs"
+        >
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Net Business Profit</div>
+          <div className="text-2xl sm:text-3xl font-bold text-emerald-700 mt-1">{formatINR(finalProfit)}</div>
+          <div className="text-xs text-slate-500 mt-1">{currentMonthLabel} • Click for vehicle details</div>
+        </button>
       </div>
 
       {/* Vehicle Quick Selector & Recent Trips */}
@@ -543,6 +542,66 @@ export const HomePage: React.FC<HomePageProps> = ({
           )}
         </div>
       </div>
+
+      {selectedKpi && (
+        <div className="fixed inset-0 z-[100] bg-slate-950/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSelectedKpi(null)}>
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-hidden bg-white rounded-2xl shadow-2xl border border-slate-200" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  {selectedKpi === "trips" ? "Total Trips" : selectedKpi === "revenue" ? "Total Revenue" : "Net Business Profit"} — Vehicle-wise Details
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">{currentMonthLabel} only</p>
+              </div>
+              <button type="button" onClick={() => setSelectedKpi(null)} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500">×</button>
+            </div>
+            <div className="p-5 overflow-y-auto max-h-[calc(90vh-90px)]">
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="text-left px-4 py-3 font-bold text-slate-600">Vehicle Number</th>
+                      <th className="text-right px-4 py-3 font-bold text-slate-600">Total Trips</th>
+                      <th className="text-right px-4 py-3 font-bold text-slate-600">Total Revenue</th>
+                      <th className="text-right px-4 py-3 font-bold text-slate-600">Net Business Profit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeVehicles.map((vehicle) => {
+                      const vehicleTrips = currentMonthTrips.filter((trip) => trip.vehicle_id === vehicle.id);
+                      const vehicleMaintenance = currentMonthMaintenance
+                        .filter((record) => record.vehicle_id === vehicle.id)
+                        .reduce((sum, record) => sum + (Number(record.amount) || 0), 0);
+                      const vehicleRevenue = vehicleTrips.reduce((sum, trip) => sum + (Number(trip.trip_fare) || 0), 0);
+                      const vehicleTripProfit = vehicleTrips.reduce((sum, trip) => sum + (Number(trip.net_profit) || 0), 0);
+                      const vehicleHalting = vehicleTrips.reduce(
+                        (sum, trip) => sum + (Number(trip.loading_halting_fare) || 0) + (Number(trip.unloading_halting_fare) || 0),
+                        0
+                      );
+                      const vehicleProfit = vehicleTripProfit - vehicleMaintenance + vehicleHalting;
+                      return (
+                        <tr key={vehicle.id} className="border-t border-slate-100">
+                          <td className="px-4 py-3 font-mono font-bold text-slate-800">{vehicle.vehicle_number}</td>
+                          <td className="px-4 py-3 text-right font-semibold">{vehicleTrips.length}</td>
+                          <td className="px-4 py-3 text-right font-mono font-semibold">{formatINR(vehicleRevenue)}</td>
+                          <td className="px-4 py-3 text-right font-mono font-semibold text-emerald-700">{formatINR(vehicleProfit)}</td>
+                        </tr>
+                      );
+                    })}
+                    <tr className="border-t-2 border-slate-300 bg-slate-50 font-bold">
+                      <td className="px-4 py-3">Total</td>
+                      <td className="px-4 py-3 text-right">{currentMonthTrips.length}</td>
+                      <td className="px-4 py-3 text-right font-mono">{formatINR(totalRevenue)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-emerald-700">{formatINR(finalProfit)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-slate-500 mt-3">Showing all active vehicles for {currentMonthLabel}. The selected KPI is highlighted by the corresponding column.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Trip Details Modal */}
       <TripDetailsModal
