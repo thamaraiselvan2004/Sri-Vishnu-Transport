@@ -71,8 +71,6 @@ function renderMonthlyReport() {
       kpiGrid.insertAdjacentElement("afterend", report);
     }
 
-    if (monthlyRows.length <= 1) reportExpanded = false;
-
     const visibleRows = reportExpanded ? monthlyRows : monthlyRows.slice(0, 1);
 
     const mobileRows = visibleRows
@@ -117,8 +115,10 @@ function renderMonthlyReport() {
       .join("");
 
     const emptyMessage = '<div class="px-4 py-8 text-center text-slate-500">No monthly business data yet.</div>';
-    const showViewAll = monthlyRows.length > 1;
-    const viewAllLabel = reportExpanded ? "View Less" : "View All";
+    const showViewAll = monthlyRows.length > 0;
+    const viewAllLabel = reportExpanded
+      ? "Show Current"
+      : `View All (${monthlyRows.length} Months)`;
 
     report.innerHTML = `
       <div class="p-5 sm:p-6 border-b border-slate-200 bg-slate-50/70">
@@ -129,7 +129,7 @@ function renderMonthlyReport() {
           </div>
           <div class="flex items-center justify-between sm:justify-end gap-2">
             <div class="w-fit text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5">Current: ${currentMonthLabel}</div>
-            ${showViewAll ? `<button id="monthly-business-report-toggle" type="button" class="shrink-0 text-xs sm:text-sm font-bold text-blue-700 hover:text-blue-800 bg-white border border-blue-200 hover:border-blue-300 rounded-lg px-3 py-1.5 transition-colors touch-manipulation">${viewAllLabel}</button>` : ""}
+            ${showViewAll ? `<button id="monthly-business-report-toggle" type="button" class="inline-flex items-center gap-1.5 shrink-0 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition shadow-xs touch-manipulation">${viewAllLabel}<span class="text-base leading-none transition-transform ${reportExpanded ? "rotate-90" : ""}">›</span></button>` : ""}
           </div>
         </div>
       </div>
@@ -225,8 +225,8 @@ function showVehicleMonthlyPerformance(key: string) {
     : '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-500">No vehicle trip data for this month.</td></tr>';
 
   modal.innerHTML = `
-    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" data-monthly-modal-backdrop>
-      <div class="w-full max-w-4xl max-h-[85vh] overflow-hidden bg-white rounded-2xl shadow-2xl border border-slate-200">
+    <div class="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6" data-monthly-modal-backdrop>
+      <div class="mx-auto my-2 sm:my-4 w-full max-w-5xl h-[calc(100vh-2rem)] sm:h-[calc(100vh-3rem)] max-h-[900px] flex flex-col overflow-hidden bg-white rounded-2xl shadow-2xl border border-slate-200">
         <div class="flex items-center justify-between gap-4 px-5 sm:px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div>
             <h2 class="text-lg sm:text-xl font-black text-slate-900">Vehicle-wise Monthly Performance</h2>
@@ -236,7 +236,7 @@ function showVehicleMonthlyPerformance(key: string) {
             <span class="text-2xl leading-none">&times;</span>
           </button>
         </div>
-        <div class="overflow-y-auto max-h-[65vh]">
+        <div class="flex-1 min-h-0 overflow-y-auto">
           <div class="hidden sm:block overflow-x-auto">
             <table class="w-full text-sm">
               <thead class="bg-slate-100 sticky top-0">
@@ -289,7 +289,7 @@ async function refreshMonthlyBusinessSummary() {
   const [{ data: trips, error: tripsError }, { data: maintenance, error: maintenanceError }, { data: vehicles, error: vehiclesError }] = await Promise.all([
     supabase
       .from("trips")
-      .select("trip_date, trip_fare, net_profit, vehicle_id"),
+      .select("trip_date, trip_fare, net_profit, loading_halting_fare, unloading_halting_fare, vehicle_id"),
     supabase.from("maintenance").select("maintenance_date, amount, vehicle_id"),
     supabase.from("vehicles").select("id, vehicle_number"),
   ]);
@@ -320,6 +320,8 @@ async function refreshMonthlyBusinessSummary() {
     row.trips += 1;
     row.revenue += Number(trip.trip_fare) || 0;
     row.profit += Number(trip.net_profit) || 0;
+    row.profit += Number(trip.loading_halting_fare) || 0;
+    row.profit += Number(trip.unloading_halting_fare) || 0;
     monthly.set(key, row);
   }
 
