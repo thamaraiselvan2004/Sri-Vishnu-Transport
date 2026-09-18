@@ -285,7 +285,7 @@ async function refreshMonthlyBusinessSummary() {
     supabase
       .from("trips")
       .select("trip_date, trip_fare, net_profit, loading_halting_fare, unloading_halting_fare, vehicle_id, vehicle_number"),
-    supabase.from("maintenance").select("maintenance_date, amount"),
+    supabase.from("maintenance").select("maintenance_date, amount, vehicle_id"),
   ]);
 
   monthlyTripsData = trips || [];
