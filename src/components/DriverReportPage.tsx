@@ -27,6 +27,7 @@ import {
 import { EditTripModal } from "./EditTripModal";
 import { TripDetailsModal } from "./TripDetailsModal";
 import { HaltingDetailsModal } from "./HaltingDetailsModal";
+import { MonthlyDriverSalaryReport } from "./MonthlyDriverSalaryReport";
 
 interface DriverReportPageProps {
   drivers: Driver[];
@@ -602,6 +603,14 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
       </div>
 
       <HaltingDetailsModal isOpen={showHaltingDetails} onClose={() => setShowHaltingDetails(false)} driverName={selectedDriverName} trips={driverTrips} />
+
+      {/* Monthly Driver Salary History */}
+      {selectedDriver && (
+        <MonthlyDriverSalaryReport
+          driver={selectedDriver}
+          trips={allTrips}
+        />
+      )}
 
       {/* Driver Settlement Progress Bar */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
