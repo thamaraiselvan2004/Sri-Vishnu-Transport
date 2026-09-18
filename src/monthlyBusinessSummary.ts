@@ -191,9 +191,10 @@ function showVehicleMonthlyPerformance(key: string) {
     const vehicleNumber = vehicleNumberMap.get(vehicleId) || String(trip.vehicle_number || vehicleId);
     const row = vehicles.get(vehicleId) || { vehicleNumber, freightFare: 0, profit: 0 };
     row.freightFare += Number(trip.trip_fare) || 0;
-    // Final Net Profit follows the Vehicle Performance Snapshot:
-    // total trip net profit minus the vehicle's maintenance for this month.
+    // Overall Profit = trip net profit + this month's loading/unloading halting charges.
     row.profit += Number(trip.net_profit) || 0;
+    row.profit += Number(trip.loading_halting_fare) || 0;
+    row.profit += Number(trip.unloading_halting_fare) || 0;
     vehicles.set(vehicleId, row);
   }
 
@@ -242,7 +243,7 @@ function showVehicleMonthlyPerformance(key: string) {
                 <tr>
                   <th class="text-left px-4 sm:px-6 py-3 text-xs uppercase tracking-wide text-slate-500 font-bold">Vehicle Numbers</th>
                   <th class="text-right px-4 sm:px-6 py-3 text-xs uppercase tracking-wide text-slate-500 font-bold">Total Freight Fare</th>
-                  <th class="text-right px-4 sm:px-6 py-3 text-xs uppercase tracking-wide text-slate-500 font-bold">Final Net Profit</th>
+                  <th class="text-right px-4 sm:px-6 py-3 text-xs uppercase tracking-wide text-slate-500 font-bold">Overall Profit</th>
                 </tr>
               </thead>
               <tbody>${tableRows}</tbody>
@@ -261,11 +262,11 @@ function showVehicleMonthlyPerformance(key: string) {
                 <div class="font-bold text-slate-900 font-mono">${row.vehicleNumber}</div>
                 <div class="grid grid-cols-2 gap-3 mt-3">
                   <div class="rounded-lg bg-blue-50 p-3"><div class="text-[10px] uppercase tracking-wide text-blue-700">Total Freight Fare</div><div class="font-bold text-blue-700 font-mono mt-1">${money(row.freightFare)}</div></div>
-                  <div class="rounded-lg bg-emerald-50 p-3"><div class="text-[10px] uppercase tracking-wide text-emerald-700">Final Net Profit</div><div class="font-bold text-emerald-700 font-mono mt-1">${money(row.profit)}</div></div>
+                  <div class="rounded-lg bg-emerald-50 p-3"><div class="text-[10px] uppercase tracking-wide text-emerald-700">Overall Profit</div><div class="font-bold text-emerald-700 font-mono mt-1">${money(row.profit)}</div></div>
                 </div>
               </div>
             `).join("") : '<div class="py-10 text-center text-slate-500">No vehicle trip data for this month.</div>'}
-            ${rows.length ? `<div class="rounded-xl border border-slate-200 bg-slate-50 p-4"><div class="font-black text-slate-900">Overall Total</div><div class="grid grid-cols-2 gap-3 mt-3"><div><div class="text-[10px] uppercase text-slate-500">Freight Fare</div><div class="font-black text-blue-700 font-mono">${money(totalFare)}</div></div><div><div class="text-[10px] uppercase text-slate-500">Final Net Profit</div><div class="font-black text-emerald-700 font-mono">${money(totalProfit)}</div></div></div></div>` : ""}
+            ${rows.length ? `<div class="rounded-xl border border-slate-200 bg-slate-50 p-4"><div class="font-black text-slate-900">Overall Total</div><div class="grid grid-cols-2 gap-3 mt-3"><div><div class="text-[10px] uppercase text-slate-500">Freight Fare</div><div class="font-black text-blue-700 font-mono">${money(totalFare)}</div></div><div><div class="text-[10px] uppercase text-slate-500">Overall Profit</div><div class="font-black text-emerald-700 font-mono">${money(totalProfit)}</div></div></div></div>` : ""}
           </div>
         </div>
         <div class="flex justify-end px-5 sm:px-6 py-4 border-t border-slate-200 bg-slate-50">
