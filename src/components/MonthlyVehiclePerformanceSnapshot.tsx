@@ -107,9 +107,9 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
         : (Number(trip.halting_fare) || 0));
     }, 0);
 
-    // Total received balance for this vehicle across all recorded trips.
-    const receivedBalanceTrips = trips
-      .filter((trip) => trip.vehicle_id === vehicle.id && (Number(trip.balance_amount) || 0) > 0)
+    // Total received balance for this vehicle in the current snapshot month only.
+    const receivedBalanceTrips = monthTrips
+      .filter((trip) => (Number(trip.balance_amount) || 0) > 0)
       .sort((a, b) => String(b.trip_date || "").localeCompare(String(a.trip_date || "")));
     const totalReceivedBalance = receivedBalanceTrips.reduce(
       (total, trip) => total + (Number(trip.balance_amount) || 0),
@@ -211,7 +211,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
             Total Received Balance
           </div>
           <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 mt-1">{formatINR(totalReceivedBalance)}</div>
-          <div className="text-xs text-slate-500 mt-1">Click to view trip-wise received amounts</div>
+          <div className="text-xs text-slate-500 mt-1">Click to view this month's trip-wise received amounts</div>
         </button>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
@@ -290,7 +290,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
             <div className="max-h-[65vh] overflow-y-auto p-5">
               {receivedBalanceTrips.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
-                  No received balance amount has been recorded for this vehicle.
+                  No received balance amount has been recorded for this vehicle in this month.
                 </div>
               ) : (
                 <div className="space-y-3">
