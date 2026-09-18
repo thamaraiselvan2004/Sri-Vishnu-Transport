@@ -331,7 +331,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
             </div>
           </div>
         </div>
-      )
+      )}
     </div>,
     portalTarget
   );
