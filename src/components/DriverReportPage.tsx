@@ -73,6 +73,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
 
   // Search filter inside driver's trips
   const [tripSearch, setTripSearch] = useState<string>("");
+  const [showAllDriverTrips, setShowAllDriverTrips] = useState(false);
 
   // Modals
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
@@ -677,7 +678,15 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
             </p>
           </div>
 
-          {/* Quick search inside trips */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            {driverTrips.length > 3 && (
+              <button type="button" onClick={() => setShowAllDriverTrips((expanded) => !expanded)} className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition shadow-xs">
+                <span>{showAllDriverTrips ? "Show Recent 3" : `View All (${driverTrips.length})`}</span>
+                <span className={showAllDriverTrips ? "text-[14px] transition-transform rotate-90" : "text-[14px] transition-transform"}>›</span>
+              </button>
+            )}
+
+            {/* Quick search inside trips */}
           <div className="w-full sm:w-64">
             <input
               type="text"
@@ -728,7 +737,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {driverTrips.map((trip) => {
+                {(showAllDriverTrips ? driverTrips : driverTrips.slice(0, 3)).map((trip) => {
                   const paid = Number(trip.amount_paid_to_driver) || 0;
                   const remaining =
                     trip.remaining_amount_to_driver !== undefined &&
