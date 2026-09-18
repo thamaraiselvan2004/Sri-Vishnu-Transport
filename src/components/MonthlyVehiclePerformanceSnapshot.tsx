@@ -106,18 +106,24 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
         : (Number(trip.halting_fare) || 0));
     }, 0);
 
+    // Total received balance for this vehicle across all recorded trips.
+    const totalReceivedBalance = trips
+      .filter((trip) => trip.vehicle_id === vehicle.id)
+      .reduce((total, trip) => total + (Number(trip.balance_amount) || 0), 0);
+
     return {
       stats,
       monthTrips,
       totalHaltingDays,
       totalHaltingCharges,
+      totalReceivedBalance,
       overallProfit: stats.finalVehicleProfit + totalHaltingCharges,
     };
   }, [vehicle.id, vehicle.vehicle_number, trips, maintenance, currentMonthKey]);
 
   if (!portalTarget) return null;
 
-  const { stats, monthTrips, totalHaltingDays, totalHaltingCharges, overallProfit } = monthStats;
+  const { stats, monthTrips, totalHaltingDays, totalHaltingCharges, totalReceivedBalance, overallProfit } = monthStats;
 
   return createPortal(
     <div className="space-y-3">
@@ -186,6 +192,15 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wide">Average Mileage</div>
           <div className="text-2xl sm:text-3xl font-black font-mono text-amber-700 mt-1">{stats.overallMileage} km/L</div>
           <div className="text-xs text-slate-500 mt-1">Running KMs / Diesel Litres this month</div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+            <IndianRupee className="w-3.5 h-3.5 text-emerald-600" />
+            Total Received Balance
+          </div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 mt-1">{formatINR(totalReceivedBalance)}</div>
+          <div className="text-xs text-slate-500 mt-1">All balance amounts received for this vehicle</div>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
