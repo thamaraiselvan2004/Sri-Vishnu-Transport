@@ -155,26 +155,35 @@ function renderMonthlyReport() {
       </div>
     `;
 
-    report.querySelectorAll<HTMLElement>("[data-month-key]").forEach((el) => {
-      el.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        const key = el.dataset.monthKey;
-        if (key) showVehicleMonthlyPerformance(key);
-      });
-    });
+    // Click handling is delegated to document so the controls continue to work
+    // even though this report is re-rendered from innerHTML during data refreshes.
+    // The button styling/behavior intentionally matches Home -> Recent Completed Trips.
 
-    const toggleButton = document.getElementById("monthly-business-report-toggle");
-    toggleButton?.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      reportExpanded = !reportExpanded;
-      renderMonthlyReport();
-      // Refresh data in the background; never block the button response on Supabase.
-      void refreshMonthlyBusinessSummary();
-    });
   } finally {
     reportRendering = false;
+  }
+}
+
+function handleMonthlyBusinessReportClick(event: MouseEvent) {
+  const target = event.target as HTMLElement | null;
+  if (!target) return;
+
+  const toggle = target.closest<HTMLElement>("#monthly-business-report-toggle");
+  if (toggle) {
+    event.preventDefault();
+    event.stopPropagation();
+    reportExpanded = !reportExpanded;
+    renderMonthlyReport();
+    void refreshMonthlyBusinessSummary();
+    return;
+  }
+
+  const monthRow = target.closest<HTMLElement>("[data-month-key]");
+  if (monthRow) {
+    event.preventDefault();
+    event.stopPropagation();
+    const key = monthRow.dataset.monthKey;
+    if (key) showVehicleMonthlyPerformance(key);
   }
 }
 
@@ -349,6 +358,9 @@ export function startMonthlyBusinessSummary() {
   const run = () => {
     void refreshMonthlyBusinessSummary();
   };
+
+  document.addEventListener("click", handleMonthlyBusinessReportClick);
+
 
   const observer = new MutationObserver(() => {
     if (document.getElementById("home-action-add-trip-btn")) run();
