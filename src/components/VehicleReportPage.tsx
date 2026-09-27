@@ -19,6 +19,7 @@ import {
   Edit3,
   User,
   Wallet,
+  ChevronRight,
 } from "lucide-react";
 import { Vehicle, Trip, MaintenanceRecord, VehicleReportStats, Driver } from "../types";
 import {
@@ -69,6 +70,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
   const [activeTab, setActiveTab] = useState<"summary" | "charts" | "trips" | "insights">("summary");
   const [selectedTripForModal, setSelectedTripForModal] = useState<Trip | null>(null);
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
+  const [viewAllTripHistory, setViewAllTripHistory] = useState<boolean>(false);
 
   // Quick preset handler
   const handleQuickPreset = (preset: "all" | "thisMonth" | "last30" | "thisYear") => {
@@ -178,6 +180,9 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
   }, 0), [vehicleTrips]);
 
   const overallProfit = stats.finalVehicleProfit + totalHaltingCharges;
+
+  // Match the Home page behavior: show the 3 most recent trips by default.
+  const displayedVehicleTrips = viewAllTripHistory ? vehicleTrips : vehicleTrips.slice(0, 3);
 
   const insights = useMemo(() => {
     return generateVehicleInsights(stats, vehicleTrips, vehicleMaintenance);
@@ -913,22 +918,39 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
       {/* ============================================================ */}
       {activeTab === "trips" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-800">
-              Trip History for {vehicle.vehicle_number} (Most Recent First)
-            </h3>
-            <span className="text-xs text-slate-500">
-              Click any trip to inspect full details
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-bold text-slate-800">
+                {viewAllTripHistory ? "All Trip History" : "Recent Trip History"} for {vehicle.vehicle_number}
+                <span className="text-xs font-normal text-slate-500 ml-1">
+                  ({displayedVehicleTrips.length} of {vehicleTrips.length})
+                </span>
+              </h3>
+              <span className="text-xs text-slate-500">
+                Click any trip to inspect full details
+              </span>
+            </div>
+            <button
+              id="vehicle-report-view-all-trips-btn"
+              type="button"
+              onClick={() => setViewAllTripHistory(!viewAllTripHistory)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition shadow-xs"
+            >
+              <span>
+                {viewAllTripHistory ? "Show Recent (3)" : "View All (" + vehicleTrips.length + " Trips)"}
+              </span>
+              <ChevronRight
+                className={"w-3.5 h-3.5 transition-transform " + (viewAllTripHistory ? "rotate-90" : "")}
+              />
+            </button>
           </div>
-
           {vehicleTrips.length === 0 ? (
             <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-sm">
               No trip records found for this vehicle in the selected date range.
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3">
-              {vehicleTrips.map((trip) => (
+              {displayedVehicleTrips.map((trip) => (
                 <div
                   key={trip.id}
                   id={`trip-card-${trip.id}`}
