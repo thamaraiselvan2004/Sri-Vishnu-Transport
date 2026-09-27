@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ShieldCheck,
   Power,
+  Trash2,
 } from "lucide-react";
 import { Vehicle, Driver, Trip } from "../types";
 import {
@@ -16,6 +17,8 @@ import {
   updateVehicleStatus,
   addDriver,
   updateDriverStatus,
+  deleteVehicle,
+  deleteDriver,
 } from "../lib/database";
 
 interface FleetManagementPageProps {
@@ -37,6 +40,9 @@ export const FleetManagementPage: React.FC<FleetManagementPageProps> = ({
   const [vehicleError, setVehicleError] = useState("");
   const [driverError, setDriverError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<{ type: "vehicle" | "driver"; id: string; name: string; tripCount: number } | null>(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleAddVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,6 +115,29 @@ export const FleetManagementPage: React.FC<FleetManagementPageProps> = ({
       await onRefreshData();
     } catch (err) {
       console.error("Failed to update driver status:", err);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    setDeleteError("");
+    try {
+      if (deleteTarget.type === "vehicle") {
+        await deleteVehicle(deleteTarget.id);
+      } else {
+        await deleteDriver(deleteTarget.id);
+      }
+      const deletedName = deleteTarget.name;
+      setDeleteTarget(null);
+      await onRefreshData();
+      setSuccessMsg(`${deleteTarget.type === "vehicle" ? "Vehicle" : "Driver"} ${deletedName} and all related data were deleted permanently.`);
+      setTimeout(() => setSuccessMsg(""), 5000);
+    } catch (err) {
+      console.error("Failed to delete record:", err);
+      setDeleteError("Delete failed. Your data was not fully removed. Please check your Supabase permissions and try again.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -213,17 +242,32 @@ export const FleetManagementPage: React.FC<FleetManagementPageProps> = ({
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => handleToggleVehicle(veh.id, veh.active)}
-                    className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
-                      veh.active
-                        ? "text-amber-700 border-amber-300 hover:bg-amber-50"
-                        : "text-emerald-700 border-emerald-300 hover:bg-emerald-50"
-                    }`}
-                  >
-                    <Power className="w-3.5 h-3.5" />
-                    <span>{veh.active ? "Deactivate" : "Activate"}</span>
-                  </button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteError("");
+                        setDeleteTarget({ type: "vehicle", id: veh.id, name: veh.vehicle_number, tripCount });
+                      }}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-red-700 border border-red-200 hover:bg-red-50 transition"
+                      title="Delete vehicle and all related data"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleVehicle(veh.id, veh.active)}
+                      className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+                        veh.active
+                          ? "text-amber-700 border-amber-300 hover:bg-amber-50"
+                          : "text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+                      }`}
+                    >
+                      <Power className="w-3.5 h-3.5" />
+                      <span>{veh.active ? "Deactivate" : "Activate"}</span>
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -307,23 +351,100 @@ export const FleetManagementPage: React.FC<FleetManagementPageProps> = ({
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => handleToggleDriver(drv.id, drv.active)}
-                    className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
-                      drv.active
-                        ? "text-amber-700 border-amber-300 hover:bg-amber-50"
-                        : "text-emerald-700 border-emerald-300 hover:bg-emerald-50"
-                    }`}
-                  >
-                    <Power className="w-3.5 h-3.5" />
-                    <span>{drv.active ? "Deactivate" : "Activate"}</span>
-                  </button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteError("");
+                        setDeleteTarget({ type: "driver", id: drv.id, name: drv.driver_name, tripCount });
+                      }}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-red-700 border border-red-200 hover:bg-red-50 transition"
+                      title="Delete driver and all related data"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleDriver(drv.id, drv.active)}
+                      className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+                        drv.active
+                          ? "text-amber-700 border-amber-300 hover:bg-amber-50"
+                          : "text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+                      }`}
+                    >
+                      <Power className="w-3.5 h-3.5" />
+                      <span>{drv.active ? "Deactivate" : "Activate"}</span>
+                    </button>
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
       </div>
+
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+          onClick={() => !isDeleting && setDeleteTarget(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 p-6"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-master-record-title"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-11 h-11 rounded-xl bg-red-100 text-red-700 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 id="delete-master-record-title" className="text-lg font-black text-slate-900">
+                  Delete {deleteTarget.type === "vehicle" ? "Vehicle" : "Driver"}?
+                </h3>
+                <p className="text-sm text-slate-600 mt-1">
+                  <span className="font-bold text-slate-900">{deleteTarget.name}</span> will be permanently deleted.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+              This will also permanently delete <strong>{deleteTarget.tripCount} related trip{deleteTarget.tripCount === 1 ? "" : "s"}</strong>
+              {deleteTarget.type === "vehicle" ? ", plus maintenance, mileage and other vehicle records" : ", including its payment and beta details"}.
+              <div className="font-bold mt-1">This action cannot be undone.</div>
+            </div>
+
+            {deleteError && (
+              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700 flex gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={confirmDelete}
+                className="px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 disabled:opacity-60 inline-flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                {isDeleting ? "Deleting..." : "Delete Permanently"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
