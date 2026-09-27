@@ -26,7 +26,7 @@ const MetricCard: React.FC<{
 }> = ({ label, value, hint, onClick, icon, valueClass = "text-slate-900", borderClass = "border border-slate-200" }) => (
   <button type="button" onClick={onClick} className={`w-full text-left bg-white p-5 rounded-2xl ${borderClass} shadow-xs hover:shadow-sm transition hover:border-blue-300 cursor-pointer`} aria-label={`View ${label} details`}>
     <div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">{icon}{label}</div>
-    <div className={`text-base sm:text-3xl font-black font-mono mt-1 min-w-0 whitespace-normal break-all leading-tight tracking-tight ${valueClass}`}>{value}</div>
+    <div className={`text-2xl sm:text-3xl font-black font-mono mt-1 min-w-0 whitespace-normal break-all leading-tight tracking-tight ${valueClass}`}>{value}</div>
     <div className="text-xs text-slate-500 mt-1">{hint}</div>
   </button>
 );
@@ -170,7 +170,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
 
         <button type="button" onClick={() => setSelectedDetailField("receivedBalance")} className="w-full min-w-0 text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-emerald-300 cursor-pointer" aria-label={`View received balance details for vehicle ${vehicle.vehicle_number}`}>
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1"><IndianRupee className="w-3.5 h-3.5 text-emerald-600" />Total Received Balance</div>
-          <div className="text-base sm:text-3xl font-black font-mono text-emerald-700 mt-1 min-w-0 whitespace-normal break-all leading-tight tracking-tight">{formatINR(totalReceivedBalance)}</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 mt-1 min-w-0 whitespace-normal break-all leading-tight tracking-tight">{formatINR(totalReceivedBalance)}</div>
           <div className="text-xs text-slate-500 mt-1">Click to view this month's trip-wise received amounts</div>
         </button>
 
@@ -178,7 +178,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
 
         <button type="button" onClick={() => setSelectedDetailField("haltingDays")} className="w-full min-w-0 text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-violet-300 cursor-pointer" aria-label={`View halting details for vehicle ${vehicle.vehicle_number}`}>
           <div className="flex items-center justify-between text-slate-500"><span className="text-xs font-bold uppercase tracking-wide flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-violet-600" />Total Halting Days</span></div>
-          <div className="text-base sm:text-3xl font-black font-mono text-violet-700 mt-1 min-w-0 whitespace-normal break-all leading-tight tracking-tight">{totalHaltingDays} Days</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-violet-700 mt-1 min-w-0 whitespace-normal break-all leading-tight tracking-tight">{totalHaltingDays} Days</div>
           <div className="text-xs text-slate-500 mt-1">Click to view loading + unloading halting details</div>
         </button>
 
