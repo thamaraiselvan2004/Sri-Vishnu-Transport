@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   User,
   Calendar,
@@ -112,13 +112,45 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
 
   const selectedDriverName = selectedDriver?.driver_name || "";
 
-  // Calculate driver-specific metrics strictly matching the selected driver
-  const dateRange = useMemo(() => {
-    return {
-      from: fromDate || undefined,
-      to: toDate || undefined,
+  // The Performance & Settlement Summary is always for the current calendar month.
+  // The date-range controls remain available for the detailed trip ledger.
+  const [currentMonthKey, setCurrentMonthKey] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
+
+  useEffect(() => {
+    const checkMonth = () => {
+      const now = new Date();
+      const nextKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      setCurrentMonthKey((current) => (current === nextKey ? current : nextKey));
     };
-  }, [fromDate, toDate]);
+    checkMonth();
+    const timer = window.setInterval(checkMonth, 30000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const currentMonthLabel = useMemo(() => {
+    const [year, month] = currentMonthKey.split("-").map(Number);
+    return new Date(year, month - 1, 1).toLocaleDateString("en-IN", {
+      month: "long",
+      year: "numeric",
+    });
+  }, [currentMonthKey]);
+
+  const dateRange = useMemo(() => ({
+    from: fromDate || undefined,
+    to: toDate || undefined,
+  }), [fromDate, toDate]);
+
+  const currentMonthDateRange = useMemo(() => {
+    const [year, month] = currentMonthKey.split("-").map(Number);
+    const lastDay = new Date(year, month, 0).getDate();
+    return {
+      from: `${year}-${String(month).padStart(2, "0")}-01`,
+      to: `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`,
+    };
+  }, [currentMonthKey]);
 
   const stats = useMemo(() => {
     if (!selectedDriverId && !selectedDriverName) {
@@ -141,9 +173,21 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
       selectedDriverId,
       selectedDriverName,
       allTrips,
-      dateRange
+      currentMonthDateRange
     );
-  }, [selectedDriverId, selectedDriverName, allTrips, dateRange]);
+  }, [selectedDriverId, selectedDriverName, allTrips, currentMonthDateRange]);
+
+  const currentMonthDriverTrips = useMemo(() => {
+    const normSelectedName = selectedDriverName.toLowerCase().trim();
+    return allTrips.filter((t) => {
+      const tripDriverName = (t.driver_name || "").toLowerCase().trim();
+      const isSelected =
+        (selectedDriverId && t.driver_id === selectedDriverId) ||
+        (normSelectedName && tripDriverName === normSelectedName);
+      if (!isSelected) return false;
+      return t.trip_date >= currentMonthDateRange.from && t.trip_date <= currentMonthDateRange.to;
+    });
+  }, [allTrips, selectedDriverId, selectedDriverName, currentMonthDateRange]);
 
   // Filter trips for the selected driver and date range
   const driverTrips = useMemo(() => {
@@ -451,7 +495,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
             Performance &amp; Settlement Summary ({selectedDriverName})
           </h2>
           <span className="text-xs text-slate-500 font-medium">
-            Calculated strictly when driver = {selectedDriverName}
+            Current month only • {currentMonthLabel}
           </span>
         </div>
 
@@ -541,7 +585,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
       </div>
 
 
-      <HaltingDetailsModal isOpen={showHaltingDetails} onClose={() => setShowHaltingDetails(false)} driverName={selectedDriverName} trips={driverTrips} />
+      <HaltingDetailsModal isOpen={showHaltingDetails} onClose={() => setShowHaltingDetails(false)} driverName={selectedDriverName} trips={currentMonthDriverTrips} />
 
       {selectedDetailField && (() => {
         const detailTitleMap: Record<string, string> = {
@@ -553,7 +597,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
           remaining: "Overall Remaining Amount to Driver",
         };
         const title = detailTitleMap[selectedDetailField] || "Driver Details";
-        const sortedTrips = [...driverTrips].sort((a, b) =>
+        const sortedTrips = [...currentMonthDriverTrips].sort((a, b) =>
           String(a.trip_date || "").localeCompare(String(b.trip_date || ""))
         );
 
@@ -578,12 +622,12 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
         });
 
         const total =
-          selectedDetailField === "kms" ? driverTrips.reduce((sum, t) => sum + (Number(t.trip_running_kms) || 0), 0) :
-          selectedDetailField === "driverBeta" ? driverTrips.reduce((sum, t) => sum + (Number(t.driver_beta) || 0), 0) :
-          selectedDetailField === "diesel" ? driverTrips.reduce((sum, t) => sum + (Number(t.diesel_litres) || 0), 0) :
+          selectedDetailField === "kms" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.trip_running_kms) || 0), 0) :
+          selectedDetailField === "driverBeta" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.driver_beta) || 0), 0) :
+          selectedDetailField === "diesel" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.diesel_litres) || 0), 0) :
           selectedDetailField === "mileage" ? stats.overallMileage :
-          selectedDetailField === "paid" ? driverTrips.reduce((sum, t) => sum + (Number(t.amount_paid_to_driver) || 0), 0) :
-          selectedDetailField === "remaining" ? driverTrips.reduce((sum, t) => {
+          selectedDetailField === "paid" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.amount_paid_to_driver) || 0), 0) :
+          selectedDetailField === "remaining" ? currentMonthDriverTrips.reduce((sum, t) => {
             const paid = Number(t.amount_paid_to_driver) || 0;
             return sum + (t.remaining_amount_to_driver !== undefined && t.remaining_amount_to_driver !== null
               ? Number(t.remaining_amount_to_driver)
