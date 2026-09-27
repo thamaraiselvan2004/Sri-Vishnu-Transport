@@ -296,13 +296,13 @@ export const HomePage: React.FC<HomePageProps> = ({
                   : "bg-slate-50 text-slate-700 hover:bg-blue-50/50 border-slate-200"
               }`}
             >
-              <span>All Vehicles ({trips.length} Trips)</span>
+              <span>All Vehicles ({currentMonthTrips.length} Trips)</span>
               <span className="text-[11px] font-mono opacity-90">Show All</span>
             </button>
 
             {activeVehicles.map((veh) => {
-              const vehTrips = trips.filter((t) => t.vehicle_id === veh.id);
-              const vehProfit = vehTrips.reduce((s, t) => s + (t.net_profit || 0), 0);
+              const vehTrips = currentMonthTrips.filter((t) => t.vehicle_id === veh.id);
+              const vehProfit = vehTrips.reduce((s, t) => s + (Number(t.net_profit) || 0), 0);
               const isSelected = selectedVehicleFilter === veh.id;
 
               return (
@@ -328,7 +328,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       {veh.vehicle_number}
                     </div>
                     <div className="text-xs text-slate-500">
-                      {vehTrips.length} trips recorded
+                      {vehTrips.length} trips this month
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
