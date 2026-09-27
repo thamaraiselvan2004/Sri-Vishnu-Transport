@@ -18,6 +18,8 @@ export const MileageStatusPage: React.FC<MileageStatusPageProps> = ({ vehicles, 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (initialVehicleId) setVehicleId(initialVehicleId);
@@ -54,9 +56,19 @@ export const MileageStatusPage: React.FC<MileageStatusPageProps> = ({ vehicles, 
     finally { setSaving(false); }
   };
 
-  const handleDelete = async (id: string) => {
-    try { await deleteMileageStatusRecord(id); await loadRecords(); }
-    catch (err: any) { setError(err?.message || "Unable to delete mileage record."); }
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      setDeleting(true);
+      setError(null);
+      await deleteMileageStatusRecord(deleteTarget);
+      setDeleteTarget(null);
+      await loadRecords();
+    } catch (err: any) {
+      setError(err?.message || "Unable to delete mileage record.");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const formatDateTime = (value: string) => new Date(value).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
@@ -81,9 +93,21 @@ export const MileageStatusPage: React.FC<MileageStatusPageProps> = ({ vehicles, 
         </form>
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
           <div className="flex items-center justify-between gap-3 mb-5"><div><h2 className="text-lg font-bold text-slate-900">Saved Mileage Records</h2><p className="text-xs text-slate-500 mt-1">Each record is saved separately for the selected vehicle.</p></div>{vehicleId && <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">{selectedVehicleNumber}</span>}</div>
-          {loading ? <div className="py-12 text-center text-sm text-slate-500">Loading mileage records...</div> : records.length === 0 ? <div className="py-12 text-center text-sm text-slate-500 border border-dashed border-slate-200 rounded-xl">No mileage records saved for this vehicle yet.</div> : <><div className="space-y-3">{visibleRecords.map((record, index) => <div key={record.id} className="border border-slate-200 rounded-xl p-4 bg-slate-50/60"><div className="flex items-start justify-between gap-3"><div><div className="font-bold text-slate-900">Record {index + 1}</div><div className="text-xs text-slate-500 mt-1">{formatDateTime(record.starting_datetime)} → {formatDateTime(record.ending_datetime)}</div></div><button type="button" onClick={() => handleDelete(record.id)} className="p-2 rounded-lg text-red-600 hover:bg-red-50" aria-label="Delete mileage record"><Trash2 className="w-4 h-4" /></button></div><div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4"><div><div className="text-[11px] text-slate-500">Starting Odo</div><div className="font-bold text-slate-800">{record.starting_odometer.toFixed(2)}</div></div><div><div className="text-[11px] text-slate-500">Ending Odo</div><div className="font-bold text-slate-800">{record.ending_odometer.toFixed(2)}</div></div><div><div className="text-[11px] text-slate-500">Distance</div><div className="font-bold text-slate-800">{Math.max(0, record.ending_odometer - record.starting_odometer).toFixed(2)} km</div></div><div><div className="text-[11px] text-slate-500">Diesel</div><div className="font-bold text-slate-800">{record.diesel_litres.toFixed(2)} L</div></div><div><div className="text-[11px] text-slate-500">Mileage</div><div className="font-bold text-violet-700">{record.mileage.toFixed(2)} km/L</div></div></div></div>)}</div>{records.length > 1 && <div className="mt-4 flex justify-center"><button type="button" onClick={() => setShowAllRecords((expanded) => !expanded)} className="px-4 py-2 rounded-xl border border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 text-sm font-bold transition-colors">{showAllRecords ? "View Less" : "View All"}</button></div>}</>}
+          {loading ? <div className="py-12 text-center text-sm text-slate-500">Loading mileage records...</div> : records.length === 0 ? <div className="py-12 text-center text-sm text-slate-500 border border-dashed border-slate-200 rounded-xl">No mileage records saved for this vehicle yet.</div> : <><div className="space-y-3">{visibleRecords.map((record, index) => <div key={record.id} className="border border-slate-200 rounded-xl p-4 bg-slate-50/60"><div className="flex items-start justify-between gap-3"><div><div className="font-bold text-slate-900">Record {index + 1}</div><div className="text-xs text-slate-500 mt-1">{formatDateTime(record.starting_datetime)} → {formatDateTime(record.ending_datetime)}</div></div><button type="button" onClick={() => setDeleteTarget(record.id)} className="p-2 rounded-lg text-red-600 hover:bg-red-50" aria-label="Delete mileage record"><Trash2 className="w-4 h-4" /></button></div><div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4"><div><div className="text-[11px] text-slate-500">Starting Odo</div><div className="font-bold text-slate-800">{record.starting_odometer.toFixed(2)}</div></div><div><div className="text-[11px] text-slate-500">Ending Odo</div><div className="font-bold text-slate-800">{record.ending_odometer.toFixed(2)}</div></div><div><div className="text-[11px] text-slate-500">Distance</div><div className="font-bold text-slate-800">{Math.max(0, record.ending_odometer - record.starting_odometer).toFixed(2)} km</div></div><div><div className="text-[11px] text-slate-500">Diesel</div><div className="font-bold text-slate-800">{record.diesel_litres.toFixed(2)} L</div></div><div><div className="text-[11px] text-slate-500">Mileage</div><div className="font-bold text-violet-700">{record.mileage.toFixed(2)} km/L</div></div></div></div>)}</div>{records.length > 1 && <div className="mt-4 flex justify-center"><button type="button" onClick={() => setShowAllRecords((expanded) => !expanded)} className="px-4 py-2 rounded-xl border border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 text-sm font-bold transition-colors">{showAllRecords ? "View Less" : "View All"}</button></div>}</>}
         </div>
       </div>
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4" onClick={() => !deleting && setDeleteTarget(null)}>
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 p-5" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="delete-mileage-record-title">
+            <h3 id="delete-mileage-record-title" className="text-lg font-black text-slate-900">Delete Mileage Record?</h3>
+            <p className="text-sm text-slate-600 mt-2">Are you sure you want to delete this mileage record? This action cannot be undone.</p>
+            <div className="flex justify-end gap-3 mt-5">
+              <button type="button" disabled={deleting} onClick={() => setDeleteTarget(null)} className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-50 disabled:opacity-50">Cancel</button>
+              <button type="button" disabled={deleting} onClick={handleDelete} className="px-4 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 disabled:opacity-50">{deleting ? "Deleting..." : "Delete"}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
