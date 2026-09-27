@@ -93,6 +93,25 @@ export async function updateVehicleStatus(id: string, active: boolean): Promise<
   if (error) throw error;
 }
 
+export async function deleteVehicle(id: string): Promise<void> {
+  const client = requireSupabase();
+
+  // Remove every record that belongs to this vehicle before removing the master record.
+  const relatedDeletes = await Promise.all([
+    client.from("trips").delete().eq("vehicle_id", id),
+    client.from("maintenance").delete().eq("vehicle_id", id),
+    client.from("manual_mileage").delete().eq("vehicle_id", id),
+    client.from("mileage_status").delete().eq("vehicle_id", id),
+  ]);
+
+  const failed = relatedDeletes.find((result) => result.error);
+  if (failed?.error) throw failed.error;
+
+  const { error } = await client.from("vehicles").delete().eq("id", id);
+  if (error) throw error;
+}
+
+
 export async function getDrivers(onlyActive = false): Promise<Driver[]> {
   const client = requireSupabase();
   let query = client.from("drivers").select("*").order("driver_name");
@@ -124,6 +143,19 @@ export async function updateDriverStatus(id: string, active: boolean): Promise<v
   const { error } = await requireSupabase().from("drivers").update({ active }).eq("id", id);
   if (error) throw error;
 }
+
+export async function deleteDriver(id: string): Promise<void> {
+  const client = requireSupabase();
+
+  // Driver-specific financial/payment details are stored on the trip records,
+  // so deleting the driver's trips removes the related driver data as well.
+  const { error: tripsError } = await client.from("trips").delete().eq("driver_id", id);
+  if (tripsError) throw tripsError;
+
+  const { error } = await client.from("drivers").delete().eq("id", id);
+  if (error) throw error;
+}
+
 
 export async function updateDriverHaltingAmount(id: string, amountPerDay: number): Promise<void> {
   const amount = Math.max(0, Number(amountPerDay) || 0);
