@@ -79,6 +79,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [inspectingTrip, setInspectingTrip] = useState<Trip | null>(null);
   const [showHaltingDetails, setShowHaltingDetails] = useState(false);
+  const [selectedDetailField, setSelectedDetailField] = useState<string | null>(null);
 
   // Quick preset helper
   const handleQuickPreset = (preset: "all" | "thisMonth" | "last30" | "thisYear") => {
@@ -456,154 +457,206 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {/* 1. Overall KMs */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition">
+          <button type="button" onClick={() => setSelectedDetailField("kms")} className="w-full text-left bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-blue-300 cursor-pointer">
             <div className="flex items-center justify-between text-slate-500">
-              <span className="text-xs font-bold uppercase tracking-wide">
-                Overall KMs
-              </span>
-              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                <Gauge className="w-4 h-4" />
-              </div>
+              <span className="text-xs font-bold uppercase tracking-wide">Overall KMs</span>
+              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><Gauge className="w-4 h-4" /></div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-slate-900 mt-2">
-              {stats.overallRunningKms.toLocaleString("en-IN")} KM
-            </div>
-            <div className="text-xs text-slate-500 mt-1">
-              Total distance driven across {stats.totalTrips} trips
-            </div>
-          </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-slate-900 mt-2">{stats.overallRunningKms.toLocaleString("en-IN")} KM</div>
+            <div className="text-xs text-slate-500 mt-1">Click to view trip-wise distance details across {stats.totalTrips} trips</div>
+          </button>
 
           {/* 2. Overall Driver Beta */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition">
+          <button type="button" onClick={() => setSelectedDetailField("driverBeta")} className="w-full text-left bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-emerald-300 cursor-pointer">
             <div className="flex items-center justify-between text-slate-500">
-              <span className="text-xs font-bold uppercase tracking-wide">
-                Overall Driver Beta
-              </span>
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <IndianRupee className="w-4 h-4" />
-              </div>
+              <span className="text-xs font-bold uppercase tracking-wide">Overall Driver Beta</span>
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><IndianRupee className="w-4 h-4" /></div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 mt-2">
-              {formatINR(stats.overallDriverBeta)}
-            </div>
-            <div className="text-xs text-slate-500 mt-1">
-              Total trip allowances earned (15% or manual)
-            </div>
-          </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 mt-2">{formatINR(stats.overallDriverBeta)}</div>
+            <div className="text-xs text-slate-500 mt-1">Click to view each trip's driver beta</div>
+          </button>
 
           {/* 3. Overall Total Diesel in Litres */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition">
+          <button type="button" onClick={() => setSelectedDetailField("diesel")} className="w-full text-left bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-orange-300 cursor-pointer">
             <div className="flex items-center justify-between text-slate-500">
-              <span className="text-xs font-bold uppercase tracking-wide">
-                Overall Total Diesel in Litres
-              </span>
-              <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
-                <Fuel className="w-4 h-4" />
-              </div>
+              <span className="text-xs font-bold uppercase tracking-wide">Overall Total Diesel in Litres</span>
+              <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center"><Fuel className="w-4 h-4" /></div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-orange-700 mt-2">
-              {stats.overallTotalDieselLitres} Litres
-            </div>
-            <div className="text-xs text-slate-500 mt-1">
-              Diesel cost: {formatINR(stats.overallDieselExpense)}
-            </div>
-          </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-orange-700 mt-2">{stats.overallTotalDieselLitres} Litres</div>
+            <div className="text-xs text-slate-500 mt-1">Click to view trip-wise diesel and expense details</div>
+          </button>
 
-          {/* 4. Overall Mileage (overall kms / overall Total Diesel in Litres) */}
-          <div className="bg-white p-5 rounded-2xl border-2 border-amber-400/80 bg-amber-50/20 p-5 rounded-2xl shadow-xs hover:shadow-sm transition">
+          {/* 4. Overall Mileage */}
+          <button type="button" onClick={() => setSelectedDetailField("mileage")} className="w-full text-left bg-white p-5 rounded-2xl border-2 border-amber-400/80 bg-amber-50/20 p-5 rounded-2xl shadow-xs hover:shadow-sm transition hover:border-amber-500 cursor-pointer">
             <div className="flex items-center justify-between text-slate-500">
-              <span className="text-xs font-bold uppercase tracking-wide text-amber-900">
-                Overall Mileage
-              </span>
-              <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4" />
-              </div>
+              <span className="text-xs font-bold uppercase tracking-wide text-amber-900">Overall Mileage</span>
+              <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center"><TrendingUp className="w-4 h-4" /></div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-amber-900 mt-2">
-              {stats.overallMileage} km/L
-            </div>
-            <div className="text-xs text-amber-700 font-medium mt-1">
-              (overall kms / overall Total Diesel in Litres)
-            </div>
-          </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-amber-900 mt-2">{stats.overallMileage} km/L</div>
+            <div className="text-xs text-amber-700 font-medium mt-1">Click to view trip-wise mileage</div>
+          </button>
 
           {/* 5. Overall Amount Paid to Driver */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition">
+          <button type="button" onClick={() => setSelectedDetailField("paid")} className="w-full text-left bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-indigo-300 cursor-pointer">
             <div className="flex items-center justify-between text-slate-500">
-              <span className="text-xs font-bold uppercase tracking-wide">
-                Overall Amount Paid to Driver
-              </span>
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                <Wallet className="w-4 h-4" />
-              </div>
+              <span className="text-xs font-bold uppercase tracking-wide">Overall Amount Paid to Driver</span>
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><Wallet className="w-4 h-4" /></div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-indigo-700 mt-2">
-              {formatINR(stats.overallAmountPaidToDriver)}
-            </div>
-            <div className="text-xs text-slate-500 mt-1">
-              Disbursed advances and cash payments to driver
-            </div>
-          </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-indigo-700 mt-2">{formatINR(stats.overallAmountPaidToDriver)}</div>
+            <div className="text-xs text-slate-500 mt-1">Click to view each trip's payment details</div>
+          </button>
 
           {/* 6. Overall Remaining Amount to Driver */}
-          <div
-            className={`p-5 rounded-2xl border-2 shadow-xs hover:shadow-sm transition ${
+          <button type="button" onClick={() => setSelectedDetailField("remaining")} className={`w-full text-left p-5 rounded-2xl border-2 shadow-xs hover:shadow-sm transition cursor-pointer ${
               stats.overallRemainingAmountToDriver > 0
-                ? "bg-rose-50/40 border-rose-400 text-rose-950"
-                : "bg-emerald-50/40 border-emerald-400 text-emerald-950"
-            }`}
-          >
+                ? "bg-rose-50/40 border-rose-400 text-rose-950 hover:border-rose-500"
+                : "bg-emerald-50/40 border-emerald-400 text-emerald-950 hover:border-emerald-500"
+            }`}>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wide">
-                Overall Remaining Amount to Driver
-              </span>
-              <span
-                className={`text-[11px] font-extrabold px-2 py-0.5 rounded-md ${
-                  stats.overallRemainingAmountToDriver > 0
-                    ? "bg-rose-100 text-rose-800"
-                    : "bg-emerald-100 text-emerald-800"
-                }`}
-              >
-                {stats.overallRemainingAmountToDriver > 0
-                  ? "Pending Settlement"
-                  : "Fully Settled"}
+              <span className="text-xs font-bold uppercase tracking-wide">Overall Remaining Amount to Driver</span>
+              <span className={`text-[11px] font-extrabold px-2 py-0.5 rounded-md ${
+                  stats.overallRemainingAmountToDriver > 0 ? "bg-rose-100 text-rose-800" : "bg-emerald-100 text-emerald-800"
+                }`}>
+                {stats.overallRemainingAmountToDriver > 0 ? "Pending Settlement" : "Fully Settled"}
               </span>
             </div>
-            <div
-              className={`text-2xl sm:text-3xl font-black font-mono mt-2 ${
-                stats.overallRemainingAmountToDriver > 0
-                  ? "text-rose-700"
-                  : "text-emerald-700"
-              }`}
-            >
+            <div className={`text-2xl sm:text-3xl font-black font-mono mt-2 ${
+                stats.overallRemainingAmountToDriver > 0 ? "text-rose-700" : "text-emerald-700"
+              }`}>
               {formatINR(stats.overallRemainingAmountToDriver)}
             </div>
-            <div className="text-xs opacity-75 mt-1">
-              Formula: (overall driver beta - overall amount paid to driver)
-            </div>
-          </div>
+            <div className="text-xs opacity-75 mt-1">Click to view each trip's remaining beta</div>
+          </button>
 
-          {/* 7. Overall Halting Days (Requested by User) */}
+          {/* 7. Overall Halting Days */}
           <button type="button" onClick={() => setShowHaltingDetails(true)} className="w-full text-left bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-purple-300 cursor-pointer">
             <div className="flex items-center justify-between text-slate-500">
-              <span className="text-xs font-bold uppercase tracking-wide text-purple-900">
-                Halting Days
-              </span>
-              <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                <Clock className="w-4 h-4" />
-              </div>
+              <span className="text-xs font-bold uppercase tracking-wide text-purple-900">Halting Days</span>
+              <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center"><Clock className="w-4 h-4" /></div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-purple-800 mt-2">
-              {stats.overallHaltingDays} Days
-            </div>
-            <div className="text-xs text-slate-500 mt-1">
-              Overall halting / detention days of {selectedDriverName}
-            </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-purple-800 mt-2">{stats.overallHaltingDays} Days</div>
+            <div className="text-xs text-slate-500 mt-1">Click to view loading + unloading halting details</div>
           </button>
         </div>
       </div>
 
+
       <HaltingDetailsModal isOpen={showHaltingDetails} onClose={() => setShowHaltingDetails(false)} driverName={selectedDriverName} trips={driverTrips} />
+
+      {selectedDetailField && (() => {
+        const detailTitleMap: Record<string, string> = {
+          kms: "Overall KMs",
+          driverBeta: "Overall Driver Beta",
+          diesel: "Overall Total Diesel in Litres",
+          mileage: "Overall Mileage",
+          paid: "Overall Amount Paid to Driver",
+          remaining: "Overall Remaining Amount to Driver",
+        };
+        const title = detailTitleMap[selectedDetailField] || "Driver Details";
+        const sortedTrips = [...driverTrips].sort((a, b) =>
+          String(a.trip_date || "").localeCompare(String(b.trip_date || ""))
+        );
+
+        const tripRows = sortedTrips.map((trip, index) => {
+          const paid = Number(trip.amount_paid_to_driver) || 0;
+          const remaining =
+            trip.remaining_amount_to_driver !== undefined &&
+            trip.remaining_amount_to_driver !== null
+              ? Number(trip.remaining_amount_to_driver)
+              : (Number(trip.driver_beta) || 0) - paid;
+          const diesel = Number(trip.diesel_litres) || 0;
+          const mileage = Number(trip.mileage) || 0;
+          const value =
+            selectedDetailField === "kms" ? `${Number(trip.trip_running_kms) || 0} KM` :
+            selectedDetailField === "driverBeta" ? formatINR(Number(trip.driver_beta) || 0) :
+            selectedDetailField === "diesel" ? `${diesel} L • ${formatINR(Number(trip.diesel_expense) || 0)}` :
+            selectedDetailField === "mileage" ? `${mileage} km/L` :
+            selectedDetailField === "paid" ? formatINR(paid) :
+            selectedDetailField === "remaining" ? formatINR(remaining) :
+            "";
+          return { trip, index, value, paid, remaining, diesel, mileage };
+        });
+
+        const total =
+          selectedDetailField === "kms" ? driverTrips.reduce((sum, t) => sum + (Number(t.trip_running_kms) || 0), 0) :
+          selectedDetailField === "driverBeta" ? driverTrips.reduce((sum, t) => sum + (Number(t.driver_beta) || 0), 0) :
+          selectedDetailField === "diesel" ? driverTrips.reduce((sum, t) => sum + (Number(t.diesel_litres) || 0), 0) :
+          selectedDetailField === "mileage" ? stats.overallMileage :
+          selectedDetailField === "paid" ? driverTrips.reduce((sum, t) => sum + (Number(t.amount_paid_to_driver) || 0), 0) :
+          selectedDetailField === "remaining" ? driverTrips.reduce((sum, t) => {
+            const paid = Number(t.amount_paid_to_driver) || 0;
+            return sum + (t.remaining_amount_to_driver !== undefined && t.remaining_amount_to_driver !== null
+              ? Number(t.remaining_amount_to_driver)
+              : (Number(t.driver_beta) || 0) - paid);
+          }, 0) :
+          0;
+
+        return (
+          <div className="fixed inset-0 z-[110] overflow-y-auto bg-slate-900/50 p-4" onClick={() => setSelectedDetailField(null)}>
+            <div className="mx-auto my-4 w-full max-w-4xl max-h-[calc(100vh-2rem)] overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-200" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="driver-report-detail-title">
+              <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                <div>
+                  <h3 id="driver-report-detail-title" className="text-lg font-black text-slate-900">{title}</h3>
+                  <p className="text-xs font-semibold text-slate-500 mt-1">{selectedDriverName} • {driverTrips.length} trip{driverTrips.length === 1 ? "" : "s"}</p>
+                </div>
+                <button type="button" onClick={() => setSelectedDetailField(null)} className="rounded-lg px-3 py-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900" aria-label="Close details">✕</button>
+              </div>
+
+              <div className="max-h-[65vh] overflow-y-auto p-5">
+                {tripRows.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
+                    No trip records for {selectedDriverName} in the selected date range.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {tripRows.map(({ trip, index, value, paid, remaining, diesel, mileage }) => (
+                      <div key={trip.id ?? `driver-detail-${index}`} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold uppercase tracking-wide text-slate-500">Trip {index + 1}</div>
+                            <div className="text-sm font-bold text-slate-900 mt-1">
+                              {trip.trip_date ? new Date(`${trip.trip_date}T00:00:00`).toLocaleDateString("en-IN") : "Date not available"}
+                            </div>
+                            <div className="text-xs text-slate-500 mt-1">{trip.from_city || "—"} → {trip.to_city || "—"}</div>
+                            <div className="text-xs text-slate-500 mt-1">Vehicle: {trip.vehicle_number || "—"}</div>
+                          </div>
+                          <div className="text-left lg:text-right">
+                            <div className="text-xs font-bold uppercase tracking-wide text-blue-700">{title}</div>
+                            <div className="text-xl font-black font-mono text-slate-900 mt-1">{value}</div>
+                            {selectedDetailField === "diesel" && (
+                              <div className="text-xs text-slate-500 mt-1">Fuel cost: {formatINR(Number(trip.diesel_expense) || 0)}</div>
+                            )}
+                            {selectedDetailField === "mileage" && (
+                              <div className="text-xs text-slate-500 mt-1">Distance: {Number(trip.trip_running_kms) || 0} KM • Diesel: {diesel} L</div>
+                            )}
+                            {selectedDetailField === "paid" && trip.driver_payment_date && (
+                              <div className="text-xs text-slate-500 mt-1">Payment date: {formatIndianDate(trip.driver_payment_date)}</div>
+                            )}
+                            {selectedDetailField === "remaining" && (
+                              <div className="text-xs text-slate-500 mt-1">Beta: {formatINR(Number(trip.driver_beta) || 0)} • Paid: {formatINR(paid)}</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-5 py-4">
+                <span className="text-sm font-bold text-slate-700">{title} Total</span>
+                <span className="text-lg font-black font-mono text-blue-700">
+                  {selectedDetailField === "diesel" ? `${total} Litres` :
+                   selectedDetailField === "kms" ? `${Number(total).toLocaleString("en-IN")} KM` :
+                   selectedDetailField === "mileage" ? `${total} km/L` :
+                   formatINR(Number(total) || 0)}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
 
       {/* Monthly Driver Salary History */}
       {selectedDriver && (
