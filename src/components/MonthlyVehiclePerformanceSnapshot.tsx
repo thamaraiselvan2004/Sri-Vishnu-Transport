@@ -215,6 +215,9 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
                           <div className="text-xs font-bold uppercase tracking-wide text-slate-500">Trip {receivedBalanceTrips.length - index}</div>
                           <div className="text-sm font-bold text-slate-900 mt-1">Date: {trip.trip_date ? new Date(`${trip.trip_date}T00:00:00`).toLocaleDateString("en-IN") : "Date not available"}</div>
                           <div className="text-xs text-slate-500 mt-1">{trip.from_city || "—"} → {trip.to_city || "—"}</div>
+                          <div className="text-xs text-slate-700 mt-1">
+                            Transporter Name: <span className="font-semibold text-slate-900">{trip.transporter_name || "—"}</span>
+                          </div>
                         </div>
                         <div className="text-left sm:text-right">
                           <div className="text-xs font-bold uppercase tracking-wide text-emerald-700">Received Amount</div>
