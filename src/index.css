@@ -1,1 +1,25 @@
 @import "tailwindcss";
+
+/* Keep long monetary values inside their cards/fields on every screen size. */
+* {
+  box-sizing: border-box;
+}
+
+.font-mono {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+input[type="number"] {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .font-mono {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
