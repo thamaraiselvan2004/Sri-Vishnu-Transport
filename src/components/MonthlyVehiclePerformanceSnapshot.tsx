@@ -126,7 +126,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
     // Total received balance for this vehicle in the current snapshot month only.
     const receivedBalanceTrips = monthTrips
       .filter((trip) => (Number(trip.balance_amount) || 0) > 0)
-      .sort((a, b) => String(b.trip_date || "").localeCompare(String(a.trip_date || "")));
+      .sort((a, b) => String(a.trip_date || "").localeCompare(String(b.trip_date || "")));
     const totalReceivedBalance = receivedBalanceTrips.reduce(
       (total, trip) => total + (Number(trip.balance_amount) || 0),
       0
@@ -134,7 +134,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
 
     const advanceReceivedTrips = monthTrips
       .filter((trip) => (Number(trip.advance_received) || 0) > 0)
-      .sort((a, b) => String(b.advance_received_date || b.trip_date || "").localeCompare(String(a.advance_received_date || a.trip_date || "")));
+      .sort((a, b) => String(a.advance_received_date || a.trip_date || "").localeCompare(String(b.advance_received_date || b.trip_date || "")));
     const totalAdvanceReceived = advanceReceivedTrips.reduce(
       (total, trip) => total + (Number(trip.advance_received) || 0),
       0
@@ -270,7 +270,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
                     <div key={trip.id ?? `received-balance-${index}`} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
-                          <div className="text-xs font-bold uppercase tracking-wide text-slate-500">Trip {receivedBalanceTrips.length - index}</div>
+                          <div className="text-xs font-bold uppercase tracking-wide text-slate-500">Trip {index + 1}</div>
                           <div className="text-sm font-bold text-slate-900 mt-1">Date: {trip.trip_date ? new Date(`${trip.trip_date}T00:00:00`).toLocaleDateString("en-IN") : "Date not available"}</div>
                           <div className="text-xs text-slate-500 mt-1">{trip.from_city || "—"} → {trip.to_city || "—"}</div>
                           <div className="text-xs text-slate-700 mt-1">
