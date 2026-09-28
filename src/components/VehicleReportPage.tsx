@@ -71,6 +71,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
   const [selectedTripForModal, setSelectedTripForModal] = useState<Trip | null>(null);
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [viewAllTripHistory, setViewAllTripHistory] = useState<boolean>(false);
+  const [viewAllReceivedBalance, setViewAllReceivedBalance] = useState<boolean>(false);
 
   // Quick preset handler
   const handleQuickPreset = (preset: "all" | "thisMonth" | "last30" | "thisYear") => {
@@ -183,6 +184,22 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
 
   // Match the Home page behavior: show the 3 most recent trips by default.
   const displayedVehicleTrips = viewAllTripHistory ? vehicleTrips : vehicleTrips.slice(0, 3);
+
+  // Received Balance is a lifetime collection/outstanding view for this vehicle.
+  // It intentionally ignores the report date filter so balances from older months remain visible.
+  const receivedBalanceTrips = useMemo(() => {
+    return allTrips
+      .filter((trip) => trip.vehicle_id === vehicle.id && (Number(trip.balance_amount) || 0) > 0)
+      .sort((a, b) => String(b.trip_date || "").localeCompare(String(a.trip_date || "")));
+  }, [allTrips, vehicle.id]);
+
+  const displayedReceivedBalanceTrips = viewAllReceivedBalance
+    ? receivedBalanceTrips
+    : receivedBalanceTrips.slice(0, 3);
+
+  const totalReceivedBalance = useMemo(() => {
+    return receivedBalanceTrips.reduce((sum, trip) => sum + (Number(trip.balance_amount) || 0), 0);
+  }, [receivedBalanceTrips]);
 
   const insights = useMemo(() => {
     return generateVehicleInsights(stats, vehicleTrips, vehicleMaintenance);
@@ -602,6 +619,85 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
               {vehicleMaintenance.length} service records
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Lifetime Received Balance - independent of monthly/date filters */}
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="bg-white p-5 rounded-2xl border-2 border-emerald-500/70 bg-emerald-50/20 shadow-xs">
+            <div className="text-xs font-bold text-emerald-800 uppercase tracking-wide flex items-center gap-1">
+              <Wallet className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Received Balance</span>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 mt-1">
+              {formatINR(totalReceivedBalance)}
+            </div>
+            <div className="text-xs text-emerald-700 font-semibold mt-1">
+              {receivedBalanceTrips.length} trip{receivedBalanceTrips.length === 1 ? "" : "s"} with received balance • All time
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-5 border-b border-slate-200">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">Received Balance Details</h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Showing {displayedReceivedBalanceTrips.length} of {receivedBalanceTrips.length} trips with balance amount greater than zero. This list includes all months.
+              </p>
+            </div>
+            <button
+              id="vehicle-report-received-balance-view-all-btn"
+              type="button"
+              onClick={() => setViewAllReceivedBalance(!viewAllReceivedBalance)}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 border border-emerald-200 transition shadow-xs"
+            >
+              <span>
+                {viewAllReceivedBalance ? "Show Recent (3)" : "View All (" + receivedBalanceTrips.length + " Trips)"}
+              </span>
+              <ChevronRight className={"w-3.5 h-3.5 transition-transform " + (viewAllReceivedBalance ? "rotate-90" : "")} />
+            </button>
+          </div>
+
+          {receivedBalanceTrips.length === 0 ? (
+            <div className="p-10 text-center text-sm text-slate-500">
+              No received balance records found for this vehicle.
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {displayedReceivedBalanceTrips.map((trip, index) => (
+                <div key={trip.id} className="p-5 hover:bg-emerald-50/30 transition">
+                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:items-center">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Transporter Name</div>
+                      <div className="text-sm font-bold text-slate-900 mt-1">{trip.transporter_name || "—"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Trip Date</div>
+                      <div className="text-sm font-semibold text-slate-800 mt-1">{trip.trip_date ? formatIndianDate(trip.trip_date) : "—"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">From → To</div>
+                      <div className="text-sm font-semibold text-slate-800 mt-1">{trip.from_city || "—"} → {trip.to_city || "—"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Advance Received</div>
+                      <div className="text-sm font-bold font-mono text-blue-700 mt-1">{formatINR(Number(trip.advance_received) || 0)}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">{trip.advance_received_date ? formatIndianDate(trip.advance_received_date) : "Date not recorded"}</div>
+                    </div>
+                    <div className="lg:text-right">
+                      <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Balance Amount</div>
+                      <div className="text-lg font-black font-mono text-emerald-700 mt-1">{formatINR(Number(trip.balance_amount) || 0)}</div>
+                    </div>
+                  </div>
+                  {viewAllReceivedBalance && (
+                    <div className="text-[10px] text-slate-400 mt-3">Received Balance Trip {index + 1}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
