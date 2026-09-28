@@ -564,6 +564,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       <th className="text-right px-4 py-3 font-bold text-slate-600">Total Trips</th>
                       <th className="text-right px-4 py-3 font-bold text-slate-600">Total Revenue</th>
                       <th className="text-right px-4 py-3 font-bold text-slate-600">Net Business Profit</th>
+                      <th className="text-right px-4 py-3 font-bold text-slate-600">Total KMs</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -579,12 +580,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                         0
                       );
                       const vehicleProfit = vehicleTripProfit - vehicleMaintenance + vehicleHalting;
+                      const vehicleTotalKms = vehicleTrips.reduce((sum, trip) => sum + (Number(trip.trip_running_kms) || 0), 0);
                       return (
                         <tr key={vehicle.id} className="border-t border-slate-100">
                           <td className="px-4 py-3 font-mono font-bold text-slate-800">{vehicle.vehicle_number}</td>
                           <td className="px-4 py-3 text-right font-semibold">{vehicleTrips.length}</td>
                           <td className="px-4 py-3 text-right font-mono font-semibold">{formatINR(vehicleRevenue)}</td>
                           <td className="px-4 py-3 text-right font-mono font-semibold text-emerald-700">{formatINR(vehicleProfit)}</td>
+                          <td className="px-4 py-3 text-right font-mono font-semibold text-blue-700">{vehicleTotalKms.toLocaleString("en-IN")} km</td>
                         </tr>
                       );
                     })}
@@ -593,6 +596,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       <td className="px-4 py-3 text-right">{currentMonthTrips.length}</td>
                       <td className="px-4 py-3 text-right font-mono">{formatINR(totalRevenue)}</td>
                       <td className="px-4 py-3 text-right font-mono text-emerald-700">{formatINR(finalProfit)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-blue-700">{currentMonthTrips.reduce((sum, trip) => sum + (Number(trip.trip_running_kms) || 0), 0).toLocaleString("en-IN")} km</td>
                     </tr>
                   </tbody>
                 </table>
