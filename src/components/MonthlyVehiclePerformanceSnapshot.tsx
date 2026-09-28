@@ -39,6 +39,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
   const [currentMonthKey, setCurrentMonthKey] = useState(() => getMonthKey(new Date()));
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const [selectedDetailField, setSelectedDetailField] = useState<string | null>(null);
+  const [viewAllReceivedBalance, setViewAllReceivedBalance] = useState(false);
 
   useEffect(() => {
     const checkMonth = () => {
@@ -71,11 +72,8 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
       placeholder.id = "monthly-vehicle-performance-snapshot";
       host.insertBefore(placeholder, snapshotSection);
 
-      const haltingSection = snapshotSection.nextElementSibling as HTMLElement | null;
       const previousSnapshotDisplay = snapshotSection.style.display;
-      const previousHaltingDisplay = haltingSection?.style.display ?? "";
       snapshotSection.style.display = "none";
-      if (haltingSection) haltingSection.style.display = "none";
 
       if (!cancelled) {
         setPortalTarget(placeholder);
@@ -85,7 +83,6 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
         setPortalTarget(null);
         if (placeholder.parentElement) placeholder.parentElement.removeChild(placeholder);
         snapshotSection.style.display = previousSnapshotDisplay;
-        if (haltingSection) haltingSection.style.display = previousHaltingDisplay;
       };
     };
 
@@ -140,6 +137,15 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
       0
     );
 
+    // Lifetime received balance for this vehicle, independent of the monthly snapshot.
+    const lifetimeReceivedBalanceTrips = trips
+      .filter((trip) => trip.vehicle_id === vehicle.id && (Number(trip.balance_amount) || 0) > 0)
+      .sort((a, b) => String(b.trip_date || "").localeCompare(String(a.trip_date || "")));
+    const lifetimeReceivedBalance = lifetimeReceivedBalanceTrips.reduce(
+      (total, trip) => total + (Number(trip.balance_amount) || 0),
+      0
+    );
+
     return {
       stats,
       monthTrips,
@@ -149,13 +155,15 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
       receivedBalanceTrips,
       totalAdvanceReceived,
       advanceReceivedTrips,
+      lifetimeReceivedBalanceTrips,
+      lifetimeReceivedBalance,
       overallProfit: stats.finalVehicleProfit + totalHaltingCharges,
     };
   }, [vehicle.id, vehicle.vehicle_number, trips, maintenance, currentMonthKey]);
 
   if (!portalTarget) return null;
 
-  const { stats, monthTrips, totalHaltingDays, totalHaltingCharges, totalReceivedBalance, receivedBalanceTrips, totalAdvanceReceived, advanceReceivedTrips, overallProfit } = monthStats;
+  const { stats, monthTrips, totalHaltingDays, totalHaltingCharges, totalReceivedBalance, receivedBalanceTrips, totalAdvanceReceived, advanceReceivedTrips, lifetimeReceivedBalanceTrips, lifetimeReceivedBalance, overallProfit } = monthStats;
 
   return createPortal(
     <div className="space-y-3">
@@ -200,6 +208,48 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
 
         <MetricCard field="haltingCharges" label="Total Halting Charges" icon={<IndianRupee className="w-3.5 h-3.5 text-rose-600" />} value={formatINR(totalHaltingCharges)} valueClass="text-rose-700" hint="Click to view this month's trip-wise halting charges" onClick={() => setSelectedDetailField("haltingCharges")} />
         <MetricCard field="overallProfit" label="Overall Profit" value={formatINR(overallProfit)} valueClass={overallProfit >= 0 ? "text-violet-700" : "text-red-700"} borderClass="border-2 border-violet-500/80 bg-violet-50/20" hint="Final Net Profit + Total Halting Charges • Click for trip-wise details" onClick={() => setSelectedDetailField("overallProfit")} />
+      </div>
+
+      {/* Lifetime Received Balance - directly below Vehicle Performance Snapshot */}
+      <div className="mt-4 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="bg-white p-5 rounded-2xl border-2 border-emerald-500/70 bg-emerald-50/20 shadow-xs">
+            <div className="text-xs font-bold text-emerald-800 uppercase tracking-wide flex items-center gap-1">
+              <IndianRupee className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Received Balance</span>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 mt-1">{formatINR(lifetimeReceivedBalance)}</div>
+            <div className="text-xs text-emerald-700 font-semibold mt-1">{lifetimeReceivedBalanceTrips.length} trip{lifetimeReceivedBalanceTrips.length === 1 ? "" : "s"} with balance amount greater than zero • All time</div>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-5 border-b border-slate-200">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">Received Balance Details</h3>
+              <p className="text-xs text-slate-500 mt-1">Showing {viewAllReceivedBalance ? lifetimeReceivedBalanceTrips.length : Math.min(3, lifetimeReceivedBalanceTrips.length)} of {lifetimeReceivedBalanceTrips.length} trips with balance amount greater than zero. This list includes all months.</p>
+            </div>
+            <button type="button" onClick={() => setViewAllReceivedBalance((current) => !current)} className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 border border-emerald-200 transition shadow-xs">
+              {viewAllReceivedBalance ? "Show Recent (3)" : "View All (" + lifetimeReceivedBalanceTrips.length + " Trips)"}
+            </button>
+          </div>
+          {lifetimeReceivedBalanceTrips.length === 0 ? (
+            <div className="p-10 text-center text-sm text-slate-500">No received balance records found for this vehicle.</div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {(viewAllReceivedBalance ? lifetimeReceivedBalanceTrips : lifetimeReceivedBalanceTrips.slice(0, 3)).map((trip) => (
+                <div key={trip.id} className="p-5 hover:bg-emerald-50/30 transition">
+                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:items-center">
+                    <div><div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Transporter Name</div><div className="text-sm font-bold text-slate-900 mt-1">{trip.transporter_name || "—"}</div></div>
+                    <div><div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Trip Date</div><div className="text-sm font-semibold text-slate-800 mt-1">{trip.trip_date ? new Date(trip.trip_date + "T00:00:00").toLocaleDateString("en-IN") : "—"}</div></div>
+                    <div><div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">From → To</div><div className="text-sm font-semibold text-slate-800 mt-1">{trip.from_city || "—"} → {trip.to_city || "—"}</div></div>
+                    <div><div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Advance Received</div><div className="text-sm font-bold font-mono text-blue-700 mt-1">{formatINR(Number(trip.advance_received) || 0)}</div><div className="text-[11px] text-slate-500 mt-0.5">{trip.advance_received_date ? new Date(trip.advance_received_date + "T00:00:00").toLocaleDateString("en-IN") : "Date not recorded"}</div></div>
+                    <div className="lg:text-right"><div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Balance Amount</div><div className="text-lg font-black font-mono text-emerald-700 mt-1">{formatINR(Number(trip.balance_amount) || 0)}</div></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
             <HaltingDetailsModal
