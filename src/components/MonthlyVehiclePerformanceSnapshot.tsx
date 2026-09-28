@@ -132,6 +132,14 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
       0
     );
 
+    const advanceReceivedTrips = monthTrips
+      .filter((trip) => (Number(trip.advance_received) || 0) > 0)
+      .sort((a, b) => String(b.advance_received_date || b.trip_date || "").localeCompare(String(a.advance_received_date || a.trip_date || "")));
+    const totalAdvanceReceived = advanceReceivedTrips.reduce(
+      (total, trip) => total + (Number(trip.advance_received) || 0),
+      0
+    );
+
     return {
       stats,
       monthTrips,
@@ -139,6 +147,8 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
       totalHaltingCharges,
       totalReceivedBalance,
       receivedBalanceTrips,
+      totalAdvanceReceived,
+      advanceReceivedTrips,
       overallProfit: stats.finalVehicleProfit + totalHaltingCharges,
     };
   }, [vehicle.id, vehicle.vehicle_number, trips, maintenance, currentMonthKey]);
@@ -295,7 +305,8 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
           toll: "Total Toll Charges",
           diesel: "Overall Total Diesel",
           mileage: "Average Mileage",
-          receivedBalance: "Total Received Balance",\n          advanceReceived: "Overall Advance Received",
+          receivedBalance: "Total Received Balance",
+          advanceReceived: "Overall Advance Received",
           maintenance: "Service Maintenance",
           haltingDays: "Total Halting Days",
           haltingCharges: "Total Halting Charges",
@@ -344,7 +355,8 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
           selectedDetailField === "toll" ? monthTrips.reduce((s, t) => s + (Number(t.toll_charges) || 0), 0) :
           selectedDetailField === "diesel" ? monthTrips.reduce((s, t) => s + (Number(t.diesel_litres) || 0), 0) :
           selectedDetailField === "mileage" ? (stats.overallMileage) :
-          selectedDetailField === "receivedBalance" ? totalReceivedBalance :\n          selectedDetailField === "advanceReceived" ? totalAdvanceReceived :
+          selectedDetailField === "receivedBalance" ? totalReceivedBalance :
+          selectedDetailField === "advanceReceived" ? totalAdvanceReceived :
           selectedDetailField === "haltingDays" ? totalHaltingDays :
           selectedDetailField === "haltingCharges" ? totalHaltingCharges :
           selectedDetailField === "overallProfit" ? overallProfit :
