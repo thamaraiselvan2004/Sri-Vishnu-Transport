@@ -145,7 +145,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
 
   if (!portalTarget) return null;
 
-  const { stats, monthTrips, totalHaltingDays, totalHaltingCharges, totalReceivedBalance, receivedBalanceTrips, overallProfit } = monthStats;
+  const { stats, monthTrips, totalHaltingDays, totalHaltingCharges, totalReceivedBalance, receivedBalanceTrips, totalAdvanceReceived, advanceReceivedTrips, overallProfit } = monthStats;
 
   return createPortal(
     <div className="space-y-3">
@@ -167,6 +167,12 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
         <MetricCard field="toll" label="Total Toll Charges" icon={<IndianRupee className="w-3.5 h-3.5 text-indigo-600" />} value={formatINR(stats.overallTollExpense)} valueClass="text-indigo-700" hint="Click to view this month's trip-wise toll charges" onClick={() => setSelectedDetailField("toll")} />
         <MetricCard field="diesel" label="Overall Total Diesel" icon={<Fuel className="w-3.5 h-3.5 text-orange-600" />} value={`${stats.overallDieselLitres} Litres`} valueClass="text-orange-700" hint={`Total fuel cost: ${formatINR(stats.overallDieselExpense)} • Click for trip-wise fuel details`} onClick={() => setSelectedDetailField("diesel")} />
         <MetricCard field="mileage" label="Average Mileage" value={`${stats.overallMileage} km/L`} valueClass="text-amber-700" hint="Click to view this month's trip-wise mileage" onClick={() => setSelectedDetailField("mileage")} />
+
+        <button type="button" onClick={() => setSelectedDetailField("advanceReceived")} className="w-full min-w-0 text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-emerald-300 cursor-pointer" aria-label={`View advance received details for vehicle ${vehicle.vehicle_number}`}>
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1"><IndianRupee className="w-3.5 h-3.5 text-emerald-600" />Overall Advance Received</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 mt-1 min-w-0 whitespace-normal break-all leading-tight tracking-tight">{formatINR(totalAdvanceReceived)}</div>
+          <div className="text-xs text-slate-500 mt-1">Click to view this month's advance details</div>
+        </button>
 
         <button type="button" onClick={() => setSelectedDetailField("receivedBalance")} className="w-full min-w-0 text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-emerald-300 cursor-pointer" aria-label={`View received balance details for vehicle ${vehicle.vehicle_number}`}>
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1"><IndianRupee className="w-3.5 h-3.5 text-emerald-600" />Total Received Balance</div>
@@ -192,6 +198,48 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
         driverName={`Vehicle ${vehicle.vehicle_number}`}
         trips={monthTrips}
       />
+
+      {selectedDetailField === "advanceReceived" && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4" onClick={() => setSelectedDetailField(null)}>
+          <div className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-200" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="advance-received-details-title">
+            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+              <div>
+                <h3 id="advance-received-details-title" className="text-lg font-black text-slate-900">Overall Advance Received Details</h3>
+                <p className="text-xs font-semibold text-slate-500 mt-1">Vehicle {vehicle.vehicle_number} • {advanceReceivedTrips.length} advance entr{advanceReceivedTrips.length === 1 ? "y" : "ies"}</p>
+              </div>
+              <button type="button" onClick={() => setSelectedDetailField(null)} className="rounded-lg px-3 py-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900" aria-label="Close advance received details">✕</button>
+            </div>
+            <div className="max-h-[65vh] overflow-y-auto p-5">
+              {advanceReceivedTrips.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">No advance received amount has been recorded for this vehicle in this month.</div>
+              ) : (
+                <div className="space-y-3">
+                  {advanceReceivedTrips.map((trip, index) => (
+                    <div key={trip.id ?? `advance-received-${index}`} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex flex-col gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div><div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Trip Date</div><div className="text-sm font-bold text-slate-900 mt-1">{trip.trip_date ? new Date(`${trip.trip_date}T00:00:00`).toLocaleDateString("en-IN") : "Date not available"}</div></div>
+                          <div><div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Advance Received Date</div><div className="text-sm font-bold text-slate-900 mt-1">{trip.advance_received_date ? new Date(`${trip.advance_received_date}T00:00:00`).toLocaleDateString("en-IN") : "Date not available"}</div></div>
+                        </div>
+                        <div><div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Transporter Name</div><div className="text-sm font-semibold text-slate-900 mt-1">{trip.transporter_name || "—"}</div></div>
+                        <div><div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">From → To Location</div><div className="text-sm font-semibold text-slate-900 mt-1">{trip.from_city || "—"} → {trip.to_city || "—"}</div></div>
+                        <div className="flex items-center justify-between border-t border-slate-200 pt-3">
+                          <span className="text-xs font-bold uppercase tracking-wide text-emerald-700">Advance Received</span>
+                          <span className="text-xl font-black font-mono text-emerald-700">{formatINR(Number(trip.advance_received) || 0)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-5 py-4">
+              <span className="text-sm font-bold text-slate-700">Total Advance Received</span>
+              <span className="text-lg font-black font-mono text-emerald-700">{formatINR(totalAdvanceReceived)}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedDetailField === "receivedBalance" && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4" onClick={() => setSelectedDetailField(null)}>
@@ -237,7 +285,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
         </div>
       )}
 
-{selectedDetailField && selectedDetailField !== "receivedBalance" && selectedDetailField !== "haltingDays" && (() => {
+{selectedDetailField && selectedDetailField !== "receivedBalance" && selectedDetailField !== "advanceReceived" && selectedDetailField !== "haltingDays" && (() => {
         const detailTitleMap: Record<string, string> = {
           trips: "No.of.Trips",
           freightFare: "Total Freight Fare",
@@ -247,7 +295,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
           toll: "Total Toll Charges",
           diesel: "Overall Total Diesel",
           mileage: "Average Mileage",
-          receivedBalance: "Total Received Balance",
+          receivedBalance: "Total Received Balance",\n          advanceReceived: "Overall Advance Received",
           maintenance: "Service Maintenance",
           haltingDays: "Total Halting Days",
           haltingCharges: "Total Halting Charges",
@@ -296,7 +344,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
           selectedDetailField === "toll" ? monthTrips.reduce((s, t) => s + (Number(t.toll_charges) || 0), 0) :
           selectedDetailField === "diesel" ? monthTrips.reduce((s, t) => s + (Number(t.diesel_litres) || 0), 0) :
           selectedDetailField === "mileage" ? (stats.overallMileage) :
-          selectedDetailField === "receivedBalance" ? totalReceivedBalance :
+          selectedDetailField === "receivedBalance" ? totalReceivedBalance :\n          selectedDetailField === "advanceReceived" ? totalAdvanceReceived :
           selectedDetailField === "haltingDays" ? totalHaltingDays :
           selectedDetailField === "haltingCharges" ? totalHaltingCharges :
           selectedDetailField === "overallProfit" ? overallProfit :
