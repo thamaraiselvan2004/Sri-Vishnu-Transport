@@ -9,6 +9,7 @@ import { ReportAnalysisContainer } from "./components/ReportAnalysisContainer";
 import { MileageStatusPage } from "./components/MileageStatusPage";
 import { VehicleMonthlyProfitReport } from "./components/VehicleMonthlyProfitReport";
 import { VehicleSavedMileageRecords } from "./components/VehicleSavedMileageRecords";
+import { VehicleReceivedBalance } from "./components/VehicleReceivedBalance";
 import { MonthlyVehiclePerformanceSnapshot } from "./components/MonthlyVehiclePerformanceSnapshot";
 import { ServiceMaintenancePage } from "./components/ServiceMaintenancePage";
 import { FleetManagementPage } from "./components/FleetManagementPage";
@@ -115,6 +116,7 @@ export function App() {
             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-8 mt-8">
               <VehicleMonthlyProfitReport vehicle={selectedVehicle} trips={trips} maintenance={maintenance} />
               <VehicleSavedMileageRecords vehicle={selectedVehicle} />
+              <VehicleReceivedBalance vehicle={selectedVehicle} trips={trips} />
             </div>
           )}
           {currentTab === "mileage-status" && <MileageStatusPage vehicles={vehicles} onNavigateHome={() => navigateTo("home")} />}
