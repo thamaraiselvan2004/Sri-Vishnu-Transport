@@ -425,7 +425,11 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
               <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-5 py-4">
                 <span className="text-sm font-bold text-slate-700">{title} Total</span>
                 <span className="text-lg font-black font-mono text-blue-700">
-                  {selectedDetailField === "diesel" ? `${tripTotal} Litres` :
+                  {selectedDetailField === "diesel" ? (
+                    <>
+                      {tripTotal} Litres <span className="mx-1 text-slate-400">•</span> {formatINR(monthTrips.reduce((s, t) => s + (Number(t.diesel_expense) || 0), 0))}
+                    </>
+                  ) :
                    selectedDetailField === "distance" ? `${tripTotal} KM` :
                    selectedDetailField === "mileage" ? `${tripTotal} km/L` :
                    selectedDetailField === "trips" ? `${tripTotal} Trips` :
