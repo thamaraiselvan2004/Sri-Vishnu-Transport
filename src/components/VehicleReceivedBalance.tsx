@@ -36,7 +36,7 @@ export const VehicleReceivedBalance: React.FC<VehicleReceivedBalanceProps> = ({ 
 
   const visibleTrips = showAll
     ? receivedBalanceTrips
-    : receivedBalanceTrips.slice(0, 3);
+    : receivedBalanceTrips.slice(0, 1);
 
   const getHaltingDays = (trip: Trip) => {
     const hasSeparateHalting =
@@ -85,7 +85,7 @@ export const VehicleReceivedBalance: React.FC<VehicleReceivedBalanceProps> = ({ 
                 onClick={() => setShowAll((current) => !current)}
                 className="shrink-0 px-3 py-2 rounded-xl border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 text-xs sm:text-sm font-bold transition-colors"
               >
-                {showAll ? "Show Recent (3)" : `View All (${receivedBalanceTrips.length})`}
+                {showAll ? "Show Recent (1)" : `View All (${receivedBalanceTrips.length})`}
               </button>
             )}
           </div>
@@ -102,7 +102,7 @@ export const VehicleReceivedBalance: React.FC<VehicleReceivedBalanceProps> = ({ 
             {visibleTrips.map((trip, index) => (
               <div
                 key={trip.id ?? `received-balance-${index}`}
-                className="border border-slate-200 rounded-xl p-4 bg-slate-50/60"
+                className={`border rounded-xl p-4 ${index % 4 === 0 ? "bg-blue-50/70 border-blue-100" : index % 4 === 1 ? "bg-emerald-50/70 border-emerald-100" : index % 4 === 2 ? "bg-amber-50/70 border-amber-100" : "bg-violet-50/70 border-violet-100"}`}
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
