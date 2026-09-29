@@ -258,6 +258,7 @@ function showVehicleMonthlyPerformance(key: string) {
                   <th class="text-left px-4 sm:px-6 py-3 text-xs uppercase tracking-wide text-slate-500 font-bold">Vehicle Numbers</th>
                   <th class="text-right px-4 sm:px-6 py-3 text-xs uppercase tracking-wide text-slate-500 font-bold">Total Trips</th>
                   <th class="text-right px-4 sm:px-6 py-3 text-xs uppercase tracking-wide text-slate-500 font-bold">Total Freight Fare</th>
+                  <th class="text-right px-4 sm:px-6 py-3 text-xs uppercase tracking-wide text-slate-500 font-bold">Total KMs</th>
                   <th class="text-right px-4 sm:px-6 py-3 text-xs uppercase tracking-wide text-slate-500 font-bold">Overall Profit</th>
                 </tr>
               </thead>
@@ -277,8 +278,8 @@ function showVehicleMonthlyPerformance(key: string) {
             ${rows.length ? rows.map((row) => `
               <div class="rounded-xl border border-slate-200 p-4 bg-white">
                 <div class="font-bold text-slate-900 font-mono">${row.vehicleNumber}</div>
-                <div class="grid grid-cols-3 gap-3 mt-3">
-                  <div class="rounded-lg bg-slate-50 p-3"><div class="text-[10px] uppercase tracking-wide text-slate-600">Total Trips</div><div class="font-bold text-slate-700 font-mono mt-1">${row.trips}</div></div><div class="rounded-lg bg-blue-50 p-3"><div class="text-[10px] uppercase tracking-wide text-blue-700">Total Freight Fare</div><div class="font-bold text-blue-700 font-mono mt-1">${money(row.freightFare)}</div></div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+                  <div class="rounded-lg bg-slate-50 p-3"><div class="text-[10px] uppercase tracking-wide text-slate-600">Total Trips</div><div class="font-bold text-slate-700 font-mono mt-1">${row.trips}</div></div><div class="rounded-lg bg-blue-50 p-3"><div class="text-[10px] uppercase tracking-wide text-blue-700">Total Freight Fare</div><div class="font-bold text-blue-700 font-mono mt-1">${money(row.freightFare)}</div></div><div class="rounded-lg bg-slate-50 p-3"><div class="text-[10px] uppercase tracking-wide text-slate-600">Total KMs</div><div class="font-bold text-slate-700 font-mono mt-1">${row.totalKms.toLocaleString("en-IN")} km</div></div>
                   <div class="rounded-lg bg-emerald-50 p-3"><div class="text-[10px] uppercase tracking-wide text-emerald-700">Overall Profit</div><div class="font-bold text-emerald-700 font-mono mt-1">${money(row.profit)}</div></div>
                 </div>
               </div>
