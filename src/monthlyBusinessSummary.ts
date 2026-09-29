@@ -193,14 +193,15 @@ function showVehicleMonthlyPerformance(key: string) {
   const vehicleNumberMap = new Map(
     monthlyVehiclesData.map((vehicle) => [String(vehicle.id), String(vehicle.vehicle_number || vehicle.id)])
   );
-  const vehicles = new Map<string, { vehicleNumber: string; trips: number; freightFare: number; profit: number }>();
+  const vehicles = new Map<string, { vehicleNumber: string; trips: number; freightFare: number; profit: number; totalKms: number }>();
 
   for (const trip of monthTrips) {
     const vehicleId = String(trip.vehicle_id || "unknown");
     const vehicleNumber = vehicleNumberMap.get(vehicleId) || String(trip.vehicle_number || vehicleId);
-    const row = vehicles.get(vehicleId) || { vehicleNumber, trips: 0, freightFare: 0, profit: 0 };
+    const row = vehicles.get(vehicleId) || { vehicleNumber, trips: 0, freightFare: 0, profit: 0, totalKms: 0 };
     row.trips += 1;
     row.freightFare += Number(trip.trip_fare) || 0;
+    row.totalKms += Number(trip.trip_running_kms) || 0;
     // Overall Profit = trip net profit + this month's loading/unloading halting charges.
     row.profit += Number(trip.net_profit) || 0;
     row.profit += Number(trip.loading_halting_fare) || 0;
@@ -216,6 +217,7 @@ function showVehicleMonthlyPerformance(key: string) {
   const rows = Array.from(vehicles.values()).sort((a, b) => a.vehicleNumber.localeCompare(b.vehicleNumber));
   const totalFare = rows.reduce((sum, row) => sum + row.freightFare, 0);
   const totalProfit = rows.reduce((sum, row) => sum + row.profit, 0);
+  const totalKms = rows.reduce((sum, row) => sum + row.totalKms, 0);
 
   let modal = document.getElementById("monthly-business-vehicle-performance-modal");
   if (!modal) {
@@ -230,10 +232,11 @@ function showVehicleMonthlyPerformance(key: string) {
           <td class="px-4 sm:px-6 py-4 font-bold text-slate-800 font-mono">${row.vehicleNumber}</td>
           <td class="px-4 sm:px-6 py-4 text-right font-bold text-slate-700 font-mono">${row.trips}</td>
           <td class="px-4 sm:px-6 py-4 text-right font-bold text-blue-700 font-mono">${money(row.freightFare)}</td>
+          <td class="px-4 sm:px-6 py-4 text-right font-bold text-slate-700 font-mono">${row.totalKms.toLocaleString("en-IN")} km</td>
           <td class="px-4 sm:px-6 py-4 text-right font-bold text-emerald-700 font-mono">${money(row.profit)}</td>
         </tr>
       `).join("")
-    : '<tr><td colspan="4" class="px-6 py-10 text-center text-slate-500">No vehicle trip data for this month.</td></tr>';
+    : '<tr><td colspan="5" class="px-6 py-10 text-center text-slate-500">No vehicle trip data for this month.</td></tr>';
 
   modal.innerHTML = `
     <div class="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6" data-monthly-modal-backdrop>
@@ -264,6 +267,7 @@ function showVehicleMonthlyPerformance(key: string) {
                   <td class="px-4 sm:px-6 py-4 font-black text-slate-900">Overall Total</td>
                   <td class="px-4 sm:px-6 py-4 text-right font-black text-slate-700 font-mono">${rows.reduce((sum, row) => sum + row.trips, 0)}</td>
                   <td class="px-4 sm:px-6 py-4 text-right font-black text-blue-700 font-mono">${money(totalFare)}</td>
+                  <td class="px-4 sm:px-6 py-4 text-right font-black text-slate-700 font-mono">${totalKms.toLocaleString("en-IN")} km</td>
                   <td class="px-4 sm:px-6 py-4 text-right font-black text-emerald-700 font-mono">${money(totalProfit)}</td>
                 </tr>
               </tfoot>
@@ -279,7 +283,7 @@ function showVehicleMonthlyPerformance(key: string) {
                 </div>
               </div>
             `).join("") : '<div class="py-10 text-center text-slate-500">No vehicle trip data for this month.</div>'}
-            ${rows.length ? `<div class="rounded-xl border border-slate-200 bg-slate-50 p-4"><div class="font-black text-slate-900">Overall Total</div><div class="grid grid-cols-3 gap-3 mt-3"><div><div class="text-[10px] uppercase text-slate-500">Total Trips</div><div class="font-black text-slate-700 font-mono">${rows.reduce((sum, row) => sum + row.trips, 0)}</div></div><div><div class="text-[10px] uppercase text-slate-500">Freight Fare</div><div class="font-black text-blue-700 font-mono">${money(totalFare)}</div></div><div><div class="text-[10px] uppercase text-slate-500">Overall Profit</div><div class="font-black text-emerald-700 font-mono">${money(totalProfit)}</div></div></div></div>` : ""}
+            ${rows.length ? `<div class="rounded-xl border border-slate-200 bg-slate-50 p-4"><div class="font-black text-slate-900">Overall Total</div><div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3"><div><div class="text-[10px] uppercase text-slate-500">Total Trips</div><div class="font-black text-slate-700 font-mono">${rows.reduce((sum, row) => sum + row.trips, 0)}</div></div><div><div class="text-[10px] uppercase text-slate-500">Freight Fare</div><div class="font-black text-blue-700 font-mono">${money(totalFare)}</div></div><div><div class="text-[10px] uppercase text-slate-500">Total KMs</div><div class="font-black text-slate-700 font-mono">${totalKms.toLocaleString("en-IN")} km</div></div><div><div class="text-[10px] uppercase text-slate-500">Overall Profit</div><div class="font-black text-emerald-700 font-mono">${money(totalProfit)}</div></div></div></div>` : ""}
           </div>
         </div>
         <div class="flex justify-end px-5 sm:px-6 py-4 border-t border-slate-200 bg-slate-50">
@@ -302,7 +306,7 @@ async function refreshMonthlyBusinessSummary() {
   const [{ data: trips, error: tripsError }, { data: maintenance, error: maintenanceError }, { data: vehicles, error: vehiclesError }] = await Promise.all([
     supabase
       .from("trips")
-      .select("trip_date, trip_fare, net_profit, loading_halting_fare, unloading_halting_fare, vehicle_id"),
+      .select("trip_date, trip_fare, trip_running_kms, net_profit, loading_halting_fare, unloading_halting_fare, vehicle_id"),
     supabase.from("maintenance").select("maintenance_date, amount, vehicle_id"),
     supabase.from("vehicles").select("id, vehicle_number"),
   ]);
