@@ -47,7 +47,7 @@ export const VehicleSavedMileageRecords: React.FC<VehicleSavedMileageRecordsProp
   const visibleRecords = showAllRecords ? records : records.slice(0, 1);
 
   return (
-    <section id="vehicle-saved-mileage-records" className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+    <section id="vehicle-saved-mileage-records" className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden h-[620px] flex flex-col">
       <div className="p-5 sm:p-6 border-b border-slate-200 bg-gradient-to-r from-violet-50 via-white to-blue-50">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
@@ -61,8 +61,8 @@ export const VehicleSavedMileageRecords: React.FC<VehicleSavedMileageRecordsProp
           </div>
         </div>
       </div>
-      <div className="p-5 sm:p-6">
-        {loading ? <div className="py-10 text-center text-sm text-slate-500">Loading mileage records...</div> : records.length === 0 ? <div className="py-10 text-center text-sm text-slate-500 border border-dashed border-slate-200 rounded-xl">No mileage records saved for this vehicle yet.</div> : <div className="space-y-3">
+      <div className="p-5 sm:p-6 flex-1 min-h-0 overflow-hidden">
+        {loading ? <div className="py-10 text-center text-sm text-slate-500">Loading mileage records...</div> : records.length === 0 ? <div className="py-10 text-center text-sm text-slate-500 border border-dashed border-slate-200 rounded-xl">No mileage records saved for this vehicle yet.</div> : <div className="h-full overflow-y-auto pr-1 space-y-3">
           {visibleRecords.map((record, index) => <div key={record.id} className="border border-slate-200 rounded-xl p-4 bg-slate-50/60">
             <div className="flex items-start justify-between gap-3"><div><div className="font-bold text-slate-900">Record {index + 1}</div><div className="text-xs text-slate-500 mt-1">{formatDateTime(record.starting_datetime)} → {formatDateTime(record.ending_datetime)}</div></div><button type="button" onClick={() => setDeleteTarget(record.id)} className="p-2 rounded-lg text-red-600 hover:bg-red-50" aria-label="Delete mileage record"><Trash2 className="w-4 h-4" /></button></div>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">
