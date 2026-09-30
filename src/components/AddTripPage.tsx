@@ -1191,13 +1191,18 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
                 >
                   Advance Received Date
                 </label>
-                <input
-                  id="advance-received-date-input"
-                  type="date"
-                  value={advanceReceivedDate}
-                  onChange={(e) => setAdvanceReceivedDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    id="advance-received-date-input"
+                    type="date"
+                    value={advanceReceivedDate}
+                    onChange={(e) => setAdvanceReceivedDate(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                  {advanceReceivedDate && (
+                    <button type="button" onClick={() => setAdvanceReceivedDate("")} className="shrink-0 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100">Clear</button>
+                  )}
+                </div>
               </div>
 
               {/* Balance Amount (Trip Fare - Broker Fare - Advance Received + Halting Fare) */}
@@ -1223,13 +1228,18 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
                 >
                   Balance Received Date
                 </label>
-                <input
-                  id="balance-received-date-input"
-                  type="date"
-                  value={balanceReceivedDate}
-                  onChange={(e) => setBalanceReceivedDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    id="balance-received-date-input"
+                    type="date"
+                    value={balanceReceivedDate}
+                    onChange={(e) => setBalanceReceivedDate(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                  {balanceReceivedDate && (
+                    <button type="button" onClick={() => setBalanceReceivedDate("")} className="shrink-0 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100">Clear</button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
