@@ -9,7 +9,9 @@ function requireSupabase() {
 function normalizeTripDates<T extends Record<string, any>>(data: T): T {
   const result = { ...data } as T;
   for (const key of ["advance_received_date", "balance_received_date", "driver_payment_date"]) {
-    if (key in result && (result as any)[key] === "") (result as any)[key] = null;
+    // Explicitly convert cleared date fields to null so Supabase removes the old value.
+    // This also handles undefined values coming from the edit form, which JSON serialization would otherwise omit.
+    if (key in result && ((result as any)[key] === "" || (result as any)[key] === undefined)) (result as any)[key] = null;
   }
   return result;
 }
