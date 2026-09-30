@@ -183,7 +183,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
   const overallProfit = stats.finalVehicleProfit + totalHaltingCharges;
 
   // Match the Home page behavior: show the 3 most recent trips by default.
-  const displayedVehicleTrips = viewAllTripHistory ? vehicleTrips : vehicleTrips.slice(0, 1);
+  const displayedVehicleTrips = viewAllTripHistory ? vehicleTrips : vehicleTrips.slice(0, 2);
 
   // Received Balance is a lifetime collection/outstanding view for this vehicle.
   // It intentionally ignores the report date filter so balances from older months remain visible.
@@ -932,7 +932,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition shadow-xs"
             >
               <span>
-                {viewAllTripHistory ? "Show Recent (1)" : "View All (" + vehicleTrips.length + " Trips)"}
+                {viewAllTripHistory ? "Show Recent (2)" : "View All (" + vehicleTrips.length + " Trips)"}
               </span>
               <ChevronRight
                 className={"w-3.5 h-3.5 transition-transform " + (viewAllTripHistory ? "rotate-90" : "")}
