@@ -116,7 +116,7 @@ export function App() {
             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-8 mt-8">
               <VehicleMonthlyProfitReport vehicle={selectedVehicle} trips={trips} maintenance={maintenance} />
               <VehicleSavedMileageRecords vehicle={selectedVehicle} />
-              <VehicleReceivedBalance vehicle={selectedVehicle} trips={trips} />
+              <VehicleReceivedBalance vehicle={selectedVehicle} trips={trips} vehicles={vehicles} drivers={drivers} onUpdateTrip={handleUpdateTrip} />
             </div>
           )}
           {currentTab === "mileage-status" && <MileageStatusPage vehicles={vehicles} onNavigateHome={() => navigateTo("home")} />}
