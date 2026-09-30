@@ -164,7 +164,21 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({ trip, isOpen, onCl
           <section><h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Collections & Driver Settlement</h3><div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <label><span className={labelClass}>Advance Received</span><input type="number" min="0" className={inputClass} value={advanceReceived} onChange={e=>setAdvanceReceived(e.target.value)} /></label>
             <label><span className={labelClass}>Advance Date</span><input type="date" className={inputClass} value={advanceReceivedDate} onChange={e=>setAdvanceReceivedDate(e.target.value)} /></label>
-            <label><span className={labelClass}>Balance Received Date</span><input type="date" className={inputClass} value={balanceReceivedDate} onChange={e=>setBalanceReceivedDate(e.target.value)} /></label>
+            <div>
+              <span className={labelClass}>Balance Received Date</span>
+              <div className="flex items-center gap-2">
+                <input type="date" className={inputClass} value={balanceReceivedDate} onChange={e=>setBalanceReceivedDate(e.target.value)} />
+                {balanceReceivedDate && (
+                  <button
+                    type="button"
+                    onClick={() => setBalanceReceivedDate("")}
+                    className="shrink-0 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs font-bold text-red-700 hover:bg-red-100"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
             <label><span className={labelClass}>Amount Paid to Driver</span><input type="number" min="0" className={inputClass} value={amountPaidToDriver} onChange={e=>setAmountPaidToDriver(e.target.value)} /></label>
             <label><span className={labelClass}>Driver Payment Date</span><input type="date" className={inputClass} value={driverPaymentDate} onChange={e=>setDriverPaymentDate(e.target.value)} /></label>
           </div><div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
