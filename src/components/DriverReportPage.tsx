@@ -763,7 +763,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
       {/* ============================================================ */}
       {/* DRIVER TRIP LEDGER TABLE */}
       {/* ============================================================ */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden h-[620px] flex flex-col">
         {/* Table Header Controls */}
         <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -816,7 +816,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="flex-1 min-h-0 overflow-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
