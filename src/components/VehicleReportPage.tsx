@@ -183,7 +183,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
   const overallProfit = stats.finalVehicleProfit + totalHaltingCharges;
 
   // Match the Home page behavior: show the 3 most recent trips by default.
-  const displayedVehicleTrips = viewAllTripHistory ? vehicleTrips : vehicleTrips.slice(0, 3);
+  const displayedVehicleTrips = viewAllTripHistory ? vehicleTrips : vehicleTrips.slice(0, 1);
 
   // Received Balance is a lifetime collection/outstanding view for this vehicle.
   // It intentionally ignores the report date filter so balances from older months remain visible.
@@ -911,7 +911,8 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
       {/* TAB 4: TRIP HISTORY (SECTION 23) */}
       {/* ============================================================ */}
       {activeTab === "trips" && (
-        <div className="space-y-4">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden h-[620px] flex flex-col">
+          <div className="p-5 sm:p-6 flex-1 min-h-0 overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-bold text-slate-800">
@@ -931,7 +932,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition shadow-xs"
             >
               <span>
-                {viewAllTripHistory ? "Show Recent (3)" : "View All (" + vehicleTrips.length + " Trips)"}
+                {viewAllTripHistory ? "Show Recent (1)" : "View All (" + vehicleTrips.length + " Trips)"}
               </span>
               <ChevronRight
                 className={"w-3.5 h-3.5 transition-transform " + (viewAllTripHistory ? "rotate-90" : "")}
@@ -943,7 +944,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
               No trip records found for this vehicle in the selected date range.
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3">
+            <div className="h-full overflow-y-auto pr-1 space-y-3">
               {displayedVehicleTrips.map((trip) => (
                 <div
                   key={trip.id}
@@ -1005,6 +1006,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
               ))}
             </div>
           )}
+          </div>
         </div>
       )}
 
