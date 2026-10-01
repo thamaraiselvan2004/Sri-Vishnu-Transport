@@ -214,7 +214,22 @@ function showVehicleMonthlyPerformance(key: string) {
     if (row) row.profit -= Number(record.amount) || 0;
   }
 
-  const rows = Array.from(vehicles.values()).sort((a, b) => a.vehicleNumber.localeCompare(b.vehicleNumber));
+  const vehicleDisplayOrder = [
+    "TN 88 J 1056",
+    "TN 04 BA 1499",
+    "TN 25 AK 4061",
+    "TN 12 P 1359",
+    "TN 54 AA 4710",
+  ];
+  const vehicleOrderMap = new Map(vehicleDisplayOrder.map((number, index) => [number, index]));
+  const rows = Array.from(vehicles.values()).sort((a, b) => {
+    const aIndex = vehicleOrderMap.get(String(a.vehicleNumber).trim().toUpperCase());
+    const bIndex = vehicleOrderMap.get(String(b.vehicleNumber).trim().toUpperCase());
+    if (aIndex !== undefined && bIndex !== undefined) return aIndex - bIndex;
+    if (aIndex !== undefined) return -1;
+    if (bIndex !== undefined) return 1;
+    return String(a.vehicleNumber).localeCompare(String(b.vehicleNumber));
+  });
   const totalFare = rows.reduce((sum, row) => sum + row.freightFare, 0);
   const totalProfit = rows.reduce((sum, row) => sum + row.profit, 0);
   const totalKms = rows.reduce((sum, row) => sum + row.totalKms, 0);
