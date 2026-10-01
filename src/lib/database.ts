@@ -63,13 +63,33 @@ async function enrichTrips(trips: Trip[]): Promise<Trip[]> {
   }));
 }
 
+const VEHICLE_DISPLAY_ORDER = [
+  "TN 88 J 1056",
+  "TN 04 BA 1499",
+  "TN 25 AK 4061",
+  "TN 12 P 1359",
+  "TN 54 AA 4710",
+];
+
+function sortVehiclesByDisplayOrder(vehicles: Vehicle[]): Vehicle[] {
+  const orderMap = new Map(VEHICLE_DISPLAY_ORDER.map((number, index) => [number, index]));
+  return [...vehicles].sort((a, b) => {
+    const aIndex = orderMap.get(String(a.vehicle_number).trim().toUpperCase());
+    const bIndex = orderMap.get(String(b.vehicle_number).trim().toUpperCase());
+    if (aIndex !== undefined && bIndex !== undefined) return aIndex - bIndex;
+    if (aIndex !== undefined) return -1;
+    if (bIndex !== undefined) return 1;
+    return String(a.vehicle_number).localeCompare(String(b.vehicle_number));
+  });
+}
+
 export async function getVehicles(onlyActive = false): Promise<Vehicle[]> {
   const client = requireSupabase();
   let query = client.from("vehicles").select("*").order("vehicle_number");
   if (onlyActive) query = query.eq("active", true);
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []) as Vehicle[];
+  return sortVehiclesByDisplayOrder((data ?? []) as Vehicle[]);
 }
 
 export async function addVehicle(vehicleNumber: string): Promise<Vehicle> {
