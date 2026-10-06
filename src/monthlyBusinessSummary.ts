@@ -68,6 +68,9 @@ function renderMonthlyReport() {
       report = document.createElement("section");
       report.id = "monthly-business-report";
       report.className = "mb-10 bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden h-[620px] flex flex-col";
+      report.style.height = "620px";
+      report.style.display = "flex";
+      report.style.flexDirection = "column";
       kpiGrid.insertAdjacentElement("afterend", report);
     }
 
@@ -134,12 +137,12 @@ function renderMonthlyReport() {
         </div>
       </div>
 
-      <div class="flex-1 min-h-0 overflow-y-auto">
+      <div class="flex-1 min-h-0 overflow-y-scroll" style="height:0; max-height:100%; overscroll-behavior:contain;">
         <div class="p-4 sm:hidden space-y-3">
           ${mobileRows || emptyMessage}
         </div>
 
-        <div class="hidden sm:block overflow-x-auto">
+        <div class="hidden sm:block overflow-x-auto min-h-full">
           <table class="w-full text-sm">
           <thead class="bg-slate-100/80 text-xs uppercase tracking-wide text-slate-500">
             <tr>
