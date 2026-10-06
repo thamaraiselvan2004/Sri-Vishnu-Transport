@@ -96,16 +96,16 @@ function renderMonthlyReport() {
         </div>
       </div>
       <div class="p-5 sm:p-6 flex-1 min-h-0 overflow-hidden">
-        <div id="monthly-business-report-scroll" style="height:100%; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding-right:4px;">
-        <div class="p-4 sm:hidden space-y-3 pb-8">
-          ${mobileRows || emptyMessage}
-        </div>
-        <div class="hidden sm:block overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead class="bg-slate-100/80 text-xs uppercase tracking-wide text-slate-500"><tr><th class="text-left px-4 sm:px-6 py-3 font-bold">Month</th><th class="text-right px-4 sm:px-6 py-3 font-bold">Total Trips</th><th class="text-right px-4 sm:px-6 py-3 font-bold">Total Revenue</th><th class="text-right px-4 sm:px-6 py-3 font-bold">Net Profit</th></tr></thead>
-            <tbody class="divide-y divide-slate-100"><tr><td colspan="4"><div class="pb-8"></div></td></tr>${desktopRows || '<tr><td colSpan="4" class="px-6 py-8 text-center text-slate-500">No monthly business data yet.</td></tr>'}</tbody>
-          </table>
-        </div>
+        <div id="monthly-business-report-scroll" class="h-full min-h-0 overflow-y-auto overflow-x-hidden pr-1 pb-8" style="-webkit-overflow-scrolling:touch; touch-action:pan-y;">
+          <div class="p-4 sm:hidden space-y-3">
+            ${mobileRows || emptyMessage}
+          </div>
+          <div class="hidden sm:block overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-100/80 text-xs uppercase tracking-wide text-slate-500"><tr><th class="text-left px-4 sm:px-6 py-3 font-bold">Month</th><th class="text-right px-4 sm:px-6 py-3 font-bold">Total Trips</th><th class="text-right px-4 sm:px-6 py-3 font-bold">Total Revenue</th><th class="text-right px-4 sm:px-6 py-3 font-bold">Net Profit</th></tr></thead>
+              <tbody class="divide-y divide-slate-100"><tr><td colspan="4"><div class="pb-8"></div></td></tr>${desktopRows || '<tr><td colSpan="4" class="px-6 py-8 text-center text-slate-500">No monthly business data yet.</td></tr>'}</tbody>
+            </table>
+          </div>
         </div>
       </div>`;
   } finally {
