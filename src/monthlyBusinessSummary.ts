@@ -67,7 +67,7 @@ function renderMonthlyReport() {
     if (!report) {
       report = document.createElement("section");
       report.id = "monthly-business-report";
-      report.className = "mb-10 bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden";
+      report.className = "mb-10 bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden h-[620px] flex flex-col";
       kpiGrid.insertAdjacentElement("afterend", report);
     }
 
