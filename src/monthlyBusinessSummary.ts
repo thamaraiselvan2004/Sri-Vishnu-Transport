@@ -134,12 +134,13 @@ function renderMonthlyReport() {
         </div>
       </div>
 
-      <div class="p-4 sm:hidden space-y-3">
-        ${mobileRows || emptyMessage}
-      </div>
+      <div class="flex-1 min-h-0 overflow-y-auto">
+        <div class="p-4 sm:hidden space-y-3">
+          ${mobileRows || emptyMessage}
+        </div>
 
-      <div class="hidden sm:block overflow-x-auto">
-        <table class="w-full text-sm">
+        <div class="hidden sm:block overflow-x-auto">
+          <table class="w-full text-sm">
           <thead class="bg-slate-100/80 text-xs uppercase tracking-wide text-slate-500">
             <tr>
               <th class="text-left px-4 sm:px-6 py-3 font-bold">Month</th>
@@ -151,7 +152,8 @@ function renderMonthlyReport() {
           <tbody class="divide-y divide-slate-100">
             ${desktopRows || '<tr><td colSpan="4" class="px-6 py-8 text-center text-slate-500">No monthly business data yet.</td></tr>'}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     `;
 
