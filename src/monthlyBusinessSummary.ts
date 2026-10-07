@@ -44,6 +44,8 @@ const updateCard = (label: string, value: string, subtitle: string) => {
 function renderMonthlyReport() {
   if (reportRendering) return;
   reportRendering = true;
+  const existingScroll = document.getElementById("monthly-business-report-scroll");
+  const savedScrollTop = existingScroll?.scrollTop ?? 0;
   try {
     const fleetLabel = Array.from(document.querySelectorAll<HTMLElement>("div")).find((el) => el.textContent?.trim() === "Fleet Vehicles");
     const kpiGrid = fleetLabel?.parentElement?.parentElement;
@@ -103,6 +105,8 @@ function renderMonthlyReport() {
           </div>
         </div>
       </div>`;
+    const scroll = document.getElementById("monthly-business-report-scroll");
+    if (scroll) scroll.scrollTop = savedScrollTop;
   } finally {
     reportRendering = false;
   }
@@ -117,7 +121,6 @@ function handleMonthlyBusinessReportClick(event: MouseEvent) {
     event.stopPropagation();
     reportExpanded = !reportExpanded;
     renderMonthlyReport();
-    void refreshMonthlyBusinessSummary();
     return;
   }
   const monthRow = target.closest<HTMLElement>("[data-month-key]");
