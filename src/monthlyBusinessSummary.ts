@@ -54,10 +54,6 @@ function renderMonthlyReport() {
       report = document.createElement("section");
       report.id = "monthly-business-report";
       report.className = "mb-10 bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden";
-      report.style.height = "620px";
-      report.style.display = "flex";
-      report.style.flexDirection = "column";
-      report.style.minHeight = "0";
       kpiGrid.insertAdjacentElement("afterend", report);
     }
 
@@ -95,8 +91,8 @@ function renderMonthlyReport() {
           </div>
         </div>
       </div>
-      <div class="p-5 sm:p-6 flex-1 min-h-0 overflow-hidden">
-        <div id="monthly-business-report-scroll" class="h-full min-h-0 overflow-y-auto overflow-x-hidden pr-1 pb-10" style="-webkit-overflow-scrolling:touch; touch-action:pan-y; overscroll-behavior-y:contain;">
+      <div class="p-5 sm:p-6">
+        <div id="monthly-business-report-scroll" class="space-y-3 max-h-[600px] overflow-y-auto pr-1" style="-webkit-overflow-scrolling:touch; touch-action:pan-y;">
           <div class="p-4 sm:hidden space-y-3">
             ${mobileRows || emptyMessage}
           </div>
