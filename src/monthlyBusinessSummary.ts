@@ -105,7 +105,6 @@ function renderMonthlyReport() {
               <tbody class="divide-y divide-slate-100"><tr><td colspan="4"><div class="pb-8"></div></td></tr>${desktopRows || '<tr><td colSpan="4" class="px-6 py-8 text-center text-slate-500">No monthly business data yet.</td></tr>'}</tbody>
             </table>
           </div>
-        </div>
       </div>`;
   } finally {
     reportRendering = false;
