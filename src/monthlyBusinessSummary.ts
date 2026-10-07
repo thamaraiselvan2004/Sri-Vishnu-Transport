@@ -53,7 +53,7 @@ function renderMonthlyReport() {
     if (!report) {
       report = document.createElement("section");
       report.id = "monthly-business-report";
-      report.className = "mb-10 bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden h-[620px] flex flex-col";
+      report.className = "mb-10 bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden h-[620px] min-h-0 flex flex-col";
       kpiGrid.insertAdjacentElement("afterend", report);
     }
 
@@ -82,7 +82,7 @@ function renderMonthlyReport() {
     const viewAllLabel = reportExpanded ? "Show Current (1)" : `View All (${monthlyRows.length} Months)`;
 
     report.innerHTML = `
-      <div class="p-5 sm:p-6 border-b border-slate-200 bg-slate-50/70">
+      <div class="shrink-0 p-5 sm:p-6 border-b border-slate-200 bg-slate-50/70">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div><h2 class="text-lg font-bold text-slate-900">Monthly Business Report</h2><p class="text-xs text-slate-500 mt-1">Monthly totals are calculated from the existing trip and maintenance records.</p></div>
           <div class="flex items-center justify-between sm:justify-end gap-2">
@@ -91,12 +91,11 @@ function renderMonthlyReport() {
           </div>
         </div>
       </div>
-      <div class="p-5 sm:p-6 flex-1 min-h-0 overflow-hidden">
-        <div id="monthly-business-report-scroll" class="h-full min-h-0 overflow-y-auto overflow-x-hidden pr-1 space-y-3" style="-webkit-overflow-scrolling:touch; touch-action:pan-y;">
-          <div class="p-4 sm:hidden space-y-3">
+      <div id="monthly-business-report-scroll" class="flex-1 min-h-0 overflow-y-scroll overflow-x-hidden overscroll-contain p-5 sm:p-6 pr-1" style="-webkit-overflow-scrolling:touch; touch-action:pan-y;">
+          <div class="p-4 pb-8 sm:hidden space-y-3">
             ${mobileRows || emptyMessage}
           </div>
-          <div class="hidden sm:block overflow-x-auto">
+          <div class="hidden sm:block overflow-x-auto pb-8">
             <table class="w-full text-sm">
               <thead class="bg-slate-100/80 text-xs uppercase tracking-wide text-slate-500"><tr><th class="text-left px-4 sm:px-6 py-3 font-bold">Month</th><th class="text-right px-4 sm:px-6 py-3 font-bold">Total Trips</th><th class="text-right px-4 sm:px-6 py-3 font-bold">Total Revenue</th><th class="text-right px-4 sm:px-6 py-3 font-bold">Net Profit</th></tr></thead>
               <tbody class="divide-y divide-slate-100"><tr><td colspan="4"><div class="pb-8"></div></td></tr>${desktopRows || '<tr><td colSpan="4" class="px-6 py-8 text-center text-slate-500">No monthly business data yet.</td></tr>'}</tbody>
