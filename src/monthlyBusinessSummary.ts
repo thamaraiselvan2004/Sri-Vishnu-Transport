@@ -67,7 +67,7 @@ function renderMonthlyReport() {
     if (!report) {
       report = document.createElement("section");
       report.id = "monthly-business-report";
-      report.className = "mb-10 bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden";
+      report.className = "mb-10 bg-white rounded-2xl border border-slate-200 shadow-xs h-[620px] flex flex-col overflow-hidden";
       kpiGrid.insertAdjacentElement("afterend", report);
     }
 
@@ -121,7 +121,7 @@ function renderMonthlyReport() {
       : `View All (${monthlyRows.length} Months)`;
 
     report.innerHTML = `
-      <div class="p-5 sm:p-6 border-b border-slate-200 bg-slate-50/70">
+      <div class="shrink-0 p-5 sm:p-6 border-b border-slate-200 bg-slate-50/70">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 class="text-lg font-bold text-slate-900">Monthly Business Report</h2>
@@ -134,11 +134,11 @@ function renderMonthlyReport() {
         </div>
       </div>
 
-      <div class="p-4 sm:hidden space-y-3">
+      <div class="flex-1 min-h-0 overflow-y-auto p-4 sm:hidden space-y-3">
         ${mobileRows || emptyMessage}
       </div>
 
-      <div class="hidden sm:block overflow-x-auto">
+      <div class="hidden sm:block flex-1 min-h-0 overflow-y-auto overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="bg-slate-100/80 text-xs uppercase tracking-wide text-slate-500">
             <tr>
