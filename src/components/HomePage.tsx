@@ -346,7 +346,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
 
         {/* Trips Section */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs h-[620px] flex flex-col overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
               <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -421,13 +421,13 @@ export const HomePage: React.FC<HomePageProps> = ({
           )}
 
           {displayedTrips.length === 0 ? (
-            <div className="text-center py-10 text-slate-500 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">
+            <div className="flex-1 min-h-0 overflow-y-auto pr-1">
               {trips.length === 0
                 ? "No trips recorded yet. Click 'Add Trip' to log the first trip."
                 : "No trips found matching the selected filter."}
             </div>
           ) : (
-            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+            <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3" style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}>
               {displayedTrips.map((trip) => {
                 const balanceAmt =
                   trip.balance_amount !== undefined && trip.balance_amount !== null
