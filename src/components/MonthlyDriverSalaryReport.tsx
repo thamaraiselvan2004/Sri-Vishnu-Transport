@@ -107,7 +107,7 @@ export const MonthlyDriverSalaryReport: React.FC<MonthlyDriverSalaryReportProps>
   return (
     <section
       id="monthly-driver-salary-report"
-      className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden"
+      className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden h-[620px] flex flex-col"
     >
       <div className="p-5 sm:p-6 border-b border-slate-200 bg-gradient-to-r from-blue-50 via-white to-emerald-50">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -141,7 +141,7 @@ export const MonthlyDriverSalaryReport: React.FC<MonthlyDriverSalaryReportProps>
           No monthly salary records are available for this driver yet.
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full min-w-[760px] text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
