@@ -95,7 +95,8 @@ function renderMonthlyReport() {
           </div>
         </div>
       </div>
-      <div id="monthly-business-report-scroll" class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-5 sm:p-6 pb-10" style="-webkit-overflow-scrolling:touch; touch-action:pan-y; overscroll-behavior-y:contain;">
+      <div class="p-5 sm:p-6 flex-1 min-h-0 overflow-hidden">
+        <div id="monthly-business-report-scroll" class="h-full min-h-0 overflow-y-auto overflow-x-hidden pr-1 pb-10" style="-webkit-overflow-scrolling:touch; touch-action:pan-y; overscroll-behavior-y:contain;">
           <div class="p-4 sm:hidden space-y-3">
             ${mobileRows || emptyMessage}
           </div>
@@ -105,6 +106,7 @@ function renderMonthlyReport() {
               <tbody class="divide-y divide-slate-100"><tr><td colspan="4"><div class="pb-8"></div></td></tr>${desktopRows || '<tr><td colSpan="4" class="px-6 py-8 text-center text-slate-500">No monthly business data yet.</td></tr>'}</tbody>
             </table>
           </div>
+        </div>
       </div>`;
   } finally {
     reportRendering = false;
