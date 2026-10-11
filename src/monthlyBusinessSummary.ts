@@ -192,7 +192,17 @@ function showVehicleMonthlyPerformance(key: string) {
     if (row) row.profit -= Number(record.amount) || 0;
   }
 
-  const rows = Array.from(vehicles.values()).sort((a, b) => a.vehicleNumber.localeCompare(b.vehicleNumber));
+  // Keep the fleet's requested order in both desktop table and mobile cards.
+  const vehicleOrder = ["1056", "1499", "4061", "1359", "4710"];
+  const vehicleRank = (vehicleNumber: string) => {
+    const normalized = vehicleNumber.replace(/\\s+/g, "").toUpperCase();
+    const rank = vehicleOrder.findIndex((number) => normalized.endsWith(number));
+    return rank === -1 ? vehicleOrder.length : rank;
+  };
+  const rows = Array.from(vehicles.values()).sort((a, b) => {
+    const rankDifference = vehicleRank(a.vehicleNumber) - vehicleRank(b.vehicleNumber);
+    return rankDifference || a.vehicleNumber.localeCompare(b.vehicleNumber);
+  });
   const totalFare = rows.reduce((sum, row) => sum + row.freightFare, 0);
   const totalProfit = rows.reduce((sum, row) => sum + row.profit, 0);
   const totalKms = rows.reduce((sum, row) => sum + row.totalKms, 0);
