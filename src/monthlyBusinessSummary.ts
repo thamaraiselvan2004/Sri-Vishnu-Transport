@@ -81,22 +81,22 @@ function renderMonthlyReport() {
     const visibleRows = reportExpanded ? monthlyRows : monthlyRows.slice(0, 1);
     const monthCards = visibleRows
       .map(([key, row]) => `
-        <button type="button" data-month-key="${key}" class="w-full text-left p-4 rounded-xl border border-slate-200/90 ${key === currentMonthKey ? "bg-blue-50/50" : "bg-slate-50/40"} hover:bg-white hover:shadow-xs transition cursor-pointer" title="Click to view vehicle-wise performance">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">${monthLabel(key)}</span>
-                ${key === currentMonthKey ? '<span class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md bg-blue-100 text-blue-700">Current</span>' : ""}
-              </div>
-              <div class="text-xs text-slate-500 mt-1">Monthly business summary</div>
+        <button type="button" data-month-key="${key}" class="w-full text-left p-4 rounded-xl border border-slate-200/90 ${key === currentMonthKey ? "bg-blue-50/50" : "bg-slate-50/40"} hover:bg-white hover:shadow-xs transition cursor-pointer" title="View vehicle-wise performance">
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <span class="font-mono text-sm font-bold text-slate-900">${monthLabel(key)}</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="rounded-lg bg-white/80 border border-slate-200/70 p-3">
+              <div class="text-xs text-slate-500">Trips</div>
+              <div class="text-sm font-bold text-slate-800 font-mono mt-1">${row.trips}</div>
             </div>
-            <div class="flex sm:flex-col items-baseline sm:items-end justify-between border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200 gap-2">
-              <div class="text-right">
-                <div class="text-xs text-slate-500">Trips: <span class="font-semibold text-slate-800 font-mono">${row.trips}</span></div>
-                <div class="text-xs text-slate-500">Revenue: <span class="font-semibold text-slate-800 font-mono">${money(row.revenue)}</span></div>
-                <div class="text-sm font-bold text-emerald-700 font-mono">Net Profit: ${money(row.profit)}</div>
-              </div>
-              <span class="text-xs font-medium text-blue-600 underline">View vehicle-wise details</span>
+            <div class="rounded-lg bg-white/80 border border-slate-200/70 p-3">
+              <div class="text-xs text-slate-500">Revenue</div>
+              <div class="text-sm font-bold text-slate-800 font-mono mt-1">${money(row.revenue)}</div>
+            </div>
+            <div class="rounded-lg bg-emerald-50/80 border border-emerald-100 p-3">
+              <div class="text-xs text-emerald-700">Net Profit</div>
+              <div class="text-sm font-bold text-emerald-700 font-mono mt-1">${money(row.profit)}</div>
             </div>
           </div>
         </button>
@@ -120,7 +120,7 @@ function renderMonthlyReport() {
         ${showViewAll ? `<button id="monthly-business-report-toggle" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition shadow-xs"><span>${viewAllLabel}</span><span class="text-[14px] transition-transform ${reportExpanded ? "rotate-90" : ""}">›</span></button>` : ""}
       </div>
 
-      <div data-monthly-scroll="list" class="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3" style="WebkitOverflowScrolling: touch; touchAction: pan-y;">
+      <div data-monthly-scroll="list" class="flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1 space-y-3" style="min-height: 0; max-height: 100%; overflow-y: auto; WebkitOverflowScrolling: touch; touchAction: pan-y;">
         ${monthCards || '<div class="py-8 text-center text-slate-500">No monthly business data yet.</div>'}
       </div>
     `;
