@@ -72,7 +72,7 @@ function renderMonthlyReport() {
 
     // Use the same fixed outer-card and single internal scrolling-list structure as
     // HomePage's All Completed Trips section.
-    report.className = "mb-10 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs h-[620px] flex flex-col overflow-hidden";
+    report.className = "lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs h-[620px] flex flex-col overflow-hidden";
 
     // This report is rebuilt every 10 seconds. Preserve the one list's scroll offset
     // before replacing its HTML, then restore it so the list does not jump to the top.
