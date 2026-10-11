@@ -108,7 +108,7 @@ function renderMonthlyReport() {
       ? "Show Current (1)"
       : `View All (${monthlyRows.length} Months)`;
 
-    report.innerHTML = `
+    const reportHTML = `
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
           <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -120,13 +120,18 @@ function renderMonthlyReport() {
         ${showViewAll ? `<button id="monthly-business-report-toggle" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition shadow-xs"><span>${viewAllLabel}</span><span class="text-[14px] transition-transform ${reportExpanded ? "rotate-90" : ""}">›</span></button>` : ""}
       </div>
 
-      <div data-monthly-scroll="list" class="flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1 space-y-3" style="min-height: 0; max-height: 100%; overflow-y: auto; WebkitOverflowScrolling: touch; touchAction: pan-y;">
+      <div data-monthly-scroll="list" class="flex-1 min-h-0 overflow-y-auto overscroll-y-contain pr-1 space-y-3" style="flex: 1 1 0%; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; WebkitOverflowScrolling: touch; touchAction: pan-y;">
         ${monthCards || '<div class="py-8 text-center text-slate-500">No monthly business data yet.</div>'}
       </div>
     `;
 
-    const scrollContainer = report.querySelector<HTMLElement>('[data-monthly-scroll="list"]');
-    if (scrollContainer) scrollContainer.scrollTop = previousScrollTop;
+    // Avoid replacing the scrolling DOM every 10 seconds when the report data has
+    // not changed. Replacing innerHTML interrupts wheel/touch momentum scrolling.
+    if (report.innerHTML !== reportHTML) {
+      report.innerHTML = reportHTML;
+      const scrollContainer = report.querySelector<HTMLElement>('[data-monthly-scroll="list"]');
+      if (scrollContainer) scrollContainer.scrollTop = previousScrollTop;
+    }
 
     // Click handling is delegated to document so the controls continue to work
     // even though this report is re-rendered from innerHTML during data refreshes.
