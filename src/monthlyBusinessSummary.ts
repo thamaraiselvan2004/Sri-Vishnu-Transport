@@ -67,9 +67,13 @@ function renderMonthlyReport() {
     if (!report) {
       report = document.createElement("section");
       report.id = "monthly-business-report";
-      report.className = "mb-10 bg-white rounded-2xl border border-slate-200 shadow-xs h-[620px] flex flex-col overflow-hidden";
       kpiGrid.insertAdjacentElement("afterend", report);
     }
+
+    // Reapply the fixed-height layout on every render. The report section persists
+    // between refreshes, so setting this only when it is first created can leave
+    // an old layout in place and prevent the list from scrolling internally.
+    report.className = "mb-10 bg-white rounded-2xl border border-slate-200 shadow-xs h-[620px] min-h-0 flex flex-col overflow-hidden";
 
     const visibleRows = reportExpanded ? monthlyRows : monthlyRows.slice(0, 1);
 
