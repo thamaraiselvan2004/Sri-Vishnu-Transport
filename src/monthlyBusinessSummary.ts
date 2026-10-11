@@ -73,7 +73,13 @@ function renderMonthlyReport() {
     // Reapply the fixed-height layout on every render. The report section persists
     // between refreshes, so setting this only when it is first created can leave
     // an old layout in place and prevent the list from scrolling internally.
-    report.className = "mb-10 bg-white rounded-2xl border border-slate-200 shadow-xs h-[620px] min-h-0 flex flex-col overflow-hidden";
+    report.className = "mb-10 bg-white rounded-2xl border border-slate-200 shadow-xs h-[620px] flex flex-col overflow-hidden";
+
+    // Match HomePage's All Completed Trips: keep the card fixed and scroll only the list.
+    // The report refreshes every 10 seconds, so preserve each responsive list's scroll offset
+    // before replacing its HTML and restore it immediately afterwards.
+    const previousMobileScrollTop = report.querySelector<HTMLElement>('[data-monthly-scroll="mobile"]')?.scrollTop ?? 0;
+    const previousDesktopScrollTop = report.querySelector<HTMLElement>('[data-monthly-scroll="desktop"]')?.scrollTop ?? 0;
 
     const visibleRows = reportExpanded ? monthlyRows : monthlyRows.slice(0, 1);
 
@@ -138,11 +144,12 @@ function renderMonthlyReport() {
         </div>
       </div>
 
-      <div class="flex-1 min-h-0 overflow-y-auto p-4 sm:hidden space-y-3">
+      <div data-monthly-scroll="mobile" class="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3 sm:hidden" style="WebkitOverflowScrolling: touch; touchAction: pan-y;">
         ${mobileRows || emptyMessage}
       </div>
 
-      <div class="hidden sm:block flex-1 min-h-0 overflow-y-auto overflow-x-auto">
+      <div data-monthly-scroll="desktop" class="hidden sm:block flex-1 min-h-0 overflow-y-auto pr-1" style="WebkitOverflowScrolling: touch; touchAction: pan-y;">
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="bg-slate-100/80 text-xs uppercase tracking-wide text-slate-500">
             <tr>
@@ -156,8 +163,14 @@ function renderMonthlyReport() {
             ${desktopRows || '<tr><td colSpan="4" class="px-6 py-8 text-center text-slate-500">No monthly business data yet.</td></tr>'}
           </tbody>
         </table>
+        </div>
       </div>
     `;
+
+    const mobileScrollContainer = report.querySelector<HTMLElement>('[data-monthly-scroll="mobile"]');
+    const desktopScrollContainer = report.querySelector<HTMLElement>('[data-monthly-scroll="desktop"]');
+    if (mobileScrollContainer) mobileScrollContainer.scrollTop = previousMobileScrollTop;
+    if (desktopScrollContainer) desktopScrollContainer.scrollTop = previousDesktopScrollTop;
 
     // Click handling is delegated to document so the controls continue to work
     // even though this report is re-rendered from innerHTML during data refreshes.
