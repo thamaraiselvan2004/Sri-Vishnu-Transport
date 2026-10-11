@@ -70,107 +70,63 @@ function renderMonthlyReport() {
       kpiGrid.insertAdjacentElement("afterend", report);
     }
 
-    // Reapply the fixed-height layout on every render. The report section persists
-    // between refreshes, so setting this only when it is first created can leave
-    // an old layout in place and prevent the list from scrolling internally.
-    report.className = "mb-10 bg-white rounded-2xl border border-slate-200 shadow-xs h-[620px] flex flex-col overflow-hidden";
+    // Use the same fixed outer-card and single internal scrolling-list structure as
+    // HomePage's All Completed Trips section.
+    report.className = "mb-10 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs h-[620px] flex flex-col overflow-hidden";
 
-    // Match HomePage's All Completed Trips: keep the card fixed and scroll only the list.
-    // The report refreshes every 10 seconds, so preserve each responsive list's scroll offset
-    // before replacing its HTML and restore it immediately afterwards.
-    const previousMobileScrollTop = report.querySelector<HTMLElement>('[data-monthly-scroll="mobile"]')?.scrollTop ?? 0;
-    const previousDesktopScrollTop = report.querySelector<HTMLElement>('[data-monthly-scroll="desktop"]')?.scrollTop ?? 0;
+    // This report is rebuilt every 10 seconds. Preserve the one list's scroll offset
+    // before replacing its HTML, then restore it so the list does not jump to the top.
+    const previousScrollTop = report.querySelector<HTMLElement>('[data-monthly-scroll="list"]')?.scrollTop ?? 0;
 
     const visibleRows = reportExpanded ? monthlyRows : monthlyRows.slice(0, 1);
-
-    const mobileRows = visibleRows
+    const monthCards = visibleRows
       .map(([key, row]) => `
-        <button type="button" data-month-key="${key}" class="w-full text-left p-4 rounded-xl border ${key === currentMonthKey ? "border-blue-300 bg-blue-50/50" : "border-slate-200 bg-white"} hover:border-blue-400 hover:shadow-sm transition cursor-pointer" title="Click to view vehicle-wise performance">
-          <div class="flex items-center justify-between gap-2 mb-3">
-            <div class="font-bold text-slate-900">${monthLabel(key)}</div>
-            ${key === currentMonthKey ? '<span class="shrink-0 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-blue-100 text-blue-700">Current</span>' : ""}
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-lg bg-slate-50 p-3">
-              <div class="text-[11px] text-slate-500 uppercase tracking-wide">Total Trips</div>
-              <div class="text-lg font-bold text-slate-800 mt-1">${row.trips}</div>
+        <button type="button" data-month-key="${key}" class="w-full text-left p-4 rounded-xl border border-slate-200/90 ${key === currentMonthKey ? "bg-blue-50/50" : "bg-slate-50/40"} hover:bg-white hover:shadow-xs transition cursor-pointer" title="Click to view vehicle-wise performance">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">${monthLabel(key)}</span>
+                ${key === currentMonthKey ? '<span class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md bg-blue-100 text-blue-700">Current</span>' : ""}
+              </div>
+              <div class="text-xs text-slate-500 mt-1">Monthly business summary</div>
             </div>
-            <div class="rounded-lg bg-slate-50 p-3">
-              <div class="text-[11px] text-slate-500 uppercase tracking-wide">Revenue</div>
-              <div class="text-base font-bold text-blue-700 font-mono mt-1 break-words">${money(row.revenue)}</div>
-            </div>
-            <div class="col-span-2 rounded-lg bg-emerald-50 p-3 border border-emerald-100">
-              <div class="text-[11px] text-emerald-700 uppercase tracking-wide">Net Profit</div>
-              <div class="text-xl font-black text-emerald-700 font-mono mt-1 break-words">${money(row.profit)}</div>
+            <div class="flex sm:flex-col items-baseline sm:items-end justify-between border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200 gap-2">
+              <div class="text-right">
+                <div class="text-xs text-slate-500">Trips: <span class="font-semibold text-slate-800 font-mono">${row.trips}</span></div>
+                <div class="text-xs text-slate-500">Revenue: <span class="font-semibold text-slate-800 font-mono">${money(row.revenue)}</span></div>
+                <div class="text-sm font-bold text-emerald-700 font-mono">Net Profit: ${money(row.profit)}</div>
+              </div>
+              <span class="text-xs font-medium text-blue-600 underline">View vehicle-wise details</span>
             </div>
           </div>
         </button>
       `)
       .join("");
 
-    const desktopRows = visibleRows
-      .map(([key, row]) => `
-        <tr data-month-key="${key}" class="${key === currentMonthKey ? "bg-blue-50/50" : "bg-white"} hover:bg-blue-50/60 transition cursor-pointer" title="Click to view vehicle-wise performance">
-          <td class="px-4 sm:px-6 py-4 font-bold text-slate-800">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span>${monthLabel(key)}</span>
-              ${key === currentMonthKey ? '<span class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Current</span>' : ""}
-            </div>
-          </td>
-          <td class="px-4 sm:px-6 py-4 text-right font-semibold text-slate-700">${row.trips}</td>
-          <td class="px-4 sm:px-6 py-4 text-right font-semibold text-blue-700 font-mono">${money(row.revenue)}</td>
-          <td class="px-4 sm:px-6 py-4 text-right font-bold text-emerald-700 font-mono">${money(row.profit)}</td>
-        </tr>
-      `)
-      .join("");
-
-    const emptyMessage = '<div class="px-4 py-8 text-center text-slate-500">No monthly business data yet.</div>';
     const showViewAll = monthlyRows.length > 0;
     const viewAllLabel = reportExpanded
       ? "Show Current (1)"
       : `View All (${monthlyRows.length} Months)`;
 
     report.innerHTML = `
-      <div class="shrink-0 p-5 sm:p-6 border-b border-slate-200 bg-slate-50/70">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900">Monthly Business Report</h2>
-            <p class="text-xs text-slate-500 mt-1">Monthly totals are calculated from the existing trip and maintenance records.</p>
-          </div>
-          <div class="flex items-center justify-between sm:justify-end gap-2">
-            <div class="w-fit text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5">Current: ${currentMonthLabel}</div>
-            ${showViewAll ? `<button id="monthly-business-report-toggle" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition shadow-xs"><span>${viewAllLabel}</span><span class="text-[14px] transition-transform ${reportExpanded ? "rotate-90" : ""}">›</span></button>` : ""}
-          </div>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <span>Monthly Business Report</span>
+            <span class="text-xs font-normal text-slate-500">(${visibleRows.length} of ${monthlyRows.length})</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-1">Current month: ${currentMonthLabel}</p>
         </div>
+        ${showViewAll ? `<button id="monthly-business-report-toggle" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition shadow-xs"><span>${viewAllLabel}</span><span class="text-[14px] transition-transform ${reportExpanded ? "rotate-90" : ""}">›</span></button>` : ""}
       </div>
 
-      <div data-monthly-scroll="mobile" class="flex-1 min-h-0 overflow-y-auto p-4 sm:hidden space-y-3" style="WebkitOverflowScrolling: touch; touchAction: pan-y;">
-        ${mobileRows || emptyMessage}
-      </div>
-
-      <div data-monthly-scroll="desktop" class="hidden sm:block flex-1 min-h-0 overflow-y-auto p-4 sm:p-6" style="WebkitOverflowScrolling: touch; touchAction: pan-y;">
-        <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="bg-slate-100/80 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th class="text-left px-4 sm:px-6 py-3 font-bold">Month</th>
-              <th class="text-right px-4 sm:px-6 py-3 font-bold">Total Trips</th>
-              <th class="text-right px-4 sm:px-6 py-3 font-bold">Total Revenue</th>
-              <th class="text-right px-4 sm:px-6 py-3 font-bold">Net Profit</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            ${desktopRows || '<tr><td colSpan="4" class="px-6 py-8 text-center text-slate-500">No monthly business data yet.</td></tr>'}
-          </tbody>
-        </table>
-        </div>
+      <div data-monthly-scroll="list" class="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3" style="WebkitOverflowScrolling: touch; touchAction: pan-y;">
+        ${monthCards || '<div class="py-8 text-center text-slate-500">No monthly business data yet.</div>'}
       </div>
     `;
 
-    const mobileScrollContainer = report.querySelector<HTMLElement>('[data-monthly-scroll="mobile"]');
-    const desktopScrollContainer = report.querySelector<HTMLElement>('[data-monthly-scroll="desktop"]');
-    if (mobileScrollContainer) mobileScrollContainer.scrollTop = previousMobileScrollTop;
-    if (desktopScrollContainer) desktopScrollContainer.scrollTop = previousDesktopScrollTop;
+    const scrollContainer = report.querySelector<HTMLElement>('[data-monthly-scroll="list"]');
+    if (scrollContainer) scrollContainer.scrollTop = previousScrollTop;
 
     // Click handling is delegated to document so the controls continue to work
     // even though this report is re-rendered from innerHTML during data refreshes.
