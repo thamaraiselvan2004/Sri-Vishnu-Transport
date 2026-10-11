@@ -144,11 +144,11 @@ function renderMonthlyReport() {
         </div>
       </div>
 
-      <div data-monthly-scroll="mobile" class="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3 sm:hidden" style="WebkitOverflowScrolling: touch; touchAction: pan-y;">
+      <div data-monthly-scroll="mobile" class="flex-1 min-h-0 overflow-y-auto p-4 sm:hidden space-y-3" style="WebkitOverflowScrolling: touch; touchAction: pan-y;">
         ${mobileRows || emptyMessage}
       </div>
 
-      <div data-monthly-scroll="desktop" class="hidden sm:block flex-1 min-h-0 overflow-y-auto pr-1" style="WebkitOverflowScrolling: touch; touchAction: pan-y;">
+      <div data-monthly-scroll="desktop" class="hidden sm:block flex-1 min-h-0 overflow-y-auto p-4 sm:p-6" style="WebkitOverflowScrolling: touch; touchAction: pan-y;">
         <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="bg-slate-100/80 text-xs uppercase tracking-wide text-slate-500">
