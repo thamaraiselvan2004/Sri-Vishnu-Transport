@@ -8,6 +8,18 @@ import {
   Vehicle,
 } from "../types";
 
+const normalizeReportDate = (value: string | null | undefined): string => {
+  if (!value) return "";
+  const normalized = String(value).trim();
+  const isoDate = normalized.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (isoDate) return isoDate[1];
+  const dayFirst = normalized.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  if (dayFirst) {
+    return `${dayFirst[3]}-${dayFirst[2].padStart(2, "0")}-${dayFirst[1].padStart(2, "0")}`;
+  }
+  return "";
+};
+
 /**
  * Format an amount in Indian Rupee format (e.g., ₹50,000 or ₹1,60,000)
  */
@@ -202,16 +214,20 @@ export function calculateVehicleStats(
   // Filter trips by date range
   const filteredTrips = trips.filter((t) => {
     if (!dateRange?.from && !dateRange?.to) return true;
-    if (dateRange?.from && t.trip_date < dateRange.from) return false;
-    if (dateRange?.to && t.trip_date > dateRange.to) return false;
+    const tripDate = normalizeReportDate(t.trip_date);
+    if (!tripDate) return false;
+    if (dateRange?.from && tripDate < normalizeReportDate(dateRange.from)) return false;
+    if (dateRange?.to && tripDate > normalizeReportDate(dateRange.to)) return false;
     return true;
   });
 
   // Filter maintenance records by date range
   const filteredMaintenance = maintenanceRecords.filter((m) => {
     if (!dateRange?.from && !dateRange?.to) return true;
-    if (dateRange?.from && m.maintenance_date < dateRange.from) return false;
-    if (dateRange?.to && m.maintenance_date > dateRange.to) return false;
+    const maintenanceDate = normalizeReportDate(m.maintenance_date);
+    if (!maintenanceDate) return false;
+    if (dateRange?.from && maintenanceDate < normalizeReportDate(dateRange.from)) return false;
+    if (dateRange?.to && maintenanceDate > normalizeReportDate(dateRange.to)) return false;
     return true;
   });
 
