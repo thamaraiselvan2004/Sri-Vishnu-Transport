@@ -182,7 +182,8 @@ export function calculateVehicleStats(
   arg1: any,
   arg2: any,
   arg3?: any,
-  arg4?: any
+  arg4?: any,
+  arg5?: { from?: string; to?: string }
 ): VehicleReportStats {
   let trips: Trip[] = [];
   let maintenanceRecords: MaintenanceRecord[] = [];
@@ -196,6 +197,7 @@ export function calculateVehicleStats(
     // Called with (vehicleId, vehicleNumber, trips, maintenance, dateRange)
     trips = Array.isArray(arg3) ? arg3 : [];
     maintenanceRecords = Array.isArray(arg4) ? arg4 : [];
+    dateRange = arg5;
   }
   // Filter trips by date range
   const filteredTrips = trips.filter((t) => {
