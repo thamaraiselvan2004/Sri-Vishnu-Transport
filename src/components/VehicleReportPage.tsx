@@ -50,7 +50,7 @@ const dateOnly = (value: string | null | undefined): string => {
   // Supabase date values may arrive as YYYY-MM-DD or as an ISO datetime.
   // Compare only the calendar date so trips on the selected To Date are included.
   const normalized = String(value).trim();
-  const isoDate = normalized.match(/^(\\d{4}-\\d{2}-\\d{2})/);
+  const isoDate = normalized.match(/^(\d{4}-\d{2}-\d{2})/);
   return isoDate ? isoDate[1] : normalized;
 };
 
