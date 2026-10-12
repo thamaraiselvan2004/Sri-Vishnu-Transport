@@ -105,6 +105,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
       setAppliedFromDate("");
       setAppliedToDate("");
       setAppliedDriverId("");
+      publishSnapshotDateRange("", "");
     } else if (preset === "thisMonth") {
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
         .toISOString()
@@ -114,6 +115,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
       setToDate(today);
       setAppliedFromDate(firstDay);
       setAppliedToDate(today);
+      publishSnapshotDateRange(firstDay, today);
     } else if (preset === "last30") {
       const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
         .toISOString()
@@ -123,6 +125,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
       setToDate(today);
       setAppliedFromDate(past30);
       setAppliedToDate(today);
+      publishSnapshotDateRange(past30, today);
     } else if (preset === "thisYear") {
       const firstJan = new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10);
       const today = now.toISOString().slice(0, 10);
@@ -130,14 +133,24 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
       setToDate(today);
       setAppliedFromDate(firstJan);
       setAppliedToDate(today);
+      publishSnapshotDateRange(firstJan, today);
     }
   };
 
+  const publishSnapshotDateRange = (from: string, to: string) => {
+    window.dispatchEvent(
+      new CustomEvent("vehicle-report-date-range-changed", {
+        detail: { fromDate: from, toDate: to },
+      })
+    );
+  };
+
   const handleGenerateReport = () => {
-    // Apply selected filters directly from the button click.
+    // Apply the filters to both the detailed report and its snapshot.
     setAppliedFromDate(fromDate);
     setAppliedToDate(toDate);
     setAppliedDriverId(selectedDriverId);
+    publishSnapshotDateRange(fromDate, toDate);
   };
 
   // Selected driver details & stats (when driver filter is active)
