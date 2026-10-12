@@ -54,6 +54,7 @@ export const ServiceMaintenancePage: React.FC<ServiceMaintenancePageProps> = ({
   const [notes, setNotes] = useState("");
 
   const [filterVehicleId, setFilterVehicleId] = useState<string>("ALL");
+  const [showAllRecords, setShowAllRecords] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
@@ -137,6 +138,10 @@ export const ServiceMaintenancePage: React.FC<ServiceMaintenancePageProps> = ({
     (sum, r) => sum + (r.amount || 0),
     0
   );
+
+  const visibleRecords = showAllRecords
+    ? displayedRecords
+    : displayedRecords.slice(0, 3);
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
@@ -332,8 +337,8 @@ export const ServiceMaintenancePage: React.FC<ServiceMaintenancePageProps> = ({
       </div>
 
       {/* History Table */}
-      <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-5">
+      <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs h-[620px] flex flex-col overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-5 shrink-0">
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <Clock className="w-5 h-5 text-amber-600" />
@@ -366,7 +371,7 @@ export const ServiceMaintenancePage: React.FC<ServiceMaintenancePageProps> = ({
         </div>
 
         {/* Total Badge */}
-        <div className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 text-xs font-semibold">
+        <div className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 text-xs font-semibold shrink-0">
           <span>Total Maintenance Spent:</span>
           <span className="font-mono font-bold">
             {formatINR(totalSpentOnDisplayed)}
@@ -376,6 +381,7 @@ export const ServiceMaintenancePage: React.FC<ServiceMaintenancePageProps> = ({
           </span>
         </div>
 
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-3">
         {/* Records Listing */}
         {displayedRecords.length === 0 ? (
           <div className="text-center py-10 text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">
@@ -396,7 +402,7 @@ export const ServiceMaintenancePage: React.FC<ServiceMaintenancePageProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {displayedRecords.map((rec) => (
+                {visibleRecords.map((rec) => (
                   <tr key={rec.id} className="hover:bg-slate-50/80 transition">
                     <td className="py-3 px-4 whitespace-nowrap text-slate-600 font-medium">
                       {formatIndianDate(rec.maintenance_date)}
@@ -448,6 +454,19 @@ export const ServiceMaintenancePage: React.FC<ServiceMaintenancePageProps> = ({
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        </div>
+
+        {displayedRecords.length > 3 && (
+          <div className="pt-3 mt-2 border-t border-slate-100 flex justify-center shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowAllRecords((current) => !current)}
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-amber-700 hover:text-amber-800 hover:bg-amber-50 transition"
+            >
+              {showAllRecords ? "Show Recent (3)" : `View All (${displayedRecords.length} Records)`}
+            </button>
           </div>
         )}
       </div>
