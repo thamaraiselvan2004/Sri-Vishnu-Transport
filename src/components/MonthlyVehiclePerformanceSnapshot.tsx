@@ -37,8 +37,20 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
   maintenance,
 }) => {
   const [currentMonthKey, setCurrentMonthKey] = useState(() => getMonthKey(new Date()));
+  const [appliedFromDate, setAppliedFromDate] = useState("");
+  const [appliedToDate, setAppliedToDate] = useState("");
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const [selectedDetailField, setSelectedDetailField] = useState<string | null>(null);
+
+  useEffect(() => {
+    const onDateRangeChanged = (event: Event) => {
+      const customEvent = event as CustomEvent<{ fromDate?: string; toDate?: string }>;
+      setAppliedFromDate(customEvent.detail?.fromDate || "");
+      setAppliedToDate(customEvent.detail?.toDate || "");
+    };
+    window.addEventListener("vehicle-report-date-range-changed", onDateRangeChanged);
+    return () => window.removeEventListener("vehicle-report-date-range-changed", onDateRangeChanged);
+  }, []);
 
   useEffect(() => {
     const checkMonth = () => {
@@ -93,9 +105,25 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
   }, [vehicle.id]);
 
   const monthStats = useMemo(() => {
-    const monthTrips = trips.filter((trip) => trip.vehicle_id === vehicle.id && trip.trip_date?.slice(0, 7) === currentMonthKey);
-    const monthMaintenance = maintenance.filter(
-      (record) => record.vehicle_id === vehicle.id && record.maintenance_date?.slice(0, 7) === currentMonthKey
+    const hasDateRange = Boolean(appliedFromDate || appliedToDate);
+    const isInSelectedRange = (value: string | null | undefined) => {
+      if (!value) return false;
+      const normalized = String(value).slice(0, 10);
+      if (appliedFromDate && normalized < appliedFromDate) return false;
+      if (appliedToDate && normalized > appliedToDate) return false;
+      return true;
+    };
+    const monthTrips = trips.filter((trip) =>
+      trip.vehicle_id === vehicle.id &&
+      (hasDateRange
+        ? isInSelectedRange(trip.trip_date)
+        : trip.trip_date?.slice(0, 7) === currentMonthKey)
+    );
+    const monthMaintenance = maintenance.filter((record) =>
+      record.vehicle_id === vehicle.id &&
+      (hasDateRange
+        ? isInSelectedRange(record.maintenance_date)
+        : record.maintenance_date?.slice(0, 7) === currentMonthKey)
     );
 
     const stats = calculateVehicleStats(
@@ -148,7 +176,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
       advanceReceivedTrips,
       overallProfit: stats.finalVehicleProfit + totalHaltingCharges,
     };
-  }, [vehicle.id, vehicle.vehicle_number, trips, maintenance, currentMonthKey]);
+  }, [vehicle.id, vehicle.vehicle_number, trips, maintenance, currentMonthKey, appliedFromDate, appliedToDate]);
 
   if (!portalTarget) return null;
 
@@ -161,33 +189,35 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
           Vehicle Performance Snapshot
         </h2>
         <span className="text-[11px] font-semibold text-blue-600">
-          {new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" })} • {vehicle.vehicle_number}
+          {appliedFromDate || appliedToDate
+            ? `Selected range: ${appliedFromDate || "Start"} – ${appliedToDate || "Present"}`
+            : new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" })} • {vehicle.vehicle_number}
         </span>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <MetricCard field="trips" label="No.of.Trips" value={stats.totalTrips} hint="Click to view this month's trip details" onClick={() => setSelectedDetailField("trips")} />
-        <MetricCard field="freightFare" label="Total Freight Fare" value={formatINR(stats.totalTripRevenue)} valueClass="text-blue-700" hint="Click to view this month's trip-wise freight fare" onClick={() => setSelectedDetailField("freightFare")} />
-        <MetricCard field="expenses" label="Total Expenses" value={formatINR(stats.totalAllExpenses)} valueClass="text-red-600" hint="Click to view this month's trip-wise expense details" onClick={() => setSelectedDetailField("expenses")} />
+        <MetricCard field="trips" label="No.of.Trips" value={stats.totalTrips} hint="Click to view trips in the selected range" onClick={() => setSelectedDetailField("trips")} />
+        <MetricCard field="freightFare" label="Total Freight Fare" value={formatINR(stats.totalTripRevenue)} valueClass="text-blue-700" hint="Click to view freight fare in the selected range" onClick={() => setSelectedDetailField("freightFare")} />
+        <MetricCard field="expenses" label="Total Expenses" value={formatINR(stats.totalAllExpenses)} valueClass="text-red-600" hint="Click to view expenses in the selected range" onClick={() => setSelectedDetailField("expenses")} />
         <MetricCard field="finalNetProfit" label="Final Net Profit" value={formatINR(stats.finalVehicleProfit)} valueClass="text-emerald-700" borderClass="border-2 border-emerald-500/80 bg-emerald-50/20" hint={`Margin: ${stats.profitMargin}% • Click for trip-wise profit details`} onClick={() => setSelectedDetailField("finalNetProfit")} />
-        <MetricCard field="distance" label="Distance" icon={<Gauge className="w-3.5 h-3.5 text-blue-600" />} value={`${stats.overallTripRunningKms} KM`} hint="Click to view this month's trip-wise distance" onClick={() => setSelectedDetailField("distance")} />
-        <MetricCard field="toll" label="Total Toll Charges" icon={<IndianRupee className="w-3.5 h-3.5 text-indigo-600" />} value={formatINR(stats.overallTollExpense)} valueClass="text-indigo-700" hint="Click to view this month's trip-wise toll charges" onClick={() => setSelectedDetailField("toll")} />
-        <MetricCard field="diesel" label="Overall Total Diesel" icon={<Fuel className="w-3.5 h-3.5 text-orange-600" />} value={`${stats.overallDieselLitres} Litres`} valueClass="text-orange-700" hint={`Total fuel cost: ${formatINR(stats.overallDieselExpense)} • Click for trip-wise fuel details`} onClick={() => setSelectedDetailField("diesel")} />
-        <MetricCard field="mileage" label="Average Mileage" value={`${stats.overallMileage} km/L`} valueClass="text-amber-700" hint="Click to view this month's trip-wise mileage" onClick={() => setSelectedDetailField("mileage")} />
+        <MetricCard field="distance" label="Distance" icon={<Gauge className="w-3.5 h-3.5 text-blue-600" />} value={`${stats.overallTripRunningKms} KM`} hint="Click to view distance in the selected range" onClick={() => setSelectedDetailField("distance")} />
+        <MetricCard field="toll" label="Total Toll Charges" icon={<IndianRupee className="w-3.5 h-3.5 text-indigo-600" />} value={formatINR(stats.overallTollExpense)} valueClass="text-indigo-700" hint="Click to view toll charges in the selected range" onClick={() => setSelectedDetailField("toll")} />
+        <MetricCard field="diesel" label="Overall Total Diesel" icon={<Fuel className="w-3.5 h-3.5 text-orange-600" />} value={`${stats.overallDieselLitres} Litres`} valueClass="text-orange-700" hint={`Total fuel cost: ${formatINR(stats.overallDieselExpense)} • Click for fuel details in the selected range`} onClick={() => setSelectedDetailField("diesel")} />
+        <MetricCard field="mileage" label="Average Mileage" value={`${stats.overallMileage} km/L`} valueClass="text-amber-700" hint="Click to view mileage in the selected range" onClick={() => setSelectedDetailField("mileage")} />
 
         <button type="button" onClick={() => setSelectedDetailField("advanceReceived")} className="w-full min-w-0 text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-emerald-300 cursor-pointer" aria-label={`View advance received details for vehicle ${vehicle.vehicle_number}`}>
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1"><IndianRupee className="w-3.5 h-3.5 text-emerald-600" />Overall Advance Received</div>
           <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 mt-1 min-w-0 whitespace-normal break-all leading-tight tracking-tight">{formatINR(totalAdvanceReceived)}</div>
-          <div className="text-xs text-slate-500 mt-1">Click to view this month's advance details</div>
+          <div className="text-xs text-slate-500 mt-1">Click to view advance details in the selected range</div>
         </button>
 
         <button type="button" onClick={() => setSelectedDetailField("receivedBalance")} className="w-full min-w-0 text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-emerald-300 cursor-pointer" aria-label={`View received balance details for vehicle ${vehicle.vehicle_number}`}>
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1"><IndianRupee className="w-3.5 h-3.5 text-emerald-600" />Total Received Balance</div>
           <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 mt-1 min-w-0 whitespace-normal break-all leading-tight tracking-tight">{formatINR(totalReceivedBalance)}</div>
-          <div className="text-xs text-slate-500 mt-1">Click to view this month's trip-wise received amounts</div>
+          <div className="text-xs text-slate-500 mt-1">Click to view received amounts in the selected range</div>
         </button>
 
-        <MetricCard field="maintenance" label="Service Maintenance" value={formatINR(stats.overallMaintenanceAmount)} valueClass="text-amber-600" hint={`${stats.maintenanceRecordCount} service records this month • Click for details`} onClick={() => setSelectedDetailField("maintenance")} />
+        <MetricCard field="maintenance" label="Service Maintenance" value={formatINR(stats.overallMaintenanceAmount)} valueClass="text-amber-600" hint={`${stats.maintenanceRecordCount} service records in range • Click for details`} onClick={() => setSelectedDetailField("maintenance")} />
 
         <button type="button" onClick={() => setSelectedDetailField("haltingDays")} className="w-full min-w-0 text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-violet-300 cursor-pointer" aria-label={`View halting details for vehicle ${vehicle.vehicle_number}`}>
           <div className="flex items-center justify-between text-slate-500"><span className="text-xs font-bold uppercase tracking-wide flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-violet-600" />Total Halting Days</span></div>
@@ -195,7 +225,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
           <div className="text-xs text-slate-500 mt-1">Click to view loading + unloading halting details</div>
         </button>
 
-        <MetricCard field="haltingCharges" label="Total Halting Charges" icon={<IndianRupee className="w-3.5 h-3.5 text-rose-600" />} value={formatINR(totalHaltingCharges)} valueClass="text-rose-700" hint="Click to view this month's trip-wise halting charges" onClick={() => setSelectedDetailField("haltingCharges")} />
+        <MetricCard field="haltingCharges" label="Total Halting Charges" icon={<IndianRupee className="w-3.5 h-3.5 text-rose-600" />} value={formatINR(totalHaltingCharges)} valueClass="text-rose-700" hint="Click to view halting charges in the selected range" onClick={() => setSelectedDetailField("haltingCharges")} />
         <MetricCard field="overallProfit" label="Overall Profit" value={formatINR(overallProfit)} valueClass={overallProfit >= 0 ? "text-violet-700" : "text-red-700"} borderClass="border-2 border-violet-500/80 bg-violet-50/20" hint="Final Net Profit + Total Halting Charges • Click for trip-wise details" onClick={() => setSelectedDetailField("overallProfit")} />
       </div>
 
