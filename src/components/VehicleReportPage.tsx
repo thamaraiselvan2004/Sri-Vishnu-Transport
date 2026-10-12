@@ -45,6 +45,15 @@ interface VehicleReportPageProps {
   onUpdateTrip?: (tripId: string, tripData: Partial<Trip>) => Promise<void>;
 }
 
+const dateOnly = (value: string | null | undefined): string => {
+  if (!value) return "";
+  // Supabase date values may arrive as YYYY-MM-DD or as an ISO datetime.
+  // Compare only the calendar date so trips on the selected To Date are included.
+  const normalized = String(value).trim();
+  const isoDate = normalized.match(/^(\\d{4}-\\d{2}-\\d{2})/);
+  return isoDate ? isoDate[1] : normalized;
+};
+
 export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
   vehicle,
   allVehicles,
@@ -142,8 +151,8 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
     return allTrips
       .filter((t) => t.vehicle_id === vehicle.id)
       .filter((t) => {
-        if (appliedFromDate && t.trip_date < appliedFromDate) return false;
-        if (appliedToDate && t.trip_date > appliedToDate) return false;
+        if (appliedFromDate && dateOnly(t.trip_date) < dateOnly(appliedFromDate)) return false;
+        if (appliedToDate && dateOnly(t.trip_date) > dateOnly(appliedToDate)) return false;
         return true;
       })
       .sort((a, b) => b.trip_date.localeCompare(a.trip_date)); // Newest first
@@ -153,8 +162,8 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
     return allMaintenance
       .filter((m) => m.vehicle_id === vehicle.id)
       .filter((m) => {
-        if (appliedFromDate && m.maintenance_date < appliedFromDate) return false;
-        if (appliedToDate && m.maintenance_date > appliedToDate) return false;
+        if (appliedFromDate && dateOnly(m.maintenance_date) < dateOnly(appliedFromDate)) return false;
+        if (appliedToDate && dateOnly(m.maintenance_date) > dateOnly(appliedToDate)) return false;
         return true;
       })
       .sort((a, b) => b.maintenance_date.localeCompare(a.maintenance_date));
