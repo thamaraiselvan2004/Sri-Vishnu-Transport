@@ -47,11 +47,24 @@ interface VehicleReportPageProps {
 
 const dateOnly = (value: string | null | undefined): string => {
   if (!value) return "";
-  // Supabase date values may arrive as YYYY-MM-DD or as an ISO datetime.
-  // Compare only the calendar date so trips on the selected To Date are included.
+  // Normalize dates before comparing. Supabase usually returns YYYY-MM-DD,
+  // but legacy/imported records may contain DD/MM/YYYY or DD-MM-YYYY.
   const normalized = String(value).trim();
   const isoDate = normalized.match(/^(\d{4}-\d{2}-\d{2})/);
-  return isoDate ? isoDate[1] : normalized;
+  if (isoDate) return isoDate[1];
+
+  const dayFirst = normalized.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  if (dayFirst) {
+    const day = dayFirst[1].padStart(2, "0");
+    const month = dayFirst[2].padStart(2, "0");
+    return `${dayFirst[3]}-${month}-${day}`;
+  }
+
+  const parsed = new Date(normalized);
+  if (!Number.isNaN(parsed.getTime())) {
+    return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`;
+  }
+  return "";
 };
 
 export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
