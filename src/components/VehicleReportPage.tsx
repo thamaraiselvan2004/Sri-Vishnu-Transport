@@ -188,9 +188,17 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
       vehicle.id,
       vehicle.vehicle_number,
       vehicleTrips,
-      vehicleMaintenance
+      vehicleMaintenance,
+      { from: appliedFromDate || undefined, to: appliedToDate || undefined }
     );
-  }, [vehicle.id, vehicle.vehicle_number, vehicleTrips, vehicleMaintenance]);
+  }, [
+    vehicle.id,
+    vehicle.vehicle_number,
+    vehicleTrips,
+    vehicleMaintenance,
+    appliedFromDate,
+    appliedToDate,
+  ]);
 
   const totalHaltingDays = useMemo(() => vehicleTrips.reduce((total, trip) => {
     const separate = trip.loading_halting_days !== undefined || trip.unloading_halting_days !== undefined;
