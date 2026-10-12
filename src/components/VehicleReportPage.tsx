@@ -133,8 +133,8 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
     }
   };
 
-  const handleGenerateReport = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGenerateReport = () => {
+    // Apply selected filters directly from the button click.
     setAppliedFromDate(fromDate);
     setAppliedToDate(toDate);
     setAppliedDriverId(selectedDriverId);
@@ -301,7 +301,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
 
       {/* Date Filter & Presets Card */}
       <div className="bg-slate-900 text-white p-6 rounded-3xl shadow-xl border border-slate-800">
-        <form onSubmit={handleGenerateReport} className="space-y-4">
+        <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2 text-sm font-bold text-slate-200">
               <Filter className="w-4 h-4 text-blue-400" />
@@ -392,7 +392,8 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
             <div>
               <button
                 id="generate-report-btn"
-                type="submit"
+                type="button"
+                onClick={handleGenerateReport}
                 className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2"
               >
                 <span>Generate Report</span>
@@ -416,7 +417,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
               </div>
             )}
           </div>
-        </form>
+        </div>
       </div>
 
       {/* ============================================================ */}
