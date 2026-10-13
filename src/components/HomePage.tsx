@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { Trip, Vehicle, MaintenanceRecord, Driver } from "../types";
-import { formatINR, formatIndianDate } from "../lib/calculations";
+import { formatINR, formatIndianDate, formatDecimal } from "../lib/calculations";
 import { EditTripModal } from "./EditTripModal";
 import { TripDetailsModal } from "./TripDetailsModal";
 import { MileageStatusHomeCard } from "./MileageStatusHomeCard";
@@ -587,7 +587,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                           <td className="px-4 py-3 text-right font-semibold">{vehicleTrips.length}</td>
                           <td className="px-4 py-3 text-right font-mono font-semibold">{formatINR(vehicleRevenue)}</td>
                           <td className="px-4 py-3 text-right font-mono font-semibold text-emerald-700">{formatINR(vehicleProfit)}</td>
-                          <td className="px-4 py-3 text-right font-mono font-semibold text-blue-700">{vehicleTotalKms.toLocaleString("en-IN")} km</td>
+                          <td className="px-4 py-3 text-right font-mono font-semibold text-blue-700">{formatDecimal(vehicleTotalKms)} km</td>
                         </tr>
                       );
                     })}
@@ -596,7 +596,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       <td className="px-4 py-3 text-right">{currentMonthTrips.length}</td>
                       <td className="px-4 py-3 text-right font-mono">{formatINR(totalRevenue)}</td>
                       <td className="px-4 py-3 text-right font-mono text-emerald-700">{formatINR(finalProfit)}</td>
-                      <td className="px-4 py-3 text-right font-mono text-blue-700">{currentMonthTrips.reduce((sum, trip) => sum + (Number(trip.trip_running_kms) || 0), 0).toLocaleString("en-IN")} km</td>
+                      <td className="px-4 py-3 text-right font-mono text-blue-700">{formatDecimal(currentMonthTrips.reduce((sum, trip) => sum + (Number(trip.trip_running_kms) || 0), 0))} km</td>
                     </tr>
                   </tbody>
                 </table>
