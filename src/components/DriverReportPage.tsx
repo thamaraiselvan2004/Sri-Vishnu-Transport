@@ -614,8 +614,8 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
           const value =
             selectedDetailField === "kms" ? `${Number(trip.trip_running_kms) || 0} KM` :
             selectedDetailField === "driverBeta" ? formatINR(Number(trip.driver_beta) || 0) :
-            selectedDetailField === "diesel" ? `${diesel} L • ${formatINR(Number(trip.diesel_expense) || 0)}` :
-            selectedDetailField === "mileage" ? `${mileage} km/L` :
+            selectedDetailField === "diesel" ? `${formatDecimal(diesel)} L • ${formatINR(Number(trip.diesel_expense) || 0)}` :
+            selectedDetailField === "mileage" ? `${formatDecimal(mileage)} km/L` :
             selectedDetailField === "paid" ? formatINR(paid) :
             selectedDetailField === "remaining" ? formatINR(remaining) :
             "";
@@ -626,7 +626,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
           selectedDetailField === "kms" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.trip_running_kms) || 0), 0) :
           selectedDetailField === "driverBeta" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.driver_beta) || 0), 0) :
           selectedDetailField === "diesel" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.diesel_litres) || 0), 0) :
-          selectedDetailField === "mileage" ? stats.overallMileage :
+          selectedDetailField === "mileage" ? formatDecimal(stats.overallMileage) :
           selectedDetailField === "paid" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.amount_paid_to_driver) || 0), 0) :
           selectedDetailField === "remaining" ? currentMonthDriverTrips.reduce((sum, t) => {
             const paid = Number(t.amount_paid_to_driver) || 0;
