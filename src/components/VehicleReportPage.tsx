@@ -881,7 +881,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
             <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
               <div className="text-xs text-slate-500 font-semibold">Avg Profit per Trip</div>
               <div className="text-xl font-bold font-mono text-slate-900 mt-1">
-                {stats.totalTrips > 0 ? formatINR(stats.finalVehicleProfit / stats.totalTrips) : "₹0"}
+                {stats.totalTrips > 0 ? formatINR(stats.finalVehicleProfit / stats.totalTrips) : formatINR(0)}
               </div>
             </div>
 
