@@ -945,13 +945,13 @@ export function generateVehicleInsights(
       insights.push({
         type: "warning",
         title: "High Maintenance Expenditure",
-        message: `Maintenance accounts for ${maintRatio.toFixed(1)}% of total revenue (${formatINR(stats.overallMaintenanceAmount)}).`,
+        message: `Maintenance accounts for ${maintRatio.toFixed(2)}% of total revenue (${formatINR(stats.overallMaintenanceAmount)}).`,
       });
     } else {
       insights.push({
         type: "info",
         title: "Controlled Maintenance",
-        message: `Maintenance costs remain healthy at ${maintRatio.toFixed(1)}% of freight turnover.`,
+        message: `Maintenance costs remain healthy at ${maintRatio.toFixed(2)}% of freight turnover.`,
       });
     }
   }
