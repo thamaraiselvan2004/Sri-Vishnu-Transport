@@ -202,7 +202,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
         <MetricCard field="finalNetProfit" label="Final Net Profit" value={formatINR(stats.finalVehicleProfit)} valueClass="text-emerald-700" borderClass="border-2 border-emerald-500/80 bg-emerald-50/20" hint={`Margin: ${stats.profitMargin}% • Click for trip-wise profit details`} onClick={() => setSelectedDetailField("finalNetProfit")} />
         <MetricCard field="distance" label="Distance" icon={<Gauge className="w-3.5 h-3.5 text-blue-600" />} value={`${stats.overallTripRunningKms} KM`} hint="Click to view distance in the selected range" onClick={() => setSelectedDetailField("distance")} />
         <MetricCard field="toll" label="Total Toll Charges" icon={<IndianRupee className="w-3.5 h-3.5 text-indigo-600" />} value={formatINR(stats.overallTollExpense)} valueClass="text-indigo-700" hint="Click to view toll charges in the selected range" onClick={() => setSelectedDetailField("toll")} />
-        <MetricCard field="diesel" label="Overall Total Diesel" icon={<Fuel className="w-3.5 h-3.5 text-orange-600" />} value={`${stats.overallDieselLitres} Litres`} valueClass="text-orange-700" hint={`Total fuel cost: ${formatINR(stats.overallDieselExpense)} • Click for fuel details in the selected range`} onClick={() => setSelectedDetailField("diesel")} />
+        <MetricCard field="diesel" label="Overall Total Diesel" icon={<Fuel className="w-3.5 h-3.5 text-orange-600" />} value={`${Number(stats.overallDieselLitres || 0).toFixed(2)} Litres`} valueClass="text-orange-700" hint={`Total fuel cost: ${formatINR(stats.overallDieselExpense)} • Click for fuel details in the selected range`} onClick={() => setSelectedDetailField("diesel")} />
         <MetricCard field="mileage" label="Average Mileage" value={`${stats.overallMileage} km/L`} valueClass="text-amber-700" hint="Click to view mileage in the selected range" onClick={() => setSelectedDetailField("mileage")} />
 
         <button type="button" onClick={() => setSelectedDetailField("advanceReceived")} className="w-full min-w-0 text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-emerald-300 cursor-pointer" aria-label={`View advance received details for vehicle ${vehicle.vehicle_number}`}>
@@ -455,7 +455,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
                 <span className="text-lg font-black font-mono text-blue-700">
                   {selectedDetailField === "diesel" ? (
                     <>
-                      {tripTotal} Litres <span className="mx-1 text-slate-400">•</span> {formatINR(monthTrips.reduce((s, t) => s + (Number(t.diesel_expense) || 0), 0))}
+                      {Number(tripTotal || 0).toFixed(2)} Litres <span className="mx-1 text-slate-400">•</span> {formatINR(monthTrips.reduce((s, t) => s + (Number(t.diesel_expense) || 0), 0))}
                     </>
                   ) :
                    selectedDetailField === "distance" ? `${tripTotal} KM` :
