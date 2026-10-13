@@ -280,11 +280,11 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
       ["DRIVER PERFORMANCE REPORT SUMMARY"],
       ["Driver Name", `"${selectedDriverName}"`],
       ["Date Range Filter", `"${fromDate || "All"} to ${toDate || "All"}"`],
-      ["Overall KMs", stats.overallRunningKms],
+      ["Overall KMs", formatDecimal(stats.overallRunningKms)],
       ["Overall Halting Days", stats.overallHaltingDays],
       ["Overall Driver Beta (Rs)", stats.overallDriverBeta],
       ["Overall Total Diesel in Litres", Number(stats.overallTotalDieselLitres || 0).toFixed(2)],
-      ["Overall Mileage (km/L)", stats.overallMileage],
+      ["Overall Mileage (km/L)", formatDecimal(stats.overallMileage)],
       ["Overall Amount Paid to Driver (Rs)", stats.overallAmountPaidToDriver],
       ["Overall Remaining Amount to Driver (Rs)", stats.overallRemainingAmountToDriver],
       ["Total Trips Driven", stats.totalTrips],
@@ -612,7 +612,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
           const diesel = Number(trip.diesel_litres) || 0;
           const mileage = Number(trip.mileage) || 0;
           const value =
-            selectedDetailField === "kms" ? `${Number(trip.trip_running_kms) || 0} KM` :
+            selectedDetailField === "kms" ? `${formatDecimal(Number(trip.trip_running_kms) || 0)} KM` :
             selectedDetailField === "driverBeta" ? formatINR(Number(trip.driver_beta) || 0) :
             selectedDetailField === "diesel" ? `${formatDecimal(diesel)} L • ${formatINR(Number(trip.diesel_expense) || 0)}` :
             selectedDetailField === "mileage" ? `${formatDecimal(mileage)} km/L` :
@@ -672,7 +672,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
                               <div className="text-xs text-slate-500 mt-1">Fuel cost: {formatINR(Number(trip.diesel_expense) || 0)}</div>
                             )}
                             {selectedDetailField === "mileage" && (
-                              <div className="text-xs text-slate-500 mt-1">Distance: {Number(trip.trip_running_kms) || 0} KM • Diesel: {diesel} L</div>
+                              <div className="text-xs text-slate-500 mt-1">Distance: {formatDecimal(Number(trip.trip_running_kms) || 0)} KM • Diesel: {formatDecimal(diesel)} L</div>
                             )}
                             {selectedDetailField === "paid" && trip.driver_payment_date && (
                               <div className="text-xs text-slate-500 mt-1">Payment date: {formatIndianDate(trip.driver_payment_date)}</div>
@@ -905,7 +905,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-right font-mono text-slate-800 whitespace-nowrap">
-                        {trip.diesel_litres || 0} L
+                        {formatDecimal(trip.diesel_litres || 0)} L
                       </td>
                       <td className="py-3.5 px-4 text-right font-mono font-bold text-amber-700 whitespace-nowrap">
                         {formatDecimal(trip.mileage)} km/L
