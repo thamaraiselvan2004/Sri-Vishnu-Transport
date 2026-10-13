@@ -28,6 +28,7 @@ import {
   generateVehicleInsights,
   formatINR,
   formatIndianDate,
+  formatDecimal,
 } from "../lib/calculations";
 import { exportVehicleReportToCSV } from "../lib/exportCsv";
 import { VehicleCharts } from "./VehicleCharts";
@@ -464,7 +465,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
                 Overall KMs
               </div>
               <div className="text-xl font-black font-mono text-white mt-1">
-                {driverStats.overallRunningKms.toLocaleString("en-IN")} KM
+                {formatDecimal(driverStats.overallRunningKms)} KM
               </div>
               <div className="text-[10px] text-slate-400 mt-0.5">
                 {driverStats.totalTrips} trips
@@ -503,7 +504,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
                 Overall Mileage
               </div>
               <div className="text-xl font-black font-mono text-amber-400 mt-1">
-                {driverStats.overallMileage} km/L
+                {formatDecimal(driverStats.overallMileage)} km/L
               </div>
               <div className="text-[10px] text-slate-400 mt-0.5">
                 kms / diesel litres
@@ -644,7 +645,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
               Average Mileage
             </div>
             <div className="text-2xl sm:text-3xl font-black font-mono text-amber-700 mt-1">
-              {stats.overallMileage} km/L
+              {formatDecimal(stats.overallMileage)} km/L
             </div>
             <div className="text-xs text-slate-500 mt-1">
               Running KMs / Diesel Litres
