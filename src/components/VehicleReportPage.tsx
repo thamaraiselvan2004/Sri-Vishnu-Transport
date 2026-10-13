@@ -490,7 +490,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
                 Overall Total Diesel
               </div>
               <div className="text-xl font-black font-mono text-orange-400 mt-1">
-                {driverStats.overallTotalDieselLitres} L
+                {Number(driverStats.overallTotalDieselLitres || 0).toFixed(2)} L
               </div>
               <div className="text-[10px] text-slate-400 mt-0.5">
                 {formatINR(driverStats.overallDieselExpense)}
@@ -631,7 +631,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
               <span>Overall Total Diesel</span>
             </div>
             <div className="text-2xl sm:text-3xl font-black font-mono text-orange-700 mt-1">
-              {stats.overallDieselLitres} Litres
+              {Number(stats.overallDieselLitres || 0).toFixed(2)} Litres
             </div>
             <div className="text-xs text-slate-500 mt-1 font-mono">
               Total fuel cost: {formatINR(stats.overallDieselExpense)}
