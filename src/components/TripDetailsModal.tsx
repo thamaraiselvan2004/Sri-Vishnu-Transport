@@ -133,7 +133,7 @@ export const TripDetailsModal: React.FC<TripDetailsModalProps> = ({
                   <span>Trip Running KMs</span>
                 </div>
                 <div className="text-sm font-mono font-black text-blue-950 mt-0.5">
-                  {trip.trip_running_kms} KM
+                  {formatDecimal(trip.trip_running_kms)} KM
                 </div>
               </div>
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
@@ -199,7 +199,7 @@ export const TripDetailsModal: React.FC<TripDetailsModalProps> = ({
 
               <div className="flex items-center justify-between p-3">
                 <span className="text-slate-600">
-                  Diesel Expense ({trip.diesel_litres} Litres)
+                  Diesel Expense ({formatDecimal(trip.diesel_litres)} Litres)
                 </span>
                 <span className="font-mono text-slate-800">
                   {formatINR(trip.diesel_expense)}
