@@ -1014,7 +1014,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
                       </span>
                     </div>
                     <div className="text-xs text-slate-500 mt-1">
-                      Driver: <span className="font-semibold text-slate-700">{trip.driver_name}</span> &bull; Transporter: {trip.transporter_name} &bull; Distance: {trip.trip_running_kms} KM &bull; Mileage: {trip.mileage} km/L
+                      Driver: <span className="font-semibold text-slate-700">{trip.driver_name}</span> &bull; Transporter: {trip.transporter_name} &bull; Distance: {formatDecimal(trip.trip_running_kms)} KM &bull; Mileage: {formatDecimal(trip.mileage)} km/L
                     </div>
                   </div>
 
