@@ -14,7 +14,7 @@ import {
   Edit3,
 } from "lucide-react";
 import { Trip } from "../types";
-import { formatINR, formatIndianDate } from "../lib/calculations";
+import { formatINR, formatIndianDate, formatDecimal } from "../lib/calculations";
 
 interface TripDetailsModalProps {
   trip: Trip | null;
@@ -139,7 +139,7 @@ export const TripDetailsModal: React.FC<TripDetailsModalProps> = ({
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <div className="text-xs text-slate-500 font-semibold">Diesel Fuel</div>
                 <div className="text-sm font-mono font-bold text-slate-900 mt-0.5">
-                  {trip.diesel_litres || 0} Litres
+                  {formatDecimal(trip.diesel_litres || 0)} Litres
                 </div>
               </div>
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
@@ -151,7 +151,7 @@ export const TripDetailsModal: React.FC<TripDetailsModalProps> = ({
               <div className="p-3 rounded-xl bg-orange-50 border border-orange-200">
                 <div className="text-xs text-orange-800 font-semibold">Fuel Mileage</div>
                 <div className="text-sm font-mono font-black text-orange-950 mt-0.5">
-                  {trip.mileage} km/L
+                  {formatDecimal(trip.mileage)} km/L
                 </div>
               </div>
             </div>
