@@ -629,7 +629,7 @@ export function calculateDriverStats(
     overallRunningKms,
     overallDriverBeta,
     overallHaltingDays,
-    overallTotalDieselLitres: Number(overallTotalDieselLitres.toFixed(1)),
+    overallTotalDieselLitres: Number(overallTotalDieselLitres.toFixed(2)),
     overallMileage,
     overallAmountPaidToDriver,
     overallRemainingAmountToDriver,
