@@ -61,8 +61,8 @@ export function exportTripsToCsv(trips: Trip[]) {
     t.driver_beta_type,
     t.trip_running_kms,
     t.diesel_expense,
-    t.diesel_litres,
-    t.mileage,
+    Number(t.diesel_litres || 0).toFixed(2),
+    Number(t.mileage || 0).toFixed(2),
     t.toll_charges,
     t.loading_expense,
     t.unloading_expense,
@@ -162,13 +162,13 @@ export function exportVehicleReportToCSV(
     [
       vehicleNumber,
       stats.totalTrips,
-      stats.overallRunningKms || stats.overallTripRunningKms || 0,
+      Number(stats.overallRunningKms || stats.overallTripRunningKms || 0).toFixed(2),
       stats.totalTripRevenue,
       stats.totalTripExpenses,
       stats.overallMaintenanceAmount,
       stats.finalVehicleProfit,
       stats.profitMargin,
-      stats.overallMileage,
+      Number(stats.overallMileage || 0).toFixed(2),
     ],
   ];
 
