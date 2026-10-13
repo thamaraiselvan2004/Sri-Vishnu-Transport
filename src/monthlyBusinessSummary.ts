@@ -15,7 +15,8 @@ const money = (value: number) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(value || 0);
 
 const monthKey = (value: string | null | undefined) => {
@@ -220,7 +221,7 @@ function showVehicleMonthlyPerformance(key: string) {
           <td class="px-4 sm:px-6 py-4 font-bold text-slate-800 font-mono">${row.vehicleNumber}</td>
           <td class="px-4 sm:px-6 py-4 text-right font-bold text-slate-700 font-mono">${row.trips}</td>
           <td class="px-4 sm:px-6 py-4 text-right font-bold text-blue-700 font-mono">${money(row.freightFare)}</td>
-          <td class="px-4 sm:px-6 py-4 text-right font-bold text-slate-700 font-mono">${row.totalKms.toLocaleString("en-IN")} km</td>
+          <td class="px-4 sm:px-6 py-4 text-right font-bold text-slate-700 font-mono">${row.totalKms.toFixed(2)} km</td>
           <td class="px-4 sm:px-6 py-4 text-right font-bold text-emerald-700 font-mono">${money(row.profit)}</td>
         </tr>
       `).join("")
@@ -256,7 +257,7 @@ function showVehicleMonthlyPerformance(key: string) {
                   <td class="px-4 sm:px-6 py-4 font-black text-slate-900">Overall Total</td>
                   <td class="px-4 sm:px-6 py-4 text-right font-black text-slate-700 font-mono">${rows.reduce((sum, row) => sum + row.trips, 0)}</td>
                   <td class="px-4 sm:px-6 py-4 text-right font-black text-blue-700 font-mono">${money(totalFare)}</td>
-                  <td class="px-4 sm:px-6 py-4 text-right font-black text-slate-700 font-mono">${totalKms.toLocaleString("en-IN")} km</td>
+                  <td class="px-4 sm:px-6 py-4 text-right font-black text-slate-700 font-mono">${totalKms.toFixed(2)} km</td>
                   <td class="px-4 sm:px-6 py-4 text-right font-black text-emerald-700 font-mono">${money(totalProfit)}</td>
                 </tr>
               </tfoot>
