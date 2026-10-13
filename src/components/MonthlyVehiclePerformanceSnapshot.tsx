@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { IndianRupee, Gauge, Fuel, Clock } from "lucide-react";
 import { MaintenanceRecord, Trip, Vehicle } from "../types";
-import { calculateVehicleStats, formatINR } from "../lib/calculations";
+import { calculateVehicleStats, formatINR, formatDecimal } from "../lib/calculations";
 import { HaltingDetailsModal } from "./HaltingDetailsModal";
 
 interface MonthlyVehiclePerformanceSnapshotProps {
@@ -203,7 +203,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
         <MetricCard field="distance" label="Distance" icon={<Gauge className="w-3.5 h-3.5 text-blue-600" />} value={`${stats.overallTripRunningKms} KM`} hint="Click to view distance in the selected range" onClick={() => setSelectedDetailField("distance")} />
         <MetricCard field="toll" label="Total Toll Charges" icon={<IndianRupee className="w-3.5 h-3.5 text-indigo-600" />} value={formatINR(stats.overallTollExpense)} valueClass="text-indigo-700" hint="Click to view toll charges in the selected range" onClick={() => setSelectedDetailField("toll")} />
         <MetricCard field="diesel" label="Overall Total Diesel" icon={<Fuel className="w-3.5 h-3.5 text-orange-600" />} value={`${Number(stats.overallDieselLitres || 0).toFixed(2)} Litres`} valueClass="text-orange-700" hint={`Total fuel cost: ${formatINR(stats.overallDieselExpense)} • Click for fuel details in the selected range`} onClick={() => setSelectedDetailField("diesel")} />
-        <MetricCard field="mileage" label="Average Mileage" value={`${stats.overallMileage} km/L`} valueClass="text-amber-700" hint="Click to view mileage in the selected range" onClick={() => setSelectedDetailField("mileage")} />
+        <MetricCard field="mileage" label="Average Mileage" value={`${formatDecimal(stats.overallMileage)} km/L`} valueClass="text-amber-700" hint="Click to view mileage in the selected range" onClick={() => setSelectedDetailField("mileage")} />
 
         <button type="button" onClick={() => setSelectedDetailField("advanceReceived")} className="w-full min-w-0 text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-emerald-300 cursor-pointer" aria-label={`View advance received details for vehicle ${vehicle.vehicle_number}`}>
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1"><IndianRupee className="w-3.5 h-3.5 text-emerald-600" />Overall Advance Received</div>
@@ -359,8 +359,8 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
             selectedDetailField === "finalNetProfit" ? formatINR(Number(trip.net_profit) || 0) :
             selectedDetailField === "distance" ? `${Number(trip.trip_running_kms) || 0} KM` :
             selectedDetailField === "toll" ? formatINR(Number(trip.toll_charges) || 0) :
-            selectedDetailField === "diesel" ? `${Number(trip.diesel_litres) || 0} L • ${formatINR(Number(trip.diesel_expense) || 0)}` :
-            selectedDetailField === "mileage" ? `${Number(trip.mileage) || 0} km/L` :
+            selectedDetailField === "diesel" ? `${formatDecimal(Number(trip.diesel_litres) || 0)} L • ${formatINR(Number(trip.diesel_expense) || 0)}` :
+            selectedDetailField === "mileage" ? `${formatDecimal(Number(trip.mileage) || 0)} km/L` :
             selectedDetailField === "receivedBalance" ? formatINR(Number(trip.balance_amount) || 0) :
             selectedDetailField === "haltingDays" ? `${haltingDays} Days` :
             selectedDetailField === "haltingCharges" ? formatINR(haltingCharges) :
