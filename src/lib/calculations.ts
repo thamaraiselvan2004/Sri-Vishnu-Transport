@@ -23,21 +23,22 @@ const normalizeReportDate = (value: string | null | undefined): string => {
 /**
  * Format an amount in Indian Rupee format (e.g., ₹50,000 or ₹1,60,000)
  */
-export function formatINR(amount: number | null | undefined): string {
-  if (amount === null || amount === undefined || isNaN(amount)) {
-    return "₹0";
-  }
-  const isNegative = amount < 0;
-  const absAmount = Math.round(Math.abs(amount));
-
-  // Format using Indian numbering system
-  const formatted = new Intl.NumberFormat("en-IN", {
-    maximumFractionDigits: 0,
-  }).format(absAmount);
-
-  return `${isNegative ? "-" : ""}₹${formatted}`;
+export function roundTo2(value: number | null | undefined): number {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 0;
+  return Math.round((number + Number.EPSILON) * 100) / 100;
 }
 
+export function formatDecimal(value: number | null | undefined): string {
+  return roundTo2(value).toFixed(2);
+}
+
+export function formatINR(amount: number | null | undefined): string {
+  return `₹${new Intl.NumberFormat("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(roundTo2(amount))}`;
+}
 /**
  * Format a date string into Indian readable convention e.g., '11 Sep 2026'
  */
@@ -281,7 +282,7 @@ export function calculateVehicleStats(
   // Profit Margin = Final Vehicle Profit / Total Trip Revenue * 100
   const profitMargin =
     totalTripRevenue > 0
-      ? Number(((finalVehicleProfit / totalTripRevenue) * 100).toFixed(1))
+      ? roundTo2((finalVehicleProfit / totalTripRevenue) * 100)
       : 0;
 
   // Overall Mileage
@@ -303,7 +304,7 @@ export function calculateVehicleStats(
 
   const averageProfitPerTrip =
     totalTrips > 0
-      ? Math.round(finalVehicleProfit / totalTrips)
+      ? roundTo2(finalVehicleProfit / totalTrips)
       : 0;
 
   const fuelCostPerKm =
@@ -473,7 +474,7 @@ export function calculateFleetStats(
   const totalProfit = totalRevenue - totalExpenses;
   const profitMargin =
     totalRevenue > 0
-      ? Number(((totalProfit / totalRevenue) * 100).toFixed(1))
+      ? roundTo2((totalProfit / totalRevenue) * 100)
       : 0;
 
   const averageMileage =
@@ -510,7 +511,7 @@ export function calculateFleetStats(
     bestRoute = {
       route,
       tripCount: rData.tripCount,
-      avgProfit: Math.round(rData.totalProfit / rData.tripCount),
+      avgProfit: roundTo2(rData.totalProfit / rData.tripCount),
     };
   }
 
@@ -629,7 +630,7 @@ export function calculateDriverStats(
     overallRunningKms,
     overallDriverBeta,
     overallHaltingDays,
-    overallTotalDieselLitres: Number(overallTotalDieselLitres.toFixed(2)),
+    overallTotalDieselLitres: roundTo2(overallTotalDieselLitres),
     overallMileage,
     overallAmountPaidToDriver,
     overallRemainingAmountToDriver,
@@ -843,8 +844,8 @@ export function generateBusinessInsights(
     routeList.sort((a, b) => b[1].total / b[1].count - a[1].total / a[1].count);
     const bestR = routeList[0];
     const secondR = routeList[1];
-    const bestAvg = Math.round(bestR[1].total / bestR[1].count);
-    const secondAvg = Math.round(secondR[1].total / secondR[1].count);
+    const bestAvg = roundTo2(bestR[1].total / bestR[1].count);
+    const secondAvg = roundTo2(secondR[1].total / secondR[1].count);
 
     if (bestAvg > secondAvg * 1.1) {
       insights.push({
