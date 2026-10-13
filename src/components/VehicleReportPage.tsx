@@ -595,7 +595,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
               {formatINR(stats.finalVehicleProfit)}
             </div>
             <div className="text-xs text-emerald-600 font-semibold mt-1">
-              Margin: {stats.profitMargin}%
+              Margin: {formatDecimal(stats.profitMargin)}%
             </div>
           </div>
 
@@ -606,7 +606,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
               <span>Distance</span>
             </div>
             <div className="text-2xl sm:text-3xl font-black font-mono text-slate-900 mt-1">
-              {stats.overallTripRunningKms} KM
+              {formatDecimal(stats.overallTripRunningKms)} KM
             </div>
             <div className="text-xs text-slate-500 mt-1">Total running distance</div>
           </div>
@@ -740,7 +740,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
                   </div>
                   <div className="flex justify-between text-xs text-slate-500">
                     <span>Total Running Distance</span>
-                    <span className="font-mono font-medium">{stats.overallTripRunningKms} KM</span>
+                    <span className="font-mono font-medium">{formatDecimal(stats.overallTripRunningKms)} KM</span>
                   </div>
                 </div>
               </div>
@@ -837,7 +837,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
                     {formatINR(stats.finalVehicleProfit)}
                   </div>
                   <div className="text-xs text-slate-400 font-semibold">
-                    Net Margin: {stats.profitMargin}%
+                    Net Margin: {formatDecimal(stats.profitMargin)}%
                   </div>
                 </div>
               </div>
