@@ -872,7 +872,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
                         {trip.transporter_name}
                       </td>
                       <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
-                        {trip.trip_running_kms} KM
+                        {formatDecimal(trip.trip_running_kms)} KM
                       </td>
                       <td className="py-3.5 px-4 text-center whitespace-nowrap">
                         <span className="font-mono font-bold text-xs px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-200">
@@ -908,7 +908,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
                         {trip.diesel_litres || 0} L
                       </td>
                       <td className="py-3.5 px-4 text-right font-mono font-bold text-amber-700 whitespace-nowrap">
-                        {trip.mileage} km/L
+                        {formatDecimal(trip.mileage)} km/L
                       </td>
                       <td className="py-3.5 px-4 text-center whitespace-nowrap">
                         <div className="inline-flex items-center gap-1.5">
