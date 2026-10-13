@@ -88,7 +88,7 @@ export function calculateDriverBeta(
   manualBeta: number
 ): number {
   if (betaType === "percentage") {
-    return Math.round((tripFare || 0) * 0.15);
+    return roundTo2((tripFare || 0) * 0.15);
   }
   return manualBeta || 0;
 }
@@ -102,7 +102,7 @@ export function calculateRunningKms(
   endingOdometer: number
 ): number {
   if (endingOdometer >= startingOdometer) {
-    return endingOdometer - startingOdometer;
+    return roundTo2(endingOdometer - startingOdometer);
   }
   return 0;
 }
@@ -140,7 +140,7 @@ export function calculateHaltingFare(
 ): number {
   const days = Number(haltingDays) || 0;
   const charge = Number(haltingChargePerDay) || 0;
-  return Math.max(0, days * charge);
+  return roundTo2(Math.max(0, days * charge));
 }
 
 /**
@@ -157,7 +157,7 @@ export function calculateBalanceAmount(
   const broker = Number(brokerFare) || 0;
   const adv = Number(advanceReceived) || 0;
   const halting = Number(haltingFare) || 0;
-  return fare - broker - adv + halting;
+  return roundTo2(fare - broker - adv + halting);
 }
 
 /**
@@ -185,7 +185,7 @@ export function calculateTripNetProfit(params: {
   const diesel = Number(params.dieselExpense) || 0;
   const other = Number(params.otherExpenses) || 0;
 
-  return (fare + halting) - (broker + beta + loading + unloading + toll + diesel + other);
+  return roundTo2((fare + halting) - (broker + beta + loading + unloading + toll + diesel + other));
 }
 
 /**
