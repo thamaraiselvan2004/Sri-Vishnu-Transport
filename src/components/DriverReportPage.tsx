@@ -23,6 +23,7 @@ import {
   calculateDriverStats,
   formatINR,
   formatIndianDate,
+  formatDecimal,
 } from "../lib/calculations";
 import { EditTripModal } from "./EditTripModal";
 import { TripDetailsModal } from "./TripDetailsModal";
@@ -506,7 +507,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
               <span className="text-xs font-bold uppercase tracking-wide">Overall KMs</span>
               <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><Gauge className="w-4 h-4" /></div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-slate-900 mt-2">{stats.overallRunningKms.toLocaleString("en-IN")} KM</div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-slate-900 mt-2">{formatDecimal(stats.overallRunningKms)} KM</div>
             <div className="text-xs text-slate-500 mt-1">Click to view trip-wise distance details across {stats.totalTrips} trips</div>
           </button>
 
@@ -536,7 +537,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
               <span className="text-xs font-bold uppercase tracking-wide text-amber-900">Overall Mileage</span>
               <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center"><TrendingUp className="w-4 h-4" /></div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-amber-900 mt-2">{stats.overallMileage} km/L</div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-amber-900 mt-2">{formatDecimal(stats.overallMileage)} km/L</div>
             <div className="text-xs text-amber-700 font-medium mt-1">Click to view trip-wise mileage</div>
           </button>
 
