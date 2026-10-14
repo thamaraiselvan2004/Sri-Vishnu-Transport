@@ -283,7 +283,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
       ["Overall KMs", formatDecimal(stats.overallRunningKms)],
       ["Overall Halting Days", stats.overallHaltingDays],
       ["Overall Driver Beta (Rs)", stats.overallDriverBeta],
-      ["Overall Total Diesel in Litres", Number(stats.overallTotalDieselLitres || 0).toFixed(2)],
+      ["Overall Total Diesel in Litres", formatDecimal(stats.overallTotalDieselLitres || 0)],
       ["Overall Mileage (km/L)", formatDecimal(stats.overallMileage)],
       ["Overall Amount Paid to Driver (Rs)", stats.overallAmountPaidToDriver],
       ["Overall Remaining Amount to Driver (Rs)", stats.overallRemainingAmountToDriver],
