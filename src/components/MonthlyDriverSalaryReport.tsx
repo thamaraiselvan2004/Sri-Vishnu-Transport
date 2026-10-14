@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { CalendarDays, User, IndianRupee, Wallet, Eye } from "lucide-react";
 import { Trip } from "../types";
-import { formatINR, formatIndianDate } from "../lib/calculations";
+import { formatINR, formatIndianDate, roundTo2 } from "../lib/calculations";
 
 interface MonthlyDriverSalaryReportProps {
   driver: { id: string; driver_name: string };
@@ -55,17 +55,17 @@ export const MonthlyDriverSalaryReport: React.FC<MonthlyDriverSalaryReportProps>
           (trip) => monthKey(trip.trip_date) === key
         );
 
-        const beta = monthTrips.reduce(
+        const beta = roundTo2(monthTrips.reduce(
           (sum, trip) => sum + (Number(trip.driver_beta) || 0),
           0
-        );
+        ));
 
-        const paid = monthTrips.reduce(
+        const paid = roundTo2(monthTrips.reduce(
           (sum, trip) => sum + (Number(trip.amount_paid_to_driver) || 0),
           0
-        );
+        ));
 
-        const remaining = monthTrips.reduce((sum, trip) => {
+        const remaining = roundTo2(monthTrips.reduce((sum, trip) => {
           const tripRemaining =
             trip.remaining_amount_to_driver !== undefined &&
             trip.remaining_amount_to_driver !== null
@@ -73,7 +73,7 @@ export const MonthlyDriverSalaryReport: React.FC<MonthlyDriverSalaryReportProps>
               : (Number(trip.driver_beta) || 0) -
                 (Number(trip.amount_paid_to_driver) || 0);
           return sum + (Number(tripRemaining) || 0);
-        }, 0);
+        }, 0));
 
         return {
           key,
