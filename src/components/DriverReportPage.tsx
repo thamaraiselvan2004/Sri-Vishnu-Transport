@@ -527,7 +527,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
               <span className="text-xs font-bold uppercase tracking-wide">Overall Total Diesel in Litres</span>
               <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center"><Fuel className="w-4 h-4" /></div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-orange-700 mt-2">{Number(stats.overallTotalDieselLitres || 0).toFixed(2)} Litres</div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-orange-700 mt-2">{formatDecimal(stats.overallTotalDieselLitres || 0)} Litres</div>
             <div className="text-xs text-slate-500 mt-1">Click to view trip-wise diesel and expense details</div>
           </button>
 
