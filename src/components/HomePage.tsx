@@ -93,25 +93,25 @@ export const HomePage: React.FC<HomePageProps> = ({
   const currentMonthMaintenance = maintenance.filter(
     (m) => getMonthKey(m.maintenance_date) === currentMonthKey
   );
-  const totalRevenue = currentMonthTrips.reduce(
+  const totalRevenue = roundTo2(currentMonthTrips.reduce(
     (sum, t) => sum + (Number(t.trip_fare) || 0),
     0
-  );
-  const totalTripProfit = currentMonthTrips.reduce(
+  ));
+  const totalTripProfit = roundTo2(currentMonthTrips.reduce(
     (sum, t) => sum + (Number(t.net_profit) || 0),
     0
-  );
-  const totalMaintenanceExpense = currentMonthMaintenance.reduce(
+  ));
+  const totalMaintenanceExpense = roundTo2(currentMonthMaintenance.reduce(
     (sum, m) => sum + (Number(m.amount) || 0),
     0
-  );
-  const totalHalting = currentMonthTrips.reduce(
+  ));
+  const totalHalting = roundTo2(currentMonthTrips.reduce(
     (sum, t) =>
       sum +
       (Number(t.loading_halting_fare) || 0) +
       (Number(t.unloading_halting_fare) || 0),
     0
-  );
+  ));
   const finalProfit = roundTo2(totalTripProfit - totalMaintenanceExpense + totalHalting);
 
   return (
@@ -573,14 +573,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                       const vehicleMaintenance = currentMonthMaintenance
                         .filter((record) => record.vehicle_id === vehicle.id)
                         .reduce((sum, record) => sum + (Number(record.amount) || 0), 0);
-                      const vehicleRevenue = vehicleTrips.reduce((sum, trip) => sum + (Number(trip.trip_fare) || 0), 0);
-                      const vehicleTripProfit = vehicleTrips.reduce((sum, trip) => sum + (Number(trip.net_profit) || 0), 0);
-                      const vehicleHalting = vehicleTrips.reduce(
+                      const vehicleRevenue = roundTo2(vehicleTrips.reduce((sum, trip) => sum + (Number(trip.trip_fare) || 0), 0));
+                      const vehicleTripProfit = roundTo2(vehicleTrips.reduce((sum, trip) => sum + (Number(trip.net_profit) || 0), 0));
+                      const vehicleHalting = roundTo2(vehicleTrips.reduce(
                         (sum, trip) => sum + (Number(trip.loading_halting_fare) || 0) + (Number(trip.unloading_halting_fare) || 0),
                         0
                       );
                       const vehicleProfit = roundTo2(vehicleTripProfit - vehicleMaintenance + vehicleHalting);
-                      const vehicleTotalKms = vehicleTrips.reduce((sum, trip) => sum + (Number(trip.trip_running_kms) || 0), 0);
+                      const vehicleTotalKms = roundTo2(vehicleTrips.reduce((sum, trip) => sum + (Number(trip.trip_running_kms) || 0), 0));
                       return (
                         <tr key={vehicle.id} className="border-t border-slate-100">
                           <td className="px-4 py-3 font-mono font-bold text-slate-800">{vehicle.vehicle_number}</td>
