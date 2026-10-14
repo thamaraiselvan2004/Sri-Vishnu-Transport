@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { Trip, Vehicle, MaintenanceRecord, Driver } from "../types";
-import { formatINR, formatIndianDate, formatDecimal } from "../lib/calculations";
+import { formatINR, formatIndianDate, formatDecimal, roundTo2 } from "../lib/calculations";
 import { EditTripModal } from "./EditTripModal";
 import { TripDetailsModal } from "./TripDetailsModal";
 import { MileageStatusHomeCard } from "./MileageStatusHomeCard";
@@ -112,7 +112,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       (Number(t.unloading_halting_fare) || 0),
     0
   );
-  const finalProfit = totalTripProfit - totalMaintenanceExpense + totalHalting;
+  const finalProfit = roundTo2(totalTripProfit - totalMaintenanceExpense + totalHalting);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
@@ -302,7 +302,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
             {activeVehicles.map((veh) => {
               const vehTrips = currentMonthTrips.filter((t) => t.vehicle_id === veh.id);
-              const vehProfit = vehTrips.reduce((s, t) => s + (Number(t.net_profit) || 0), 0);
+              const vehProfit = roundTo2(vehTrips.reduce((s, t) => s + (Number(t.net_profit) || 0), 0));
               const isSelected = selectedVehicleFilter === veh.id;
 
               return (
@@ -579,7 +579,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                         (sum, trip) => sum + (Number(trip.loading_halting_fare) || 0) + (Number(trip.unloading_halting_fare) || 0),
                         0
                       );
-                      const vehicleProfit = vehicleTripProfit - vehicleMaintenance + vehicleHalting;
+                      const vehicleProfit = roundTo2(vehicleTripProfit - vehicleMaintenance + vehicleHalting);
                       const vehicleTotalKms = vehicleTrips.reduce((sum, trip) => sum + (Number(trip.trip_running_kms) || 0), 0);
                       return (
                         <tr key={vehicle.id} className="border-t border-slate-100">
