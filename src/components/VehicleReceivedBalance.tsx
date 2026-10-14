@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Edit3, IndianRupee, Wallet } from "lucide-react";
 import { Trip, Vehicle, Driver } from "../types";
 import { EditTripModal } from "./EditTripModal";
-import { formatINR } from "../lib/calculations";
+import { formatINR, roundTo2 } from "../lib/calculations";
 
 interface VehicleReceivedBalanceProps {
   vehicle: Vehicle;
@@ -38,10 +38,10 @@ export const VehicleReceivedBalance: React.FC<VehicleReceivedBalanceProps> = ({
 
   const totalReceivedBalance = useMemo(
     () =>
-      receivedBalanceTrips.reduce(
+      roundTo2(receivedBalanceTrips.reduce(
         (sum, trip) => sum + (Number(trip.balance_amount) || 0),
         0
-      ),
+      )),
     [receivedBalanceTrips]
   );
 
