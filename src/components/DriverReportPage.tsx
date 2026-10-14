@@ -23,6 +23,7 @@ import {
   calculateDriverStats,
   formatINR,
   formatIndianDate,
+  roundTo2,
   formatDecimal,
 } from "../lib/calculations";
 import { EditTripModal } from "./EditTripModal";
@@ -622,7 +623,7 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
           return { trip, index, value, paid, remaining, diesel, mileage };
         });
 
-        const total =
+        const total = roundTo2(
           selectedDetailField === "kms" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.trip_running_kms) || 0), 0) :
           selectedDetailField === "driverBeta" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.driver_beta) || 0), 0) :
           selectedDetailField === "diesel" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.diesel_litres) || 0), 0) :
@@ -634,7 +635,8 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
               ? Number(t.remaining_amount_to_driver)
               : (Number(t.driver_beta) || 0) - paid);
           }, 0) :
-          0;
+          0
+        );
 
         return (
           <div className="fixed inset-0 z-[110] overflow-y-auto bg-slate-900/50 p-4" onClick={() => setSelectedDetailField(null)}>
