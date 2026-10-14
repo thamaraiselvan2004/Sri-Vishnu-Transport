@@ -191,7 +191,7 @@ function showVehicleMonthlyPerformance(key: string) {
 
   for (const record of monthMaintenance) {
     const row = vehicles.get(String(record.vehicle_id || "unknown"));
-    if (row) row.profit -= Number(record.amount) || 0;
+    if (row) row.profit = roundTo2(row.profit - (Number(record.amount) || 0));
   }
 
   // Keep the fleet's requested order in both desktop table and mobile cards.
@@ -205,9 +205,9 @@ function showVehicleMonthlyPerformance(key: string) {
     const rankDifference = vehicleRank(a.vehicleNumber) - vehicleRank(b.vehicleNumber);
     return rankDifference || a.vehicleNumber.localeCompare(b.vehicleNumber);
   });
-  const totalFare = rows.reduce((sum, row) => sum + row.freightFare, 0);
-  const totalProfit = rows.reduce((sum, row) => sum + row.profit, 0);
-  const totalKms = rows.reduce((sum, row) => sum + row.totalKms, 0);
+  const totalFare = roundTo2(rows.reduce((sum, row) => sum + row.freightFare, 0));
+  const totalProfit = roundTo2(rows.reduce((sum, row) => sum + row.profit, 0));
+  const totalKms = roundTo2(rows.reduce((sum, row) => sum + row.totalKms, 0));
 
   let modal = document.getElementById("monthly-business-vehicle-performance-modal");
   if (!modal) {
