@@ -51,7 +51,7 @@ export const VehicleMonthlyProfitReport: React.FC<VehicleMonthlyProfitReportProp
       const separate = trip.loading_halting_fare !== undefined || trip.unloading_halting_fare !== undefined;
       return total + (separate ? (Number(trip.loading_halting_fare) || 0) + (Number(trip.unloading_halting_fare) || 0) : (Number(trip.halting_fare) || 0));
     }, 0);
-    const totalReceivedBalance = monthTrips.reduce((total, trip) => total + (Number(trip.balance_amount) || 0), 0);
+    const totalReceivedBalance = roundTo2(monthTrips.reduce((total, trip) => total + (Number(trip.balance_amount) || 0), 0));
     return { stats, totalHaltingDays, totalHaltingCharges, totalReceivedBalance, overallProfit: stats.finalVehicleProfit + totalHaltingCharges };
   }, [selectedMonthKey, vehicle.id, vehicle.vehicle_number, trips, maintenance]);
 
