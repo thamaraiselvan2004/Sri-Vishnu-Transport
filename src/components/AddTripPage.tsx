@@ -16,6 +16,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { Vehicle, Driver, Trip, DriverBetaType } from "../types";
+import { roundTo2 } from "../lib/calculations";
 import {
   searchStates,
   searchCities,
@@ -159,23 +160,23 @@ export const AddTripPage: React.FC<AddTripPageProps> = ({
   // Halting Fare = Halting days * Halting charge/day
   const numLoadingHaltingDays = parseFloat(loadingHaltingDays) || 0;
   const numLoadingHaltingChargePerDay = parseFloat(loadingHaltingChargePerDay) || 0;
-  const loadingHaltingFare = numLoadingHaltingDays * numLoadingHaltingChargePerDay;
+  const loadingHaltingFare = roundTo2(numLoadingHaltingDays * numLoadingHaltingChargePerDay);
   const numUnloadingHaltingDays = parseFloat(unloadingHaltingDays) || 0;
   const numUnloadingHaltingChargePerDay = parseFloat(unloadingHaltingChargePerDay) || 0;
-  const unloadingHaltingFare = numUnloadingHaltingDays * numUnloadingHaltingChargePerDay;
+  const unloadingHaltingFare = roundTo2(numUnloadingHaltingDays * numUnloadingHaltingChargePerDay);
   const numHaltingDays = numLoadingHaltingDays + numUnloadingHaltingDays;
-  const haltingFare = loadingHaltingFare + unloadingHaltingFare;
+  const haltingFare = roundTo2(loadingHaltingFare + unloadingHaltingFare);
   const numHaltingChargePerDay = numHaltingDays > 0 ? haltingFare / numHaltingDays : 0;
 
   // Derived Advance & Balance Calculation
   // Formula: balance amount = trip fare - broker fare - advance received + halting fare
   const numAdvanceReceived = parseFloat(advanceReceived) || 0;
   const balanceAmount =
-    numTripFare - numBrokerFare - numAdvanceReceived + haltingFare;
+    roundTo2(numTripFare - numBrokerFare - numAdvanceReceived + haltingFare);
 
   // Derived Driver Payment & Remaining Calculation
   const numAmountPaidToDriver = parseFloat(amountPaidToDriver) || 0;
-  const remainingAmountToDriver = calculatedDriverBeta - numAmountPaidToDriver;
+  const remainingAmountToDriver = roundTo2(calculatedDriverBeta - numAmountPaidToDriver);
 
   const numDieselExpense = parseFloat(dieselExpense) || 0;
   const numDieselLitres = parseFloat(dieselLitres) || 0;
