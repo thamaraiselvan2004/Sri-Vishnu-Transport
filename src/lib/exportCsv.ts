@@ -1,4 +1,5 @@
 import { Trip, MaintenanceRecord, Vehicle, Driver } from "../types";
+import { formatDecimal } from "./calculations";
 
 function downloadCsvFile(content: string, filename: string) {
   const blob = new Blob(["\uFEFF" + content], { type: "text/csv;charset=utf-8;" });
@@ -55,19 +56,19 @@ export function exportTripsToCsv(trips: Trip[]) {
     t.from_city,
     t.to_state,
     t.to_city,
-    Number(t.trip_fare || 0).toFixed(2),
-    Number(t.broker_fare || 0).toFixed(2),
-    Number(t.driver_beta || 0).toFixed(2),
+    formatDecimal(t.trip_fare || 0),
+    formatDecimal(t.broker_fare || 0),
+    formatDecimal(t.driver_beta || 0),
     t.driver_beta_type,
-    Number(t.trip_running_kms || 0).toFixed(2),
-    Number(t.diesel_expense || 0).toFixed(2),
-    Number(t.diesel_litres || 0).toFixed(2),
-    Number(t.mileage || 0).toFixed(2),
-    Number(t.toll_charges || 0).toFixed(2),
-    Number(t.loading_expense || 0).toFixed(2),
-    Number(t.unloading_expense || 0).toFixed(2),
-    Number(t.other_expenses || 0).toFixed(2),
-    Number(t.net_profit || 0).toFixed(2),
+    formatDecimal(t.trip_running_kms || 0),
+    formatDecimal(t.diesel_expense || 0),
+    formatDecimal(t.diesel_litres || 0),
+    formatDecimal(t.mileage || 0),
+    formatDecimal(t.toll_charges || 0),
+    formatDecimal(t.loading_expense || 0),
+    formatDecimal(t.unloading_expense || 0),
+    formatDecimal(t.other_expenses || 0),
+    formatDecimal(t.net_profit || 0),
     t.created_at,
   ]);
 
@@ -99,7 +100,7 @@ export function exportMaintenanceToCsv(records: MaintenanceRecord[]) {
     m.odometer_reading,
     m.service_type,
     m.description,
-    Number(m.amount || 0).toFixed(2),
+    formatDecimal(m.amount || 0),
     m.notes,
     m.created_at,
   ]);
@@ -162,13 +163,13 @@ export function exportVehicleReportToCSV(
     [
       vehicleNumber,
       stats.totalTrips,
-      Number(stats.overallRunningKms || stats.overallTripRunningKms || 0).toFixed(2),
-      Number(stats.totalTripRevenue || 0).toFixed(2),
-      Number(stats.totalTripExpenses || 0).toFixed(2),
-      Number(stats.overallMaintenanceAmount || 0).toFixed(2),
-      Number(stats.finalVehicleProfit || 0).toFixed(2),
-      Number(stats.profitMargin || 0).toFixed(2),
-      Number(stats.overallMileage || 0).toFixed(2),
+      formatDecimal(stats.overallRunningKms || stats.overallTripRunningKms || 0),
+      formatDecimal(stats.totalTripRevenue || 0),
+      formatDecimal(stats.totalTripExpenses || 0),
+      formatDecimal(stats.overallMaintenanceAmount || 0),
+      formatDecimal(stats.finalVehicleProfit || 0),
+      formatDecimal(stats.profitMargin || 0),
+      formatDecimal(stats.overallMileage || 0),
     ],
   ];
 
@@ -190,12 +191,12 @@ export function exportVehicleReportToCSV(
     t.driver_name || "",
     t.transporter_name,
     `${t.from_city} -> ${t.to_city}`,
-    Number(t.trip_running_kms || 0).toFixed(2),
-    Number(t.trip_fare || 0).toFixed(2),
-    Number(t.driver_beta || 0).toFixed(2),
-    Number(t.diesel_expense || 0).toFixed(2),
-    Number(t.toll_charges || 0).toFixed(2),
-    Number(t.net_profit || 0).toFixed(2),
+    formatDecimal(t.trip_running_kms || 0),
+    formatDecimal(t.trip_fare || 0),
+    formatDecimal(t.driver_beta || 0),
+    formatDecimal(t.diesel_expense || 0),
+    formatDecimal(t.toll_charges || 0),
+    formatDecimal(t.net_profit || 0),
   ]);
 
   const content = [
