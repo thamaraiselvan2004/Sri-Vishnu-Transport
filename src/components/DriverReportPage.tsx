@@ -623,20 +623,19 @@ export const DriverReportPage: React.FC<DriverReportPageProps> = ({
           return { trip, index, value, paid, remaining, diesel, mileage };
         });
 
-        const total = roundTo2(
-          selectedDetailField === "kms" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.trip_running_kms) || 0), 0) :
-          selectedDetailField === "driverBeta" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.driver_beta) || 0), 0) :
-          selectedDetailField === "diesel" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.diesel_litres) || 0), 0) :
+        const total =
+          selectedDetailField === "kms" ? roundTo2(currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.trip_running_kms) || 0), 0)) :
+          selectedDetailField === "driverBeta" ? roundTo2(currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.driver_beta) || 0), 0)) :
+          selectedDetailField === "diesel" ? roundTo2(currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.diesel_litres) || 0), 0)) :
           selectedDetailField === "mileage" ? formatDecimal(stats.overallMileage) :
-          selectedDetailField === "paid" ? currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.amount_paid_to_driver) || 0), 0) :
-          selectedDetailField === "remaining" ? currentMonthDriverTrips.reduce((sum, t) => {
+          selectedDetailField === "paid" ? roundTo2(currentMonthDriverTrips.reduce((sum, t) => sum + (Number(t.amount_paid_to_driver) || 0), 0)) :
+          selectedDetailField === "remaining" ? roundTo2(currentMonthDriverTrips.reduce((sum, t) => {
             const paid = Number(t.amount_paid_to_driver) || 0;
             return sum + (t.remaining_amount_to_driver !== undefined && t.remaining_amount_to_driver !== null
               ? Number(t.remaining_amount_to_driver)
               : (Number(t.driver_beta) || 0) - paid);
-          }, 0) :
-          0
-        );
+          }, 0)) :
+          0;
 
         return (
           <div className="fixed inset-0 z-[110] overflow-y-auto bg-slate-900/50 p-4" onClick={() => setSelectedDetailField(null)}>
