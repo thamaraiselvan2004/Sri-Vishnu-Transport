@@ -578,7 +578,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       const vehicleHalting = roundTo2(vehicleTrips.reduce(
                         (sum, trip) => sum + (Number(trip.loading_halting_fare) || 0) + (Number(trip.unloading_halting_fare) || 0),
                         0
-                      );
+                      ));
                       const vehicleProfit = roundTo2(vehicleTripProfit - vehicleMaintenance + vehicleHalting);
                       const vehicleTotalKms = roundTo2(vehicleTrips.reduce((sum, trip) => sum + (Number(trip.trip_running_kms) || 0), 0));
                       return (
