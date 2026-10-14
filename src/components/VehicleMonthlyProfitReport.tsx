@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { CalendarDays, TrendingUp, Truck, IndianRupee, Gauge, Fuel, Clock } from "lucide-react";
 import { MaintenanceRecord, Trip, Vehicle } from "../types";
-import { calculateVehicleStats, formatINR, formatDecimal } from "../lib/calculations";
+import { calculateVehicleStats, formatINR, formatDecimal, roundTo2 } from "../lib/calculations";
 
 interface VehicleMonthlyProfitReportProps { vehicle: Vehicle; trips: Trip[]; maintenance: MaintenanceRecord[]; }
 interface MonthlyRow { key: string; month: string; trips: number; revenue: number; expenses: number; haltingCharges: number; profit: number; }
@@ -22,18 +22,18 @@ export const VehicleMonthlyProfitReport: React.FC<VehicleMonthlyProfitReportProp
       const monthTrips = vehicleTrips.filter((t) => monthKey(t.trip_date) === key);
       const monthMaintenance = vehicleMaintenance.filter((m) => monthKey(m.maintenance_date) === key);
       const stats = calculateVehicleStats(vehicle.id, vehicle.vehicle_number, monthTrips, monthMaintenance);
-      const haltingCharges = monthTrips.reduce((sum, trip) => {
+      const haltingCharges = roundTo2(monthTrips.reduce((sum, trip) => {
         const separate = trip.loading_halting_fare !== undefined || trip.unloading_halting_fare !== undefined;
         return sum + (separate ? (Number(trip.loading_halting_fare) || 0) + (Number(trip.unloading_halting_fare) || 0) : Number(trip.halting_fare) || 0);
-      }, 0);
-      const maintenanceExpenses = monthMaintenance.reduce((sum, record) => sum + (Number(record.amount) || 0), 0);
-      const revenue = monthTrips.reduce((sum, trip) => sum + (Number(trip.trip_fare) || 0), 0);
-      const expenses = Math.max(0, revenue + haltingCharges - (stats.finalVehicleProfit + haltingCharges));
-      return { key, month: monthLabel(key), trips: monthTrips.length, revenue, expenses: expenses + maintenanceExpenses, haltingCharges, profit: stats.finalVehicleProfit + haltingCharges };
+      }, 0));
+      const maintenanceExpenses = roundTo2(monthMaintenance.reduce((sum, record) => sum + (Number(record.amount) || 0), 0));
+      const revenue = roundTo2(monthTrips.reduce((sum, trip) => sum + (Number(trip.trip_fare) || 0), 0));
+      const expenses = roundTo2(Math.max(0, revenue + haltingCharges - (stats.finalVehicleProfit + haltingCharges)));
+      return { key, month: monthLabel(key), trips: monthTrips.length, revenue, expenses: roundTo2(expenses + maintenanceExpenses), haltingCharges, profit: roundTo2(stats.finalVehicleProfit + haltingCharges) };
     });
   }, [vehicle.id, vehicle.vehicle_number, trips, maintenance]);
 
-  const totalProfit = rows.reduce((sum, row) => sum + row.profit, 0);
+  const totalProfit = roundTo2(rows.reduce((sum, row) => sum + row.profit, 0));
   const visibleRows = showAllMonths ? rows : rows.slice(0, 1);
 
   const selectedMonth = selectedMonthKey ? rows.find((row) => row.key === selectedMonthKey) || null : null;
@@ -85,7 +85,7 @@ export const VehicleMonthlyProfitReport: React.FC<VehicleMonthlyProfitReportProp
                 <div className="bg-white p-4 rounded-2xl border-2 border-emerald-500/80 bg-emerald-50/20"><div className="text-xs font-bold text-emerald-800 uppercase tracking-wide">Final Net Profit</div><div className="text-2xl font-black font-mono text-emerald-700 mt-1">{formatINR(selectedMonthSnapshot.stats.finalVehicleProfit)}</div><div className="text-xs text-emerald-600 font-semibold mt-1">Margin: {formatDecimal(selectedMonthSnapshot.stats.profitMargin)}%</div></div>
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs"><div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1"><Gauge className="w-3.5 h-3.5 text-blue-600" />Distance</div><div className="text-2xl font-black font-mono text-slate-900 mt-1">{selectedMonthSnapshot.stats.overallTripRunningKms} KM</div></div>
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs"><div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1"><IndianRupee className="w-3.5 h-3.5 text-indigo-600" />Total Toll Charges</div><div className="text-2xl font-black font-mono text-indigo-700 mt-1">{formatINR(selectedMonthSnapshot.stats.overallTollExpense)}</div></div>
-                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs"><div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1"><Fuel className="w-3.5 h-3.5 text-orange-600" />Overall Total Diesel</div><div className="text-2xl font-black font-mono text-orange-700 mt-1">{Number(selectedMonthSnapshot.stats.overallDieselLitres || 0).toFixed(2)} Litres</div><div className="text-xs text-slate-500 mt-1">Fuel cost: {formatINR(selectedMonthSnapshot.stats.overallDieselExpense)}</div></div>
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs"><div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1"><Fuel className="w-3.5 h-3.5 text-orange-600" />Overall Total Diesel</div><div className="text-2xl font-black font-mono text-orange-700 mt-1">{formatDecimal(selectedMonthSnapshot.stats.overallDieselLitres || 0)} Litres</div><div className="text-xs text-slate-500 mt-1">Fuel cost: {formatINR(selectedMonthSnapshot.stats.overallDieselExpense)}</div></div>
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs"><div className="text-xs font-bold text-slate-500 uppercase tracking-wide">Average Mileage</div><div className="text-2xl font-black font-mono text-amber-700 mt-1">{formatDecimal(selectedMonthSnapshot.stats.overallMileage)} km/L</div></div>
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs"><div className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1"><IndianRupee className="w-3.5 h-3.5 text-emerald-600" />Total Received Balance</div><div className="text-2xl font-black font-mono text-emerald-700 mt-1">{formatINR(selectedMonthSnapshot.totalReceivedBalance)}</div><div className="text-xs text-slate-500 mt-1">Received during {selectedMonth.month}</div></div>
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs"><div className="text-xs font-bold text-slate-500 uppercase tracking-wide">Service Maintenance</div><div className="text-2xl font-black font-mono text-amber-600 mt-1">{formatINR(selectedMonthSnapshot.stats.overallMaintenanceAmount)}</div><div className="text-xs text-slate-500 mt-1">{selectedMonthSnapshot.stats.maintenanceRecordCount} service records</div></div>
