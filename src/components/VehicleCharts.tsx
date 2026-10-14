@@ -1,4 +1,5 @@
 import React from "react";
+import { roundTo2 } from "../lib/calculations";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -76,10 +77,10 @@ export const VehicleCharts: React.FC<VehicleChartsProps> = ({
         trips: 0,
       };
     }
-    monthlyData[monthKey].revenue += t.trip_fare || 0;
-    monthlyData[monthKey].profit += t.net_profit || 0;
-    monthlyData[monthKey].distance += t.trip_running_kms || 0;
-    monthlyData[monthKey].dieselLitres += t.diesel_litres || 0;
+    monthlyData[monthKey].revenue = roundTo2(monthlyData[monthKey].revenue + (t.trip_fare || 0));
+    monthlyData[monthKey].profit = roundTo2(monthlyData[monthKey].profit + (t.net_profit || 0));
+    monthlyData[monthKey].distance = roundTo2(monthlyData[monthKey].distance + (t.trip_running_kms || 0));
+    monthlyData[monthKey].dieselLitres = roundTo2(monthlyData[monthKey].dieselLitres + (t.diesel_litres || 0));
     monthlyData[monthKey].trips += 1;
   }
 
