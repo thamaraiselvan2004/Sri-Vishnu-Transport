@@ -30,12 +30,12 @@ export function roundTo2(value: number | null | undefined): number {
 }
 
 export function formatDecimal(value: number | null | undefined): string {
-  return roundTo2(value).toFixed(2);
+  return String(roundTo2(value));
 }
 
 export function formatINR(amount: number | null | undefined): string {
   return `₹${new Intl.NumberFormat("en-IN", {
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(roundTo2(amount))}`;
 }
