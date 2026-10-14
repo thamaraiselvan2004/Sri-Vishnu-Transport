@@ -29,6 +29,7 @@ import {
   formatINR,
   formatIndianDate,
   formatDecimal,
+  roundTo2,
 } from "../lib/calculations";
 import { exportVehicleReportToCSV } from "../lib/exportCsv";
 import { VehicleCharts } from "./VehicleCharts";
@@ -219,7 +220,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
     return total + (separate ? (Number(trip.loading_halting_days) || 0) + (Number(trip.unloading_halting_days) || 0) : (Number(trip.halting_days) || 0));
   }, 0), [vehicleTrips]);
 
-  const totalHaltingCharges = useMemo(() => vehicleTrips.reduce((total, trip) => {
+  const totalHaltingCharges = useMemo(() => roundTo2(vehicleTrips.reduce((total, trip) => {
     const separate = trip.loading_halting_fare !== undefined || trip.unloading_halting_fare !== undefined;
     return total + (separate ? (Number(trip.loading_halting_fare) || 0) + (Number(trip.unloading_halting_fare) || 0) : (Number(trip.halting_fare) || 0));
   }, 0), [vehicleTrips]);
@@ -242,7 +243,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
     : receivedBalanceTrips.slice(0, 3);
 
   const totalReceivedBalance = useMemo(() => {
-    return receivedBalanceTrips.reduce((sum, trip) => sum + (Number(trip.balance_amount) || 0), 0);
+    return roundTo2(receivedBalanceTrips.reduce((sum, trip) => sum + (Number(trip.balance_amount) || 0), 0));
   }, [receivedBalanceTrips]);
 
   const insights = useMemo(() => {
