@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { IndianRupee, Gauge, Fuel, Clock } from "lucide-react";
 import { MaintenanceRecord, Trip, Vehicle } from "../types";
-import { calculateVehicleStats, formatINR, formatDecimal } from "../lib/calculations";
+import { calculateVehicleStats, formatINR, formatDecimal, roundTo2 } from "../lib/calculations";
 import { HaltingDetailsModal } from "./HaltingDetailsModal";
 
 interface MonthlyVehiclePerformanceSnapshotProps {
@@ -140,29 +140,29 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
         : (Number(trip.halting_days) || 0));
     }, 0);
 
-    const totalHaltingCharges = monthTrips.reduce((total, trip) => {
+    const totalHaltingCharges = roundTo2(monthTrips.reduce((total, trip) => {
       const separate = trip.loading_halting_fare !== undefined || trip.unloading_halting_fare !== undefined;
       return total + (separate
         ? (Number(trip.loading_halting_fare) || 0) + (Number(trip.unloading_halting_fare) || 0)
         : (Number(trip.halting_fare) || 0));
-    }, 0);
+    }, 0));
 
     // Total received balance for this vehicle in the current snapshot month only.
     const receivedBalanceTrips = monthTrips
       .filter((trip) => (Number(trip.balance_amount) || 0) > 0)
       .sort((a, b) => String(a.trip_date || "").localeCompare(String(b.trip_date || "")));
-    const totalReceivedBalance = receivedBalanceTrips.reduce(
+    const totalReceivedBalance = roundTo2(receivedBalanceTrips.reduce(
       (total, trip) => total + (Number(trip.balance_amount) || 0),
       0
-    );
+    ));
 
     const advanceReceivedTrips = monthTrips
       .filter((trip) => (Number(trip.advance_received) || 0) > 0)
       .sort((a, b) => String(a.advance_received_date || a.trip_date || "").localeCompare(String(b.advance_received_date || b.trip_date || "")));
-    const totalAdvanceReceived = advanceReceivedTrips.reduce(
+    const totalAdvanceReceived = roundTo2(advanceReceivedTrips.reduce(
       (total, trip) => total + (Number(trip.advance_received) || 0),
       0
-    );
+    ));
 
 
     return {
@@ -174,7 +174,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
       receivedBalanceTrips,
       totalAdvanceReceived,
       advanceReceivedTrips,
-      overallProfit: stats.finalVehicleProfit + totalHaltingCharges,
+      overallProfit: roundTo2(stats.finalVehicleProfit + totalHaltingCharges),
     };
   }, [vehicle.id, vehicle.vehicle_number, trips, maintenance, currentMonthKey, appliedFromDate, appliedToDate]);
 
@@ -202,7 +202,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
         <MetricCard field="finalNetProfit" label="Final Net Profit" value={formatINR(stats.finalVehicleProfit)} valueClass="text-emerald-700" borderClass="border-2 border-emerald-500/80 bg-emerald-50/20" hint={`Margin: ${formatDecimal(stats.profitMargin)}% • Click for trip-wise profit details`} onClick={() => setSelectedDetailField("finalNetProfit")} />
         <MetricCard field="distance" label="Distance" icon={<Gauge className="w-3.5 h-3.5 text-blue-600" />} value={`${formatDecimal(stats.overallTripRunningKms)} KM`} hint="Click to view distance in the selected range" onClick={() => setSelectedDetailField("distance")} />
         <MetricCard field="toll" label="Total Toll Charges" icon={<IndianRupee className="w-3.5 h-3.5 text-indigo-600" />} value={formatINR(stats.overallTollExpense)} valueClass="text-indigo-700" hint="Click to view toll charges in the selected range" onClick={() => setSelectedDetailField("toll")} />
-        <MetricCard field="diesel" label="Overall Total Diesel" icon={<Fuel className="w-3.5 h-3.5 text-orange-600" />} value={`${Number(stats.overallDieselLitres || 0).toFixed(2)} Litres`} valueClass="text-orange-700" hint={`Total fuel cost: ${formatINR(stats.overallDieselExpense)} • Click for fuel details in the selected range`} onClick={() => setSelectedDetailField("diesel")} />
+        <MetricCard field="diesel" label="Overall Total Diesel" icon={<Fuel className="w-3.5 h-3.5 text-orange-600" />} value={`${formatDecimal(stats.overallDieselLitres || 0)} Litres`} valueClass="text-orange-700" hint={`Total fuel cost: ${formatINR(stats.overallDieselExpense)} • Click for fuel details in the selected range`} onClick={() => setSelectedDetailField("diesel")} />
         <MetricCard field="mileage" label="Average Mileage" value={`${formatDecimal(stats.overallMileage)} km/L`} valueClass="text-amber-700" hint="Click to view mileage in the selected range" onClick={() => setSelectedDetailField("mileage")} />
 
         <button type="button" onClick={() => setSelectedDetailField("advanceReceived")} className="w-full min-w-0 text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-sm transition hover:border-emerald-300 cursor-pointer" aria-label={`View advance received details for vehicle ${vehicle.vehicle_number}`}>
@@ -455,7 +455,7 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
                 <span className="text-lg font-black font-mono text-blue-700">
                   {selectedDetailField === "diesel" ? (
                     <>
-                      {Number(tripTotal || 0).toFixed(2)} Litres <span className="mx-1 text-slate-400">•</span> {formatINR(monthTrips.reduce((s, t) => s + (Number(t.diesel_expense) || 0), 0))}
+                      {formatDecimal(tripTotal || 0)} Litres <span className="mx-1 text-slate-400">•</span> {formatINR(monthTrips.reduce((s, t) => s + (Number(t.diesel_expense) || 0), 0))}
                     </>
                   ) :
                    selectedDetailField === "distance" ? `${tripTotal} KM` :
