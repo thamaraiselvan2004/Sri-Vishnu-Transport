@@ -570,9 +570,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <tbody>
                     {activeVehicles.map((vehicle) => {
                       const vehicleTrips = currentMonthTrips.filter((trip) => trip.vehicle_id === vehicle.id);
-                      const vehicleMaintenance = currentMonthMaintenance
+                      const vehicleMaintenance = roundTo2(currentMonthMaintenance
                         .filter((record) => record.vehicle_id === vehicle.id)
-                        .reduce((sum, record) => sum + (Number(record.amount) || 0), 0);
+                        .reduce((sum, record) => sum + (Number(record.amount) || 0), 0));
                       const vehicleRevenue = roundTo2(vehicleTrips.reduce((sum, trip) => sum + (Number(trip.trip_fare) || 0), 0));
                       const vehicleTripProfit = roundTo2(vehicleTrips.reduce((sum, trip) => sum + (Number(trip.net_profit) || 0), 0));
                       const vehicleHalting = roundTo2(vehicleTrips.reduce(
