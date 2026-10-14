@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { X, Save, Trash2 } from "lucide-react";
 import { Trip, Vehicle, Driver, DriverBetaType } from "../types";
 import { deleteTrip } from "../lib/database";
-import { calculateDriverBeta, calculateMileage, calculateTripNetProfit, formatINR } from "../lib/calculations";
+import { calculateDriverBeta, calculateMileage, calculateTripNetProfit, formatINR, roundTo2 } from "../lib/calculations";
 
 interface EditTripModalProps {
   trip: Trip | null;
@@ -70,13 +70,13 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({ trip, isOpen, onCl
   const runningKms = numberValue(tripRunningKms);
   const diesel = numberValue(dieselLitres);
   const mileage = calculateMileage(runningKms, diesel);
-  const loadingHaltingFare = numberValue(loadingHaltingDays) * numberValue(loadingHaltingChargePerDay);
-  const unloadingHaltingFare = numberValue(unloadingHaltingDays) * numberValue(unloadingHaltingChargePerDay);
+  const loadingHaltingFare = roundTo2(numberValue(loadingHaltingDays) * numberValue(loadingHaltingChargePerDay));
+  const unloadingHaltingFare = roundTo2(numberValue(unloadingHaltingDays) * numberValue(unloadingHaltingChargePerDay));
   const totalHaltingDays = numberValue(loadingHaltingDays) + numberValue(unloadingHaltingDays);
-  const haltingFare = loadingHaltingFare + unloadingHaltingFare;
+  const haltingFare = roundTo2(loadingHaltingFare + unloadingHaltingFare);
   const driverBeta = calculateDriverBeta(numberValue(tripFare), driverBetaType, numberValue(manualDriverBeta));
-  const balanceAmount = numberValue(tripFare) - numberValue(brokerFare) - numberValue(advanceReceived) + haltingFare;
-  const remainingDriverAmount = driverBeta - numberValue(amountPaidToDriver);
+  const balanceAmount = roundTo2(numberValue(tripFare) - numberValue(brokerFare) - numberValue(advanceReceived) + haltingFare);
+  const remainingDriverAmount = roundTo2(driverBeta - numberValue(amountPaidToDriver));
   const netProfit = calculateTripNetProfit({ tripFare: numberValue(tripFare), haltingFare, brokerFare: numberValue(brokerFare), driverBeta, loadingExpense: numberValue(loadingExpense), unloadingExpense: numberValue(unloadingExpense), tollCharges: numberValue(tollCharges), dieselExpense: numberValue(dieselExpense), otherExpenses: numberValue(otherExpenses) });
   const selectedVehicle = useMemo(() => vehicles.find(v => v.id === vehicleId), [vehicles, vehicleId]);
   const selectedDriver = useMemo(() => drivers.find(d => d.id === driverId), [drivers, driverId]);
@@ -94,7 +94,7 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({ trip, isOpen, onCl
         diesel_litres: diesel, diesel_expense: numberValue(dieselExpense), mileage: mileage.mileage, trip_fare: numberValue(tripFare),
         broker_fare: numberValue(brokerFare), driver_beta: driverBeta, driver_beta_type: driverBetaType,
         toll_charges: numberValue(tollCharges), loading_expense: numberValue(loadingExpense), unloading_expense: numberValue(unloadingExpense), other_expenses: numberValue(otherExpenses),
-        halting_days: totalHaltingDays, halting_charge_per_day: totalHaltingDays > 0 ? haltingFare / totalHaltingDays : 0, halting_fare: haltingFare,
+        halting_days: totalHaltingDays, halting_charge_per_day: totalHaltingDays > 0 ? roundTo2(haltingFare / totalHaltingDays) : 0, halting_fare: haltingFare,
         loading_halting_days: numberValue(loadingHaltingDays), loading_halting_charge_per_day: numberValue(loadingHaltingChargePerDay), loading_halting_fare: loadingHaltingFare,
         unloading_halting_days: numberValue(unloadingHaltingDays), unloading_halting_charge_per_day: numberValue(unloadingHaltingChargePerDay), unloading_halting_fare: unloadingHaltingFare,
         advance_received: numberValue(advanceReceived), advance_received_date: advanceReceivedDate || undefined, balance_amount: balanceAmount,
