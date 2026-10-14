@@ -223,9 +223,9 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
   const totalHaltingCharges = useMemo(() => roundTo2(vehicleTrips.reduce((total, trip) => {
     const separate = trip.loading_halting_fare !== undefined || trip.unloading_halting_fare !== undefined;
     return total + (separate ? (Number(trip.loading_halting_fare) || 0) + (Number(trip.unloading_halting_fare) || 0) : (Number(trip.halting_fare) || 0));
-  }, 0), [vehicleTrips]);
+  }, 0)), [vehicleTrips]);
 
-  const overallProfit = stats.finalVehicleProfit + totalHaltingCharges;
+  const overallProfit = roundTo2(stats.finalVehicleProfit + totalHaltingCharges);
 
   // Match the Home page behavior: show the 3 most recent trips by default.
   const displayedVehicleTrips = viewAllTripHistory ? vehicleTrips : vehicleTrips.slice(0, 2);
