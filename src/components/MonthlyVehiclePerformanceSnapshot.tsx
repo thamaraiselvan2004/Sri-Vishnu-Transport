@@ -373,15 +373,15 @@ export const MonthlyVehiclePerformanceSnapshot: React.FC<MonthlyVehiclePerforman
           : [];
         const tripTotal =
           selectedDetailField === "trips" ? monthTrips.length :
-          selectedDetailField === "freightFare" ? monthTrips.reduce((s, t) => s + (Number(t.trip_fare) || 0), 0) :
-          selectedDetailField === "expenses" ? monthTrips.reduce((s, t) => s +
+          selectedDetailField === "freightFare" ? roundTo2(monthTrips.reduce((s, t) => s + (Number(t.trip_fare) || 0), 0)) :
+          selectedDetailField === "expenses" ? roundTo2(monthTrips.reduce((s, t) => s +
             (Number(t.broker_fare) || 0) + (Number(t.driver_beta) || 0) + (Number(t.loading_expense) || 0) +
             (Number(t.unloading_expense) || 0) + (Number(t.toll_charges) || 0) + (Number(t.diesel_expense) || 0) +
-            (Number(t.other_expenses) || 0), 0) :
-          selectedDetailField === "finalNetProfit" ? monthTrips.reduce((s, t) => s + (Number(t.net_profit) || 0), 0) :
-          selectedDetailField === "distance" ? monthTrips.reduce((s, t) => s + (Number(t.trip_running_kms) || 0), 0) :
-          selectedDetailField === "toll" ? monthTrips.reduce((s, t) => s + (Number(t.toll_charges) || 0), 0) :
-          selectedDetailField === "diesel" ? monthTrips.reduce((s, t) => s + (Number(t.diesel_litres) || 0), 0) :
+            (Number(t.other_expenses) || 0), 0)) :
+          selectedDetailField === "finalNetProfit" ? roundTo2(monthTrips.reduce((s, t) => s + (Number(t.net_profit) || 0), 0)) :
+          selectedDetailField === "distance" ? roundTo2(monthTrips.reduce((s, t) => s + (Number(t.trip_running_kms) || 0), 0)) :
+          selectedDetailField === "toll" ? roundTo2(monthTrips.reduce((s, t) => s + (Number(t.toll_charges) || 0), 0)) :
+          selectedDetailField === "diesel" ? roundTo2(monthTrips.reduce((s, t) => s + (Number(t.diesel_litres) || 0), 0)) :
           selectedDetailField === "mileage" ? (stats.overallMileage) :
           selectedDetailField === "receivedBalance" ? totalReceivedBalance :
           selectedDetailField === "advanceReceived" ? totalAdvanceReceived :
