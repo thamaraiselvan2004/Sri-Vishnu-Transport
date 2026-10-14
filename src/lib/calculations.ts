@@ -265,19 +265,20 @@ export function calculateVehicleStats(
     0
   );
 
-  const totalTripExpenses =
+  const totalTripExpenses = roundTo2(
     totalBrokerFare +
     overallDriverBeta +
     totalLoadingExpense +
     totalUnloadingExpense +
     overallTollExpense +
     overallDieselExpense +
-    totalOtherExpenses;
+    totalOtherExpenses
+  );
 
-  const totalAllExpenses = totalTripExpenses + overallMaintenanceAmount;
+  const totalAllExpenses = roundTo2(totalTripExpenses + overallMaintenanceAmount);
 
   // Final Vehicle Profit = Total Trip Net Profit - Total Maintenance Expense
-  const finalVehicleProfit = totalTripNetProfit - overallMaintenanceAmount;
+  const finalVehicleProfit = roundTo2(totalTripNetProfit - overallMaintenanceAmount);
 
   // Profit Margin = Final Vehicle Profit / Total Trip Revenue * 100
   const profitMargin =
