@@ -1,4 +1,5 @@
 import { supabase } from "./lib/supabase";
+import { roundTo2 } from "./lib/calculations";
 
 let started = false;
 let refreshTimer: number | undefined;
@@ -15,7 +16,7 @@ const money = (value: number) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(value || 0);
 
@@ -179,12 +180,12 @@ function showVehicleMonthlyPerformance(key: string) {
     const vehicleNumber = vehicleNumberMap.get(vehicleId) || String(trip.vehicle_number || vehicleId);
     const row = vehicles.get(vehicleId) || { vehicleNumber, trips: 0, freightFare: 0, profit: 0, totalKms: 0 };
     row.trips += 1;
-    row.freightFare += Number(trip.trip_fare) || 0;
-    row.totalKms += Number(trip.trip_running_kms) || 0;
+    row.freightFare = roundTo2(row.freightFare + (Number(trip.trip_fare) || 0));
+    row.totalKms = roundTo2(row.totalKms + (Number(trip.trip_running_kms) || 0));
     // Overall Profit = trip net profit + this month's loading/unloading halting charges.
-    row.profit += Number(trip.net_profit) || 0;
-    row.profit += Number(trip.loading_halting_fare) || 0;
-    row.profit += Number(trip.unloading_halting_fare) || 0;
+    row.profit = roundTo2(row.profit + (Number(trip.net_profit) || 0));
+    row.profit = roundTo2(row.profit + (Number(trip.loading_halting_fare) || 0));
+    row.profit = roundTo2(row.profit + (Number(trip.unloading_halting_fare) || 0));
     vehicles.set(vehicleId, row);
   }
 
@@ -221,7 +222,7 @@ function showVehicleMonthlyPerformance(key: string) {
           <td class="px-4 sm:px-6 py-4 font-bold text-slate-800 font-mono">${row.vehicleNumber}</td>
           <td class="px-4 sm:px-6 py-4 text-right font-bold text-slate-700 font-mono">${row.trips}</td>
           <td class="px-4 sm:px-6 py-4 text-right font-bold text-blue-700 font-mono">${money(row.freightFare)}</td>
-          <td class="px-4 sm:px-6 py-4 text-right font-bold text-slate-700 font-mono">${row.totalKms.toFixed(2)} km</td>
+          <td class="px-4 sm:px-6 py-4 text-right font-bold text-slate-700 font-mono">${roundTo2(row.totalKms)} km</td>
           <td class="px-4 sm:px-6 py-4 text-right font-bold text-emerald-700 font-mono">${money(row.profit)}</td>
         </tr>
       `).join("")
@@ -257,7 +258,7 @@ function showVehicleMonthlyPerformance(key: string) {
                   <td class="px-4 sm:px-6 py-4 font-black text-slate-900">Overall Total</td>
                   <td class="px-4 sm:px-6 py-4 text-right font-black text-slate-700 font-mono">${rows.reduce((sum, row) => sum + row.trips, 0)}</td>
                   <td class="px-4 sm:px-6 py-4 text-right font-black text-blue-700 font-mono">${money(totalFare)}</td>
-                  <td class="px-4 sm:px-6 py-4 text-right font-black text-slate-700 font-mono">${totalKms.toFixed(2)} km</td>
+                  <td class="px-4 sm:px-6 py-4 text-right font-black text-slate-700 font-mono">${roundTo2(totalKms)} km</td>
                   <td class="px-4 sm:px-6 py-4 text-right font-black text-emerald-700 font-mono">${money(totalProfit)}</td>
                 </tr>
               </tfoot>
@@ -325,7 +326,7 @@ async function refreshMonthlyBusinessSummary() {
     if (!key) continue;
     const row = monthly.get(key) || { trips: 0, revenue: 0, profit: 0 };
     row.trips += 1;
-    row.revenue += Number(trip.trip_fare) || 0;
+    row.revenue = roundTo2(row.revenue + (Number(trip.trip_fare) || 0));
     row.profit += Number(trip.net_profit) || 0;
     row.profit += Number(trip.loading_halting_fare) || 0;
     row.profit += Number(trip.unloading_halting_fare) || 0;
