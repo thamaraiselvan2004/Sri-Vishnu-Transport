@@ -491,7 +491,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
                 Overall Total Diesel
               </div>
               <div className="text-xl font-black font-mono text-orange-400 mt-1">
-                {Number(driverStats.overallTotalDieselLitres || 0).toFixed(2)} L
+                {formatDecimal(driverStats.overallTotalDieselLitres || 0)} L
               </div>
               <div className="text-[10px] text-slate-400 mt-0.5">
                 {formatINR(driverStats.overallDieselExpense)}
@@ -632,7 +632,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
               <span>Overall Total Diesel</span>
             </div>
             <div className="text-2xl sm:text-3xl font-black font-mono text-orange-700 mt-1">
-              {Number(stats.overallDieselLitres || 0).toFixed(2)} Litres
+              {formatDecimal(stats.overallDieselLitres || 0)} Litres
             </div>
             <div className="text-xs text-slate-500 mt-1 font-mono">
               Total fuel cost: {formatINR(stats.overallDieselExpense)}
@@ -867,14 +867,14 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
             <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
               <div className="text-xs text-slate-500 font-semibold">Revenue per KM</div>
               <div className="text-xl font-bold font-mono text-blue-700 mt-1">
-                ₹{stats.overallTripRunningKms > 0 ? (stats.totalTripRevenue / stats.overallTripRunningKms).toFixed(2) : "0.00"}/km
+                ₹{stats.overallTripRunningKms > 0 ? formatDecimal(stats.totalTripRevenue / stats.overallTripRunningKms) : "0.00"}/km
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
               <div className="text-xs text-slate-500 font-semibold">Profit per KM</div>
               <div className="text-xl font-bold font-mono text-emerald-700 mt-1">
-                ₹{stats.overallTripRunningKms > 0 ? (stats.finalVehicleProfit / stats.overallTripRunningKms).toFixed(2) : "0.00"}/km
+                ₹{stats.overallTripRunningKms > 0 ? formatDecimal(stats.finalVehicleProfit / stats.overallTripRunningKms) : "0.00"}/km
               </div>
             </div>
 
@@ -888,7 +888,7 @@ export const VehicleReportPage: React.FC<VehicleReportPageProps> = ({
             <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
               <div className="text-xs text-slate-500 font-semibold">Fuel Cost per KM</div>
               <div className="text-xl font-bold font-mono text-orange-700 mt-1">
-                ₹{stats.overallTripRunningKms > 0 ? (stats.overallDieselExpense / stats.overallTripRunningKms).toFixed(2) : "0.00"}/km
+                ₹{stats.overallTripRunningKms > 0 ? formatDecimal(stats.overallDieselExpense / stats.overallTripRunningKms) : "0.00"}/km
               </div>
             </div>
           </div>
