@@ -12,7 +12,7 @@ import {
   Clock,
 } from "lucide-react";
 import { Vehicle, MaintenanceRecord } from "../types";
-import { formatINR, formatIndianDate } from "../lib/calculations";
+import { formatINR, formatIndianDate, roundTo2 } from "../lib/calculations";
 import { addMaintenanceRecord, deleteMaintenanceRecord } from "../lib/database";
 
 interface ServiceMaintenancePageProps {
@@ -134,10 +134,10 @@ export const ServiceMaintenancePage: React.FC<ServiceMaintenancePageProps> = ({
     return rec.vehicle_id === filterVehicleId;
   });
 
-  const totalSpentOnDisplayed = displayedRecords.reduce(
+  const totalSpentOnDisplayed = roundTo2(displayedRecords.reduce(
     (sum, r) => sum + (r.amount || 0),
     0
-  );
+  ));
 
   const visibleRecords = showAllRecords
     ? displayedRecords
