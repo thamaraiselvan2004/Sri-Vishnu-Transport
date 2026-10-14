@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { formatDecimal } from "../lib/calculations";
 import { Gauge, Trash2, Truck } from "lucide-react";
 import { MileageStatusRecord, Vehicle } from "../types";
 import { deleteMileageStatusRecord, getMileageStatusRecords } from "../lib/database";
@@ -66,11 +67,11 @@ export const VehicleSavedMileageRecords: React.FC<VehicleSavedMileageRecordsProp
           {visibleRecords.map((record, index) => <div key={record.id} className="border border-slate-200 rounded-xl p-4 bg-slate-50/60">
             <div className="flex items-start justify-between gap-3"><div><div className="font-bold text-slate-900">Record {index + 1}</div><div className="text-xs text-slate-500 mt-1">{formatDateTime(record.starting_datetime)} → {formatDateTime(record.ending_datetime)}</div></div><button type="button" onClick={() => setDeleteTarget(record.id)} className="p-2 rounded-lg text-red-600 hover:bg-red-50" aria-label="Delete mileage record"><Trash2 className="w-4 h-4" /></button></div>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">
-              <div><div className="text-[11px] text-slate-500">Starting Odo</div><div className="font-bold text-slate-800">{record.starting_odometer.toFixed(2)}</div></div>
-              <div><div className="text-[11px] text-slate-500">Ending Odo</div><div className="font-bold text-slate-800">{record.ending_odometer.toFixed(2)}</div></div>
-              <div><div className="text-[11px] text-slate-500">Distance</div><div className="font-bold text-slate-800">{Math.max(0, record.ending_odometer - record.starting_odometer).toFixed(2)} km</div></div>
-              <div><div className="text-[11px] text-slate-500">Diesel</div><div className="font-bold text-slate-800">{record.diesel_litres.toFixed(2)} L</div></div>
-              <div><div className="text-[11px] text-slate-500">Mileage</div><div className="font-bold text-violet-700">{record.mileage.toFixed(2)} km/L</div></div>
+              <div><div className="text-[11px] text-slate-500">Starting Odo</div><div className="font-bold text-slate-800">{formatDecimal(record.starting_odometer)}</div></div>
+              <div><div className="text-[11px] text-slate-500">Ending Odo</div><div className="font-bold text-slate-800">{formatDecimal(record.ending_odometer)}</div></div>
+              <div><div className="text-[11px] text-slate-500">Distance</div><div className="font-bold text-slate-800">{formatDecimal(Math.max(0, record.ending_odometer - record.starting_odometer))} km</div></div>
+              <div><div className="text-[11px] text-slate-500">Diesel</div><div className="font-bold text-slate-800">{formatDecimal(record.diesel_litres)} L</div></div>
+              <div><div className="text-[11px] text-slate-500">Mileage</div><div className="font-bold text-violet-700">{formatDecimal(record.mileage)} km/L</div></div>
             </div>
           </div>)}
         </div>}
